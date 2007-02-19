@@ -1,0 +1,117 @@
+<?xml version="1.0" encoding="utf-8"?>
+<feed xmlns:ptr='http://www.geof.net/code/annotation/' xmlns='http://www.w3.org/2005/Atom' ptr:annotation-version='0.3'>
+ <link rel='self' type='text/html' href="/~geof/annotation/www/annotate"/>
+ <updated>20070121T2318-0800</updated>
+ <title>Annotations</title> <id>tag:www.geof.net,2005-07-20:annotation</id>
+ <entry>
+  <ptr:range>/2/15.0:/2/17.7</ptr:range>
+
+  <ptr:access>private</ptr:access>
+  <title>Sorry;  IE is a pain to debug and it hasn't been a priority while I've been adding new features.  Some new of those features may never be supported in IE, but basic annotation will be possible when support is working.</title>
+  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/12"/>
+  <link rel='alternate' type='text/html' title="Web Annotation Demo" href="http://www.geof.net/code/annotation/demo/#m1"/>
+  <id>tag:www.geof.net,2007-01-21:0</id>
+  <updated>2007-01-21T22:39:-0800</updated>
+  <summary>Internet Explorer support</summary>
+
+  <author>
+   <name>anonymous</name>
+  </author>
+  <contributor>
+   <name>Geof Glass</name>
+  </contributor>
+ </entry>
+ <entry>
+
+  <ptr:range>/3/3.0:/3/3.6</ptr:range>
+  <ptr:access>private</ptr:access>
+  <title>aoeu</title>
+  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/26"/>
+  <link rel='alternate' type='text/html' title="Web Annotation Demo" href="http://www.geof.net/code/annotation/demo/#m1"/>
+  <id>tag:www.geof.net,2007-01-21:0</id>
+  <updated>2007-01-21T23:18:-0800</updated>
+
+  <summary>bottom</summary>
+  <author>
+   <name>anonymous</name>
+  </author>
+  <contributor>
+   <name>Geof Glass</name>
+  </contributor>
+
+ </entry>
+ <entry>
+  <ptr:range>/2/2/1/2/50.0:/2/2/1/2/57.7</ptr:range>
+  <ptr:access>private</ptr:access>
+  <title>Highlights can also overlap, like this one.  Hover over the highlight or note to see which is associated with which.</title>
+  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/14"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
+
+  <id>tag:www.geof.net,2007-01-21:0</id>
+  <updated>2007-01-21T22:40:-0800</updated>
+  <summary>start in one paragraph and end in another</summary>
+  <author>
+   <name>anonymous</name>
+  </author>
+  <contributor>
+
+   <name>Geof Glass</name>
+  </contributor>
+ </entry>
+ <entry>
+  <ptr:range>/2/2/1/2/52.0:/2/2/1/2/53.9</ptr:range>
+  <ptr:access>private</ptr:access>
+  <title>Paragraph, table cell, list item, etc.</title>
+
+  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/13"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
+  <id>tag:www.geof.net,2007-01-21:0</id>
+  <updated>2007-01-21T22:40:-0800</updated>
+  <summary>one paragraph</summary>
+  <author>
+   <name>anonymous</name>
+
+  </author>
+  <contributor>
+   <name>Geof Glass</name>
+  </contributor>
+ </entry>
+ <entry>
+  <ptr:range>/2/2/6/2/28.0:/2/2/6/2/38.3</ptr:range>
+  <ptr:access>private</ptr:access>
+
+  <title>The OJS version allows you to simply click on a paragraph in a journal article on the same site;  it then automatically links to that paragraph.</title>
+  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/15"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
+  <id>tag:www.geof.net,2007-01-21:0</id>
+  <updated>2007-01-21T22:41:-0800</updated>
+  <summary>then type in or paste the URL into the edit box</summary>
+  <author>
+
+   <name>anonymous</name>
+  </author>
+  <contributor>
+   <name>Geof Glass</name>
+  </contributor>
+ </entry>
+ <entry>
+  <ptr:range>/2/2/7/2/5.0:/2/2/7/2/6.9</ptr:range>
+
+  <ptr:access>private</ptr:access>
+  <title>Here's a sample link to my site.</title>
+  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/19"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
+  <link rel='related' type='text/html' title="Here's a sample link to my site." href="http://www.geof.net/code/annotation/"/>
+  <id>tag:www.geof.net,2007-01-21:0</id>
+  <updated>2007-01-21T22:48:-0800</updated>
+
+  <summary>a hyperlink</summary>
+  <author>
+   <name>anonymous</name>
+  </author>
+  <contributor>
+   <name>Geof Glass</name>
+  </contributor>
+
+ </entry>
+</feed>

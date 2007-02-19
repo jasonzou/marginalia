@@ -1,0 +1,148 @@
+<html>
+<head>
+	<title>Marginalia Demo Installation</title>
+	<style type="text/css">
+		ol li {
+			margin: 1em 0 ;
+		}
+	</style>
+</head>
+<body>
+<h1>Marginalia Demo Installation</h1>
+
+<p>The installation requires the following:</p>
+
+<ul>
+	<li>PHP 4.3 or later</li>
+	<li>MySQL 4.1 or later (though a colleague has had success with MySQL 3; 
+	I haven't tested with earlier versions or with Postgres)</li>
+	<li>The <a href="http://www.geof.net/code/annotation">Marginalia</a> library.</li>
+</ul>
+
+<h2>Create Directory Structure</h2>
+
+<p>Download the Marginalia library.  Take the <code>marginalia</code> directory
+from teh library and place it as a subdirectory of <code>www</code> in this
+demo application.</p>
+
+<p>Place the <code>www</code> directory on your web server, and rename it appropriately
+(e.g. if you want to access it as <code>http://localhost/annotation-demo</code>, rename it
+to <code>annotation-demo</code>).</p>
+
+<h2>Option 1:  Use a Static XML Back-End</h3>
+
+<p>Intsead of setting up a database, you can simply run the demo off a static
+XML file.  In this case, none of the changes you make will be saved (and you
+may run into a few problems), but you can at least see how things work in
+principle.  Make sure the <code>RestAnnotationService</code> is commented-out
+in <code>index.html</code>:</p>
+
+<pre>
+<code>
+		// var annotationService = new RestAnnotationService( serviceRoot );
+		var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
+</code>
+</pre>
+
+<p>Now the annotations will simply be taken from <code>example-annotations.xml</code>.
+None of the <code>.php</code> files will be used.</p>
+
+
+<h2>Option 2: Configure a Database Back-End</h2>
+
+<p>If you want to be able to save annotations in the database, you must configure
+the dynamic versio of the annotation service.  Make sure the
+<code>StaticAnnotationService</code> is commented out in <code>index.html</code>:</p>
+
+<pre>
+<code>
+		var annotationService = new RestAnnotationService( serviceRoot );
+		// var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
+</code>
+</pre>
+
+<h3>Populate the Database</h3>
+
+<p>Create a database and database user, then run the <code>.sql</code>
+scripts in the <code>db</code> directory.</p>
+
+<h3>Update Configuration Files</h3>
+
+<p>Rename <code>sample-config.php</code> to <code>config.php</code> and edit
+it to include the correct database connection information.  You must
+also update the <code>$CFG->host</code> and <code>$CFG->wwwapp</code> values.
+For example, if the demo application is to be accessed at 
+<code>http://localhost/annotation-demo</code>, then they should be set as
+follows:</p>
+
+<pre>
+<code>
+$CFG->host = 'localhost';
+$CFG->wwwapp = 'annotation-demo/';
+</code>
+</pre>
+
+<p>Note the trailing slash on the value for <code>$CFG->wwwapp</code.</p>
+
+<p>You probably will not need to modify config.js unless you are debugging.</p>
+
+
+<h1>Debugging</h1>
+
+<p>If you have problems, it is probably because of a misconfiguration.  First, make sure
+that you always connect to the demo application using the host name and path
+specified in config.php</p>
+
+<p>If your URL matches your configuration, you can try the tracing facilities built in to
+the application.  To use these, you must first turn on the tracing facility for the dump()
+function in Firefox, as follows (thanks to 
+<a href="http://ulaluma.com/pyx/archives/2004/05/debugging_javas.html">pyx</a> for the 
+instructions):</p>
+
+<pre>
+Fire up Mozilla and type 'about:config' in the url bar.
+Right click and choose 'New->Boolean'
+Type 'browser.dom.window.dump.enabled'
+Type 'true'
+</pre>
+
+<p>Then, you must access the site via Firefox run from the
+command line (i.e. a Unix or Mac OS X terminal window or a Windows command window).  Ensure 
+that the following lines are present at the top of <kbd>annotation/config.js</kbd>:</p>
+
+<pre>
+<code>
+TRACING_ON = true;
+LOGGING_ON = true;
+setTrace( 'annotation-service', true );
+</code>
+</pre>
+
+<p>There are other setTrace options, but they are for debugging specific algorithms
+in the application and are probably unrelated to your problem.  They will also produce
+a huge amount of output and slow the application down ('annotation-service' is usually
+on because it doesn't produce much output).</p>
+
+<p>If logging to the console doesn't work, try setting INWINDOW_LOG to true;  this will
+clutter your application, but give you logging information within the browser window
+itself.</p>
+
+<p>Once logging is switched on, connections to the annotation web service will be traced.
+These connections correspond to four operations:  listAnnotations, createAnnotation,
+updateAnnotation, and deleteAnnotation.  Of these, the most useful to examine is
+listAnnotations, because you can run it directly from your browser window.  The tracing
+includes the URLs and the HTTP status code if there is an error.  Visit the
+listAnnotations URL in your browser.  If it is working, you will see an Atom XML
+document containing a list of annotations (or very little if you have none).</p>
+
+<p>If there
+is a problem connecting to the service, you will see an error.  A 404 error indicates
+that Apache could not find the annotation service because of a misconfiguration.  One
+possible cause is problems with mod_rewrite (see step 4 above).  Any
+other error code usually means that the service is available, but something else is
+wrong.  If there is a bug in the application, that could show up as an error code other 
+than 404.</p>
+
+</body>
+</html>
+
