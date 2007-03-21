@@ -90,9 +90,9 @@
 			return _skipSmartcopy( node ) || _skipAnnotationLinks( node );
 		}
 
-		var serviceRoot = 'http://localhost/~geof/annotation/www';
-		// var annotationService = new RestAnnotationService( serviceRoot );
-		var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
+		var serviceRoot = 'http://localhost/~geof/marginalia/demo/www';
+		var annotationService = new RestAnnotationService( serviceRoot );
+		//var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
 		var preferences = new Preferences( new StaticPreferenceService( ) );
 		var keywordService = new RestKeywordService( serviceRoot + '/keywords.txt');
 		keywordService.init( );

@@ -1,0 +1,220 @@
+h1 {
+	font-family: Georgia, serif;
+	text-align: center;
+	font-size: x-large;
+}
+
+h2 {
+	font-family: Georgia, serif;
+	font-size: large;
+	text-align: center;
+}
+
+p {
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+	margin: 1em 2em;
+}
+
+/* General layout */
+
+#sidebar {
+	text-align: left;
+	position: absolute;
+	top: 0;
+	left: .5ex;
+	width: 11em;
+}
+
+#sidebar h3 {
+	margin: 1em 0 1ex 0;
+}
+
+#sidebar ul {
+	list-style-type: none;
+	margin: 1ex 0 1ex 1em;
+	padding: 0;
+}
+
+#sidebar ul li {
+	font-weight: bold;
+	margin: 1ex 0;
+	padding: 0;
+}
+
+#debug {
+	margin-left: 12em;
+}
+
+/* Annotation styles */
+ol#articles {
+	list-style-type: none;
+	position: relative ;
+	width: 40em ;
+	margin: 0;
+	margin-left: 11em;
+	padding: 0;
+}
+
+.hentry h3 {
+	margin: 1ex 0;
+}
+
+.hentry {
+	position: relative;
+	padding: 0 ;
+	margin: 2em 0 ;
+}
+
+.hentry .entry-content {
+	width: 70% ;
+	font-size: medium;
+	font-family: Verdana, Arial, Helvetica, sans-serif;
+}
+
+.hentry p {
+	margin: 1ex 0;
+}
+
+.hentry .entry-content li {
+	margin: 1ex 0;
+}
+
+.hentry .entry-content em.annotation {
+	background: #ffe880;
+	font-style: normal;
+}
+
+.hentry .entry-content em.annotation em.annotation {
+	background: #ecd470;
+}
+
+.hentry .entry-content em.annotation em.annotation em.annotation {
+	background: #d8c666;
+}
+
+.hentry .entry-content em.annotation a,
+.hentry .entry-content a em.annotation {
+	text-decoration: underline;
+}
+
+.hentry .entry-content em.annotation sup a {
+	text-decoration: none;
+	background-color: inherit;
+	cursor: pointer;
+}
+
+.hentry .notes {
+	background: #eee;
+	position: absolute;
+	height: 100%;
+	width: 30%;
+	top: 0;
+	right: 0 ;
+	margin: 0;
+	padding: 0;
+}
+
+.hentry button.createAnnotation {
+	height: 100%;
+	width: 1em;
+	position: absolute;
+	top: 0 ;
+}
+
+.editing-note .hentry button.createAnnotation {
+	visibility: hidden;
+}
+
+.hentry table td {
+	vertical-align: top;
+}
+
+.hentry .notes ol {
+	list-style-type: none;
+	margin: 0 0 0 1em ;
+	padding: 2px .5ex ;
+	height: 100%;
+}
+
+.hentry .notes li {
+	position: relative;
+	font-family: sans-serif;
+	font-size: 80%;	
+	margin: 0 ;
+	margin-bottom: 1ex;
+	padding: 0;
+	min-height: 1.2em;
+	width: 100%;
+	cursor: pointer;
+}
+
+.hentry .notes li.dummyfirst {
+	height: 1px;
+	cursor: default;
+	border: none;
+	background: none;
+	margin: 0;
+	padding: 0;
+}
+
+.hentry .notes li button {
+	border: none;
+	background: none;
+	float: right;
+	display: block;
+	font-size: inherit;
+	padding: 0;
+	margin: 0;
+	vertical-align: top;
+	cursor: pointer;
+}
+
+.hentry .notes li button:hover {
+	font-weight: bold;
+}
+
+.hentry .notes li textarea {
+	font-size: inherit;
+	font-family: sans-serif;
+	border: none;
+	background: white;
+	margin: 0;
+	width: 95%;
+}
+
+.hentry .notes li.hover,
+.hentry .entry-content em.annotation.hover {
+	color: red;
+/*	outline: red 1px solid; */
+}
+
+.hentry .notes li button.expand-edit {
+	position: absolute;
+	top: 0;
+	right: 100%;
+}
+
+.hentry .notes .editing-link label {
+	position: absolute;
+	top: 0;
+	left: 0;
+	width: 1em;
+}
+
+.hentry .notes .editing-link input {
+	margin-left: 1.5em;
+	margin-right: 1.5em;
+	max-width: 80%;
+}
+
+.hentry .notes .editing-link button {
+	position: absolute;
+	top: 0;
+	right: 0;
+	width: 1em;
+}
+
+.hentry .smart-copy {
+	display: none;
+}
+
