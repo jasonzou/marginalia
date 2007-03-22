@@ -47,7 +47,8 @@ LocalizedAnnotationStrings = {
 	'note too long' : 'Please limit your margin note to 250 characters.',
 	
 	'quote too long' : 'The passage you have attempted to highlight is too long.  It may not exceed 1000 characters.',
-	
+
+	'zero length quote' : 'You must select some text to annotate.',
 
 	'lang' : 'en'
 };
