@@ -1,0 +1,14 @@
+#summary Marginalia features to support debugging and development.
+
+= Introduction =
+
+Marginalia includes some instrumentation and special features for use by developers.  Not all of them are obvious in the user interface.
+
+
+= Marginalia Direct =
+
+Press Shift-Ctrl-M from within an annotated page to bring up the Marginalia Direct console.  This uses the same HTTP API as the more friendly user interface (with its highlighting, margin notes, and so on), but does not require the presence or correctness of the annotatiosn or the annotated document.  So if annotations disappear because of bad range calculations (for example) or the absence of a document, you can still get at them here.
+
+The console allows annotations to be retrieved by URL and user name.  They can then be modified or deleted.  Any value is permitted in the fields, but all security and access restrictions implemented on the server apply.  Thus certain changes (e.g. invalid access values, unsafe URL protocols, etc.) may silently fail.
+
+Note that in some cases, the console may not work perfectly with a server implementation.  The Moodle server, for example, uses discussion and message IDs in the annotation table in addition to URLs, and Marginalia Direct doesn't know about that - so any updates to the URL field will probably mess up your annotations.  This restriction is largely because Marginalia Direct is exclusively implemented in Javascript so that it will be useful with all Marginalia installations, regardless of the server-side software, language, database, etc.
