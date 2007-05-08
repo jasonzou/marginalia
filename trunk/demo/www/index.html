@@ -32,6 +32,8 @@
 	<script type="text/javascript" src="marginalia/rest-annotate.js"></script>
 	<script type="text/javascript" src="marginalia/rest-prefs.js"></script>
 	<script type="text/javascript" src="marginalia/rest-keywords.js"></script>
+	<script type="text/javascript" src="marginalia/marginalia-direct.js"></script>
+	<link rel="stylesheet" type="text/css" href="marginalia/marginalia-direct.css"/>
 	<!-- These are implementations of how to fetch annotations, set preferences, and
 	of localized strings.  They will likely be different on every system. -->
 	<script type="text/javascript" src="marginalia-config.js"></script>
@@ -100,6 +102,9 @@
 			preferences, keywordService );
 		smartcopyInit( );
 		smartcopyOn( );
+		
+		var marginaliaDirect = new MarginaliaDirect( annotationService );
+		marginaliaDirect.init( );
 	</script>
 </head>
 <!-- showAllAnnotations must be called to display all annotations on the page.  They can be 
