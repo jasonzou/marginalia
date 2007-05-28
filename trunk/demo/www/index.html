@@ -92,7 +92,7 @@
 			return _skipSmartcopy( node ) || _skipAnnotationLinks( node );
 		}
 
-		var serviceRoot = 'http://localhost/~geof/marginalia/demo/www';
+		var serviceRoot = 'http://192.168.1.139/~geof/marginalia/demo/www';
 		var annotationService = new RestAnnotationService( serviceRoot );
 		//var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
 		var preferences = new Preferences( new StaticPreferenceService( ) );
@@ -115,7 +115,7 @@ whatever).  Here, the * is a wildcard.  The wildcarding convention and support a
 the back-end implementation;  most applications with only one region of content per web page 
 probably have no use for it.  The wildcard matches against the URL for each entry (look for
 the entrylink class). -->
-<body onload='window.marginalia.showAnnotations( "http://www.geof.net/code/annotation/demo/#*")'>
+<body onload='initLogging(); window.marginalia.showAnnotations( "http://www.geof.net/code/annotation/demo/#*")'>
 
 	<!-- This is used for debugging.  A log of trace() calls in the annotation code can
 	be instructed to dump its output here. -->

@@ -38,24 +38,24 @@ ANNOTATION_NICE_URLS = false;
 NICE_ANNOTATION_SERVICE_URL = '/annotate';
 UGLY_ANNOTATION_SERVICE_URL = '/annotate.php';
 
-/* Logging Settings */
-TRACING_ON = true;		// switch on to output trace() calls
-LOGGING_ON = true;		// switch on to output logError() calls
-INWINDOW_LOG = false;	// switch on to output to HTML document instead of/in addition to console
-
-// Set these to true to view certain kinds of events
-// Most of these are only useful for debugging specific areas of code.
-// annotation-service, however, is particularly useful for most debugging
-setTrace( 'annotation-service', true );	// XMLHttp calls to the annotation service
-setTrace( 'word-range', false );			// Word Range calculations (e.g. converting from Text Range)
-setTrace( 'find-quote', false );			// Check if quote matches current state of document
-setTrace( 'node-walk', false );			// Used for going through nodes in document order
-setTrace( 'show-highlight', false );		// Text highlighting calculations
-setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
-setTrace( 'range-compare', false );		// Compare range positions
-setTrace( 'range-string', false );			// Show conversions of word ranges to/from string
-setTrace( 'list-annotations-xml', false );// Show the full Atom XML coming back from listAnnotations
-setTrace( 'WordPointWalker', false );		// Show return values from WordPointWalker
-setTrace( 'prefs', false );				// List fetched preferences
-setTrace( 'keywords', false );				// List fetched keywords
-setTrace( 'point-compare', false );			// Compare two WordPoints
+function initLogging( )
+{
+	var log = window.log = new ErrorLogger( true, true );
+	
+	// Set these to true to view certain kinds of events
+	// Most of these are only useful for debugging specific areas of code.
+	// annotation-service, however, is particularly useful for most debugging
+	log.setTrace( 'annotation-service', true );	// XMLHttp calls to the annotation service
+	log.setTrace( 'word-range', false );			// Word Range calculations (e.g. converting from Text Range)
+	log.setTrace( 'find-quote', false );			// Check if quote matches current state of document
+	log.setTrace( 'node-walk', false );			// Used for going through nodes in document order
+	log.setTrace( 'show-highlight', false );		// Text highlighting calculations
+	log.setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
+	log.setTrace( 'range-compare', false );		// Compare range positions
+	log.setTrace( 'range-string', false );			// Show conversions of word ranges to/from string
+	log.setTrace( 'list-annotations-xml', false );// Show the full Atom XML coming back from listAnnotations
+	log.setTrace( 'WordPointWalker', false );		// Show return values from WordPointWalker
+	log.setTrace( 'prefs', false );				// List fetched preferences
+	log.setTrace( 'keywords', false );				// List fetched keywords
+	log.setTrace( 'point-compare', false );			// Compare two WordPoints
+}
