@@ -51,32 +51,39 @@ class AnnotationDB
 			mysql_close( );
 	}
 
-	function createAnnotation( $url, &$range, $note, $access, $quote, $quote_title, $quote_author, $link )
+	function createAnnotation( &$annotation )
 	{
 		global $CFG, $USER;
+
+		$link = $annotation->getLink( );
+		$blockRange = $annotation->getBlockRange( );
+		$xpathRange = $annotation->getXPathRange( );
+		$blockStart = $blockRange->getStart( );
+		$blockEnd = $blockRange->getEnd( );
+		$xpathStart = $xpathRange->getStart( );
+		$xpathEnd = $xpathRange->getEnd( );
 		
 		$sUser			= addslashes( $USER->username );
-		$sUrl			= addslashes( $url );
-		$sNote			= addslashes( $note );
-		$sAccess		= addslashes( $access );
-		$sQuote			= addslashes( $quote );
-		$sQuote_title	= addslashes( $quote_title );
-		$sQuote_author	= addslashes( $quote_author );
+		$sUrl			= addslashes( $annotation->getUrl( ) );
+		$sNote			= addslashes( $annotation->getNote( ) );
+		$sAccess		= addslashes( $annotation->getAccess( ) );
+		$sQuote			= addslashes( $annotation->getQuote( ) );
+		$sQuote_title	= addslashes( $annotation->getQuoteTitle( ) );
+		$sQuote_author	= addslashes( $annotation->getQuoteAuthor( ) );
 		$sLink			= null == $link ? 'null' : "'".addslashes( $link )."'";
-		$start = $range->getStart( );
-		$end = $range->getEnd( );
+		
 		// In a running application, all queries should be parameterized for security,
 		// not concatenated together as I am doing here.
 		$query = "insert into $CFG->dbannotation "
 			. "(userid, url, note, access"
 			. ", quote, quote_title, quote_author, link, created"
-			. ", start_block, start_word, start_char"
-			. ", end_block, end_word, end_char"
+			. ", start_xpath, start_block, start_word, start_char"
+			. ", end_xpath, end_block, end_word, end_char"
 			. ") values ("
 			. "'$sUser', '$sUrl', '$sNote', '$sAccess'"
 			. ", '$sQuote', '$sQuote_title', '$sQuote_author', $sLink, now()"
-			. ", '".$start->getPaddedBlockStr()."', ".$start->getWords().", ".$start->getChars()
-			. ", '".$end->getPaddedBlockStr()."', ".$end->getWords().", ".$end->getChars()
+			. ", '".$xpathStart->getPathStr()."', '".$blockStart->getPaddedPathStr()."', ".$blockStart->getWords().", ".$blockStart->getChars()
+			. ", '".$xpathEnd->getPathStr()."', '".$blockEnd->getPaddedPathStr()."', ".$blockEnd->getWords().", ".$blockEnd->getChars()
 			. ")";
 	//	echo "\nQUERY: $query\n\n";
 		mysql_query( $query );
@@ -108,6 +115,7 @@ class AnnotationDB
 		$sAccess = null === $access ? null : addslashes( $access );
 		$sLink = null === $link ? null : addslashes( $link );
 		$query = '';
+		// TODO: Should add support for changing ranges (as when called from MarginaliaDirect)
 		if ( null !== $note )	$query .= "note='$sNote'";
 		if ( null !== $access )	$query = AnnotationDB::appendToUpdateStr( $query, "access='$sAccess'" );
 		if ( null !== $link )	$query = AnnotationDB::appendToUpdateStr( $query, "link='$sLink'" );
@@ -182,10 +190,17 @@ class AnnotationDB
 			{
 				$annotation = new Annotation( );
 				$annotation->fromArray( $row );
-				$range = new WordRange(
-					new WordPoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-					new WordPoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
-				$annotation->setRange( $range );
+				$blockRange = new BlockRange(
+					new BlockPoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+					new BlockPoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+				$annotation->setBlockRange( $blockRange );
+				if ( $row[ 'start_xpath' ] != null )
+				{
+					$xpathRange = new XPathRange(
+						new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+						new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+					$annotation->setXPathRange( $xpathRange );
+				}
 				$annotations[ ] = $annotation;
 			}
 		}

@@ -28,7 +28,8 @@
 require_once( "config.php" );
 require_once( "annotation.php" );
 require_once( "annotate-db.php" );
-require_once( "word-range.php" );
+require_once( "block-range.php" );
+require_once( "xpath-range.php" );
 
 $annotationService = new AnnotationService( );
 $annotationService->dispatch( );
@@ -127,8 +128,12 @@ class AnnotationService
 	{
 		global $CFG;
 		
-		$range = new WordRange( );
-		$range->fromString( $_POST[ 'range' ] );
+		$blockRange = new BlockRange( );
+		$blockRange->fromString( $_POST[ 'block-range' ] );
+		$xpathRange = new XPathRange( );
+		$xpathRange->fromString( $_POST[ 'xpath-range' ] );
+		
+		// TODO: Scan XPath to make sure it's safe
 		$note = unfix_quotes( $_POST[ 'note' ] );
 		$access = unfix_quotes( $_POST[ 'access' ] );
 		$quote = unfix_quotes( $_POST[ 'quote' ] );
@@ -136,7 +141,11 @@ class AnnotationService
 		$quote_author = unfix_quotes( $_POST[ 'quote_author' ] );
 		$url = unfix_quotes( $_POST[ 'url' ] );
 		$link = unfix_quotes( $_POST[ 'link' ] );
-		if ( !isnum( $offset ) || !isnum( $length ) || !sanitize( $date ) || !sanitize( $url ) )
+		
+		if ( ! isXPathSafe( $xpathRange->start->getPathStr() ) || ! isXPathSafe( $xpathRange->end->getPathStr( ) ) )
+			AnnotationService::httpError( 400, 'Bad Request', 'Bad xpath' );
+			
+		if ( ! isnum( $offset ) || !isnum( $length ) || !sanitize( $date ) || !sanitize( $url ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Bad URL' );
 		elseif ( ! AnnotationService::isUrlSafe( $url ) || ! AnnotationService::isUrlSafe( $link ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
@@ -149,7 +158,17 @@ class AnnotationService
 				AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
 			else
 			{
-				$id = $db->createAnnotation( $url, $range, $note, $access, $quote, $quote_title, $quote_author, $link );
+				$annotation = new Annotation( );
+				$annotation->setUrl( $url );
+				$annotation->setBlockRange( $blockRange );
+				$annotation->setXPathRange( $xpathRange );
+				$annotation->setNote( $note );
+				$annotation->setAccess( $access );
+				$annotation->setQuote( $quote );
+				$annotation->setQuoteTitle( $quote_title );
+				$annotation->setQuoteAuthor( $quote_author );
+				$annotation->setLink( $link );
+				$id = $db->createAnnotation( $annotation );
 				$db->release( );
 				if ( $id != 0 )
 				{
@@ -259,10 +278,14 @@ class AnnotationService
 		for ( $i = 0;  $i < count( $annotations );  ++$i )
 		{
 			$annotation = $annotations[ $i ];
-			$range = &$annotation->getRange();
+			$blockRange = &$annotation->getBlockRange();
+			$xpathRange = &$annotation->getXPathRange();
 			echo " <entry>\n";
-			// Offset and length
-			echo "  <ptr:range>".$range->toString( )."</ptr:range>\n";
+			// Emit range in two formats:  block for sorting, xpath for authority and speed
+			echo "  <ptr:range format='block'>".$blockRange->toString( )."</ptr:range>\n";
+			// Make 100% certain that the XPath expression is no safe (e.g. no document() calls)
+			if ( $xpathRange && isXPathSafe( $xpathRange->start->getPathStr() ) && isXPathSafe( $xpathRange->end->getPathStr( ) ) )
+				echo "  <ptr:range format='xpath'>".$xpathRange->toString( )."</ptr:range>\n";
 			echo "  <ptr:access>$annotation->access</ptr:access>\n";
 			// Annotation note as title
 			echo "  <title>" . htmlspecialchars( $annotation->getNote() ) . "</title>\n";
@@ -346,6 +369,17 @@ function sanitize( $field )
 function isnum( $field )
 {
 	return strspn( $field, '0123456789' ) == strlen( $field );
+}
+
+function isXPathSafe( $xpath )
+{
+	$parts = split( $xpath, '/' );
+	foreach ( $parts as $part )
+	{
+		if ( $part != '' && ! preg_match( '/^[a-zA-Z]+\[\d+\]$/', $part ) )
+			return false;
+	}
+	return true;
 }
 
 ?>

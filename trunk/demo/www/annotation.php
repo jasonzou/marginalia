@@ -31,7 +31,8 @@ class Annotation
 		$this->id = null;
 		$this->url = null;
 		$this->userId = null;
-		$this->range = null;
+		$this->blockRange = null;
+		$this->xpathRange = null;
 		$this->note = null;
 		$this->access = null;
 		$this->quote = null;
@@ -56,11 +57,17 @@ class Annotation
 			$this->setUserId( $strings[ 'userid' ] );
 		if ( array_key_exists( 'url', $strings ) )
 			$this->setUrl( $strings[ 'url' ] );
-		if ( array_key_exists( 'range', $strings ) )
+		if ( array_key_exists( 'block-range', $strings ) )
 		{
-			$range = new WordRange( );
-			$range->fromString( $strings[ 'range' ] );
-			$this->setRange( $range );
+			$range = new BlockRange( );
+			$range->fromString( $strings[ 'block-range' ] );
+			$this->setBlockRange( $range );
+		}
+		if ( array_key_exists( 'xpath-range', $strings ) )
+		{
+			$range = new XPathRange( );
+			$range->fromString( $strings[ 'xpath-range' ] );
+			$this->setXPathRange( $range );
 		}
 
 		if ( array_key_exists( 'note', $strings ) )
@@ -106,11 +113,17 @@ class Annotation
 	function getUserId( )
 	{ return $this->userId; }
 	
-	function setRange( &$range )
-	{ $this->range = $range; }
+	function setBlockRange( &$range )
+	{ $this->blockRange = $range; }
 		
-	function getRange( )
-	{ return $this->range; }
+	function getBlockRange( )
+	{ return $this->blockRange; }
+	
+	function setXPathRange( &$range )
+	{ $this->xpathRange = $range; }
+	
+	function getXPathRange( )
+	{ return $this->xpathRange; }
 	
 	function setNote( $note )
 	{ $this->note = $note; }
