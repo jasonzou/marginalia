@@ -22,6 +22,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * $Id$
  */
 
 ANNOTATION_LINKING = true;		// If true, include the linking feature
@@ -47,7 +49,7 @@ function initLogging( )
 	// annotation-service, however, is particularly useful for most debugging
 	log.setTrace( 'annotation-service', true );	// XMLHttp calls to the annotation service
 	log.setTrace( 'word-range', false );			// Word Range calculations (e.g. converting from Text Range)
-	log.setTrace( 'find-quote', false );			// Check if quote matches current state of document
+	log.setTrace( 'find-quote', true );			// Check if quote matches current state of document
 	log.setTrace( 'node-walk', false );			// Used for going through nodes in document order
 	log.setTrace( 'show-highlight', false );		// Text highlighting calculations
 	log.setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
@@ -57,5 +59,5 @@ function initLogging( )
 	log.setTrace( 'WordPointWalker', false );		// Show return values from WordPointWalker
 	log.setTrace( 'prefs', false );				// List fetched preferences
 	log.setTrace( 'keywords', false );				// List fetched keywords
-	log.setTrace( 'point-compare', false );			// Compare two WordPoints
+	log.setTrace( 'BlockPoint.compare', false );	// Compare two BlockPoints
 }

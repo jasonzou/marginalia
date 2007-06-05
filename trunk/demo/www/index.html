@@ -9,6 +9,8 @@
 	Moodle code (which includes all the features of Moodle forums, not just annotations).
 	This looks complicated with the comments.  Scroll to the second entry below (id="m2")
 	to see how simple this stuff really is in practice.
+	
+	$Id$
 	-->
 	<title>Annotation Example</title>
 	<!-- This stylesheet includes styling for the annotation margin.  The code makes heavy
@@ -24,6 +26,7 @@
 	<script type="text/javascript" src="marginalia/html-model.js"></script>
 	<script type="text/javascript" src="marginalia/domutil.js"></script>
 	<script type="text/javascript" src="marginalia/ranges.js"></script>
+	<script type="text/javascript" src="marginalia/range-format.js"></script>
 	<script type="text/javascript" src="marginalia/post-micro.js"></script>
 	<script type="text/javascript" src="marginalia/linkable.js"></script>
 	<script type="text/javascript" src="marginalia/marginalia.js"></script>
@@ -92,7 +95,7 @@
 			return _skipSmartcopy( node ) || _skipAnnotationLinks( node );
 		}
 
-		var serviceRoot = 'http://192.168.1.139/~geof/marginalia/demo/www';
+		var serviceRoot = 'http://localhost/~geof/marginalia/demo/www';
 		var annotationService = new RestAnnotationService( serviceRoot );
 		//var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
 		var preferences = new Preferences( new StaticPreferenceService( ) );
