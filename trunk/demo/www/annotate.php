@@ -23,6 +23,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * $Id$
  */
 
 require_once( "config.php" );
@@ -198,27 +200,84 @@ class AnnotationService
 			$urlencoded .= $data;
 		parse_str( $urlencoded, $params );
 
-		// If PHP ever decides to use magicquotes on these we're screwed
-		$note = unfix_quotes( $params[ 'note' ] );
-		$access = unfix_quotes( $params[ 'access' ] );
-		$link = unfix_quotes( $params[ 'link' ] );
-		if ( $access != 'public' && $access != 'private' && $access != '' )
-			AnnotationService::httpError( 400, 'Bad Request', 'Bad access value' );
-		elseif ( ! AnnotationService::isUrlSafe( $link ) )
-			AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
+		$db = new AnnotationDB( );
+		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
+			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
 		else
 		{
-			$db = new AnnotationDB( );
-			if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-				AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
-			else
+			// This is like a try...catch block, but since exceptions don't (?) exist in PHP4,
+			// if something goes wrong, simply break out of the do...while without executing
+			// remaining code in the block.
+			do
 			{
-				if ( $db->updateAnnotation( $id, $note, $access, $link ) )
+				$annotation = $db->getAnnotation( $id );
+				if ( null === $annotation )
+				{
+					AnnotationService::httpError( 404, 'Not Found', 'No such annotation' );
+					break;
+				}
+
+				// Set only the fields that were passed in
+				
+				// blockRange
+				if ( array_key_exists( 'block-range', $params ) )
+				{
+					$blockRange = new BlockRange( );
+					$blockRange->fromString( $params[ 'block-range' ] );
+					$annotation->setBlockRange( $blockRange );
+				}
+				
+				// xpathRange
+				if ( array_key_exists( 'xpath-range', $params ) )
+				{
+					$xpathRange = new XPathRange( );
+					$xpathRange->fromString( $params[ 'xpath-range' ] );
+					$annotation->setXPathRange( $xpathRange );
+				}
+				
+				// note
+				if ( array_key_exists( 'note', $params ) )
+					$annotation->setNote( unfix_quotes( $params[ 'note' ] ) );
+				
+				// quote
+				if ( array_key_exists( 'quote', $params ) )
+					$annotation->setQuote( unfix_quotes( $params[ 'quote' ] ) );
+				
+				// access
+				if ( array_key_exists( 'access', $params ) )
+				{
+					$access = unfix_quotes( $params[ 'access' ] );
+					echo "Set access=$access\n";
+					if ( $access != 'public' && $access != 'private' && $access != '' )
+					{
+						AnnotationService::httpError( 400, 'Bad Request', 'Bad access value' );
+						break;
+					}
+					$annotation->setAccess( $access );
+					echo "Now access=".$annotation->getAccess( )."\n";
+				}
+				
+				// link
+				if ( array_key_exists( 'link', $params ) )
+				{
+					$link = unfix_quotes( $params[ 'link' ] );
+					if ( ! AnnotationService::isUrlSafe( $link ) )
+					{
+						AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
+						break;
+					}
+					$annotation->setLink( $link );
+				}
+				
+				// Update the annotation in the database
+				if ( $db->updateAnnotation( $annotation ) )
 					header( 'HTTP/1.1 204 Updated' );
 				else
 					AnnotationService::httpError( 500, 'Internal Service Error', 'Update failed' );
-				$db->release( );
 			}
+			while( 0 );
+
+			$db->release( );
 		}
 	}
 
@@ -373,7 +432,7 @@ function isnum( $field )
 
 function isXPathSafe( $xpath )
 {
-	$parts = split( $xpath, '/' );
+	$parts = split( '\/', $xpath );
 	foreach ( $parts as $part )
 	{
 		if ( $part != '' && ! preg_match( '/^[a-zA-Z]+\[\d+\]$/', $part ) )

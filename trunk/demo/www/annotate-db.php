@@ -22,6 +22,8 @@
  * You should have received a copy of the GNU General Public License
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * $Id$
  */
 
 // Yeah, gotta love the mess that is PHP
@@ -62,7 +64,7 @@ class AnnotationDB
 		$blockEnd = $blockRange->getEnd( );
 		$xpathStart = $xpathRange->getStart( );
 		$xpathEnd = $xpathRange->getEnd( );
-		
+
 		$sUser			= addslashes( $USER->username );
 		$sUrl			= addslashes( $annotation->getUrl( ) );
 		$sNote			= addslashes( $annotation->getNote( ) );
@@ -106,24 +108,92 @@ class AnnotationDB
 		return $r;
 	}
 	
-	function updateAnnotation( $id, $note, $access, $link )
+	function updateAnnotation( &$annotation )
 	{
 		global $CFG, $USER;
 		
-		$sId = (int) $id;
-		$sNote = null === $note ? null : addslashes( $note );
-		$sAccess = null === $access ? null : addslashes( $access );
-		$sLink = null === $link ? null : addslashes( $link );
+		$sId = (int) $annotation->getId( );
+		
 		$query = '';
-		// TODO: Should add support for changing ranges (as when called from MarginaliaDirect)
-		if ( null !== $note )	$query .= "note='$sNote'";
-		if ( null !== $access )	$query = AnnotationDB::appendToUpdateStr( $query, "access='$sAccess'" );
-		if ( null !== $link )	$query = AnnotationDB::appendToUpdateStr( $query, "link='$sLink'" );
-		// In a running application, all queries should be parameterized for security,
+		
+		$rangeForWords = null;
+		
+		// Block Range
+		$blockRange = $annotation->getBlockRange( );
+		if ( null !== $blockRange )
+		{
+			$sStartBlock = addslashes( $blockRange->start->getPathStr( ) );
+			$sEndBlock = addslashes( $blockRange->end->getPathStr( ) );
+			$query = AnnotationDB::appendToUpdateStr( $query, "start_block='$sStartBlock'" );
+			$query = AnnotationDB::appendToUpdateStr( $query, "end_block='$sEndBlock'" );
+			$rangeForWords = $blockRange;
+		}
+		
+		// XPath Range
+		$xpathRange = $annotation->getXPathRange( );
+		if ( null !== $xpathRange )
+		{
+			$sStartXPath = addslashes( $xpathRange->start->getPathStr( ) );
+			$sEndXPath = addslashes( $xpathRange->end->getPathStr( ) );
+			$query = AnnotationDB::appendToUpdateStr( $query, "start_xpath='$sStartXPath'" );
+			$query = AnnotationDB::appendToUpdateStr( $query, "end_xpath='$sEndXPath'" );
+			$rangeForWords = $xpathRange;
+		}
+		
+		// Set start and end words and chars if appropriate from block or xpath range
+		// Must do it only once, even if both block and xpath range are set
+		if ( null !== $rangeForWords )
+		{
+			$sStartWords = (int) $rangeForWords->start->words;
+			$sStartChars = (int) $rangeForWords->start->chars;
+			$sEndWords = (int) $rangeForWords->end->words;
+			$sEndChars = (int) $rangeForWords->end->chars;
+			$query = AnnotationDB::appendToUpdateStr( $query, "start_word=$sStartWords" );
+			$query = AnnotationDB::appendToUpdateStr( $query, "start_char=$sStartChars" );
+			$query = AnnotationDB::appendToUpdateStr( $query, "end_word=$sEndWords" );
+			$query = AnnotationDB::appendToUpdateStr( $query, "end_char=$sEndChars" );
+		}
+		
+		// Note
+		$note = $annotation->getNote( );
+		if ( null !== $note )
+		{
+			$sNote = addslashes( $note );
+			$query = AnnotationDB::appendToUpdateStr( $query, "note='$sNote'" );
+		}
+		
+		// Quote
+		$quote = $annotation->getQuote( );
+		if ( null !== $note )
+		{
+			$sQuote = addslashes( $quote );
+			$query = AnnotationDB::appendToUpdateStr( $query, "quote='$sQuote'" );
+		}
+		
+		// Access
+		$access = $annotation->getAccess( );
+		if ( null !== $access )
+		{
+			// TODO: Add extra validity check here
+			$sAccess = addslashes( $access );
+			$query = AnnotationDB::appendToUpdateStr( $query, "access='$sAccess'" );
+		}
+		
+		// Link
+		$link = $annotation->getLink( );
+		if ( null !== $link )
+		{
+			// TODO: Add extra security check on URL here
+			$sLink = addslashes( $link );
+			$query = AnnotationDB::appendToUpdateStr( $query, "link='$sLink'" );
+		}
+		
+		// TODO: In a running application, all queries should be parameterized for security,
 		// not concatenated together as I am doing here.
 		$query = "update $CFG->dbannotation set $query where id=$sId";
 		
 		mysql_query( $query );
+		
 		// (Somewhat) perversely, if fields are set to the values they already have (i.e. there is no actual change),
 		// the number of affected rows is zero.
 		$r = mysql_affected_rows( );
@@ -171,6 +241,22 @@ class AnnotationDB
 			return strtotime( $CFG->installDate );
 	}
 	
+	function getAnnotation( $annotationId )
+	{
+		global $CFG;
+		
+		$annotationId = (int) $annotationId;
+		$query = "select * from $CFG->dbannotation where id=$annotationId";
+		$result = mysql_query( $query );
+		if ( $result )
+		{
+			$row = mysql_fetch_assoc( $result );
+			return $this->rowToAnnotation( $row );
+		}
+		else
+			return null;
+	}
+	
 	function listAnnotations( $url, $userid )
 	{
 		global $CFG;
@@ -187,25 +273,29 @@ class AnnotationDB
 		{
 			// Individual entries ----
 			while( $row = mysql_fetch_assoc( $result ) )
-			{
-				$annotation = new Annotation( );
-				$annotation->fromArray( $row );
-				$blockRange = new BlockRange(
-					new BlockPoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-					new BlockPoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
-				$annotation->setBlockRange( $blockRange );
-				if ( $row[ 'start_xpath' ] != null )
-				{
-					$xpathRange = new XPathRange(
-						new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-						new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
-					$annotation->setXPathRange( $xpathRange );
-				}
-				$annotations[ ] = $annotation;
-			}
+				$annotations[ ] = $this->rowToAnnotation( $row );
 		}
 		return $annotations;
 	}
+	
+	function rowToAnnotation( $row )
+	{
+		$annotation = new Annotation( );
+		$annotation->fromArray( $row );
+		$blockRange = new BlockRange(
+			new BlockPoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+			new BlockPoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+		$annotation->setBlockRange( $blockRange );
+		if ( $row[ 'start_xpath' ] != null )
+		{
+			$xpathRange = new XPathRange(
+				new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+				new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+			$annotation->setXPathRange( $xpathRange );
+		}
+		return $annotation;
+	}
+	
 }
 
 ?>
