@@ -11,4 +11,4 @@ Press Shift-Ctrl-M from within an annotated page to bring up the Marginalia Dire
 
 The console allows annotations to be retrieved by URL and user name.  They can then be modified or deleted.  Any value is permitted in the fields, but all security and access restrictions implemented on the server apply.  Thus certain changes (e.g. invalid access values, unsafe URL protocols, etc.) may silently fail.
 
-Note that in some cases, the console may not work perfectly with a server implementation.  The Moodle server, for example, uses discussion and message IDs in the annotation table in addition to URLs, and Marginalia Direct doesn't know about that - so any updates to the URL field will probably mess up your annotations.  This restriction is largely because Marginalia Direct is exclusively implemented in Javascript so that it will be useful with all Marginalia installations, regardless of the server-side software, language, database, etc.
+Implementations adding additional fields should be OK so long as the server can derive the correct value of those fields (e.g. in the Moodle version, the message ID field must be updated when the URL changes).
