@@ -17,11 +17,6 @@ function getLocalized( s )
 LocalizedAnnotationStrings = {
 
 	
-	
-	
-	
-	
-	
 	'public annotation' : 'This annotation is public.',
 	
 	'private annotation' : 'This annotation is private.',
@@ -47,8 +42,11 @@ LocalizedAnnotationStrings = {
 	'note too long' : 'Please limit your margin note to 250 characters.',
 	
 	'quote too long' : 'The passage you have attempted to highlight is too long.  It may not exceed 1000 characters.',
-
+	
 	'zero length quote' : 'You must select some text to annotate.',
+	
+	'quote not found' : 'The highlighted passage could not be found',
+	
 
 	'lang' : 'en'
 };
