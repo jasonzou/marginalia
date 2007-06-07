@@ -148,6 +148,23 @@ ol#articles {
 	cursor: pointer;
 }
 
+.hentry .notes li.quote-error p:before {
+	content: '!';
+	padding: 0 .75ex;
+	margin-right: .2ex;
+	background: red;
+	color: white;
+	font-weight: bold;
+}
+
+.hentry .notes li.collapsed {
+	overflow: hidden;
+}
+
+.hentry .notes li.collapsed p {
+	white-space: nowrap;
+}
+
 .hentry .notes li.dummyfirst {
 	height: 1px;
 	cursor: default;
@@ -157,20 +174,42 @@ ol#articles {
 	padding: 0;
 }
 
+.hentry .notes li .controls {
+	display: none;
+}
+
+.hentry .notes li:hover {
+	background: #ddd;
+}
+
+.hentry .notes li:hover .controls {
+	display: block;
+	position: absolute;
+	bottom:  100%;
+	left: 0;
+	width: 100%;
+	background: #ddd;
+}
+
+.hentry .notes li:hover button {
+	background: #ddd;
+	border: #ddd 1px solid;
+}
+
 .hentry .notes li button {
 	border: none;
-	background: none;
-	float: right;
-	display: block;
 	font-size: inherit;
 	padding: 0;
 	margin: 0;
+	width: 1.5em;
 	vertical-align: top;
 	cursor: pointer;
+	z-index: 1000;
 }
 
 .hentry .notes li button:hover {
 	font-weight: bold;
+	border: #ddd 1px outset;
 }
 
 .hentry .notes li textarea {
