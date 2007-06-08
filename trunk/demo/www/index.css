@@ -92,6 +92,16 @@ ol#articles {
 	background: #d8c666;
 }
 
+/* Action markers */
+.hentry .entry-content em.annotation del {
+	text-decoration: line-through;
+}
+
+.hentry .entry-content em.annotation ins {
+	color: blue;
+	text-decoration: none;
+}
+
 .hentry .entry-content em.annotation a,
 .hentry .entry-content a em.annotation {
 	text-decoration: underline;
@@ -175,9 +185,10 @@ ol#articles {
 }
 
 .hentry .notes li .controls {
-	display: none;
+	float: right;
+	/*display: none;*/
 }
-
+/*
 .hentry .notes li:hover {
 	background: #ddd;
 }
@@ -195,7 +206,7 @@ ol#articles {
 	background: #ddd;
 	border: #ddd 1px solid;
 }
-
+*/
 .hentry .notes li button {
 	border: none;
 	font-size: inherit;

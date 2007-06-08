@@ -30,6 +30,7 @@ ANNOTATION_LINKING = true;		// If true, include the linking feature
 ANNOTATION_KEYWORDS = true;	// If true, include the keywords feature
 ANNOTATION_ACCESS = true;		// If true, include the public/private feature
 ANNOTATION_EXTERNAL_LINKING = true;	// If true, link editor accepts any http/https URL
+ANNOTATION_ACTIONS = true;		// If true, switch on support for actions (insert, substitute, delete)
 
 ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
 
@@ -50,9 +51,9 @@ function initLogging( )
 	log.setTrace( 'annotation-service', true );	// XMLHttp calls to the annotation service
 	log.setTrace( 'word-range', false );			// Word Range calculations (e.g. converting from Text Range)
 	log.setTrace( 'xpath-range', false );			// Trace XPath ranges
-	log.setTrace( 'find-quote', false );			// Check if quote matches current state of document
+	log.setTrace( 'find-quote', true );			// Check if quote matches current state of document
 	log.setTrace( 'node-walk', false );			// Used for going through nodes in document order
-	log.setTrace( 'show-highlight', false );		// Text highlighting calculations
+	log.setTrace( 'show-highlight', true );		// Text highlighting calculations
 	log.setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
 	log.setTrace( 'range-compare', false );		// Compare range positions
 	log.setTrace( 'range-string', false );			// Show conversions of word ranges to/from string
@@ -62,5 +63,6 @@ function initLogging( )
 	log.setTrace( 'keywords', false );				// List fetched keywords
 	log.setTrace( 'BlockPoint.compare', false );	// Compare two BlockPoints
 	log.setTrace( 'range-timing', false );			// Calculate the speed of range calculations
-	log.setTrace( 'highlight-timing', true );		// Calculate the speed of highlight display
+	log.setTrace( 'highlight-timing', false );	// Calculate the speed of highlight display
+	log.setTrace( 'actions', true );				// Insertion of action text
 }

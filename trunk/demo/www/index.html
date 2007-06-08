@@ -92,7 +92,7 @@
 		
 		function _skipContent( node )
 		{
-			return _skipSmartcopy( node ) || _skipAnnotationLinks( node );
+			return _skipSmartcopy( node ) || _skipAnnotationLinks( node ) || _skipAnnotationActions( node );
 		}
 
 		var serviceRoot = 'http://localhost/~geof/marginalia/demo/www';

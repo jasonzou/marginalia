@@ -69,6 +69,7 @@ class AnnotationDB
 		$sUrl			= addslashes( $annotation->getUrl( ) );
 		$sNote			= addslashes( $annotation->getNote( ) );
 		$sAccess		= addslashes( $annotation->getAccess( ) );
+		$sAction		= addslashes( $annotation->getAction( ) );
 		$sQuote			= addslashes( $annotation->getQuote( ) );
 		$sQuote_title	= addslashes( $annotation->getQuoteTitle( ) );
 		$sQuote_author	= addslashes( $annotation->getQuoteAuthor( ) );
@@ -77,12 +78,12 @@ class AnnotationDB
 		// In a running application, all queries should be parameterized for security,
 		// not concatenated together as I am doing here.
 		$query = "insert into $CFG->dbannotation "
-			. "(userid, url, note, access"
+			. "(userid, url, note, access, action"
 			. ", quote, quote_title, quote_author, link, created"
 			. ", start_xpath, start_block, start_word, start_char"
 			. ", end_xpath, end_block, end_word, end_char"
 			. ") values ("
-			. "'$sUser', '$sUrl', '$sNote', '$sAccess'"
+			. "'$sUser', '$sUrl', '$sNote', '$sAccess', '$sAction'"
 			. ", '$sQuote', '$sQuote_title', '$sQuote_author', $sLink, now()"
 			. ", '".$xpathStart->getPathStr()."', '".$blockStart->getPaddedPathStr()."', ".$blockStart->getWords().", ".$blockStart->getChars()
 			. ", '".$xpathEnd->getPathStr()."', '".$blockEnd->getPaddedPathStr()."', ".$blockEnd->getWords().", ".$blockEnd->getChars()
@@ -174,11 +175,18 @@ class AnnotationDB
 		$access = $annotation->getAccess( );
 		if ( null !== $access )
 		{
-			// TODO: Add extra validity check here
 			$sAccess = addslashes( $access );
 			$query = AnnotationDB::appendToUpdateStr( $query, "access='$sAccess'" );
 		}
 		
+		// Action
+		$action = $annotation->getAction( );
+		if ( null != $action )
+		{
+			$sAction = addslashes( $action );
+			$query = AnnotationDB::appendToUpdateStr( $query, "action='$sAction'" );
+		}
+			
 		// Link
 		$link = $annotation->getLink( );
 		if ( null !== $link )

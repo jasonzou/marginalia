@@ -137,6 +137,7 @@ class AnnotationService
 		
 		// TODO: Scan XPath to make sure it's safe
 		$note = unfix_quotes( $_POST[ 'note' ] );
+		$action = unfix_quotes( $_POST[ 'action' ] );
 		$access = unfix_quotes( $_POST[ 'access' ] );
 		$quote = unfix_quotes( $_POST[ 'quote' ] );
 		$quote_title = unfix_quotes( $_POST[ 'quote_title' ] );
@@ -144,15 +145,17 @@ class AnnotationService
 		$url = unfix_quotes( $_POST[ 'url' ] );
 		$link = unfix_quotes( $_POST[ 'link' ] );
 		
-		if ( ! isXPathSafe( $xpathRange->start->getPathStr() ) || ! isXPathSafe( $xpathRange->end->getPathStr( ) ) )
+		if ( ! XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) || ! XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Bad xpath' );
 			
 		if ( ! isnum( $offset ) || !isnum( $length ) || !sanitize( $date ) || !sanitize( $url ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Bad URL' );
-		elseif ( ! AnnotationService::isUrlSafe( $url ) || ! AnnotationService::isUrlSafe( $link ) )
+		elseif ( ! Annotation::isUrlSafe( $url ) || ! Annotation::isUrlSafe( $link ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
-		elseif ( $access != 'public' && $access != 'private' && $access != '' )
+		elseif ( ! Annotation::isAccessValid( $access ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Bad access value' );
+		elseif ( $action && ! Annotation::isActionValid( $action ) ) 
+			AnnotationService::httpError( 400, 'Bad Request', 'Bad action value' );
 		else
 		{
 			$db = new AnnotationDB( );
@@ -165,6 +168,7 @@ class AnnotationService
 				$annotation->setBlockRange( $blockRange );
 				$annotation->setXPathRange( $xpathRange );
 				$annotation->setNote( $note );
+				$annotation->setAction( $action );
 				$annotation->setAccess( $access );
 				$annotation->setQuote( $quote );
 				$annotation->setQuoteTitle( $quote_title );
@@ -247,21 +251,31 @@ class AnnotationService
 				if ( array_key_exists( 'access', $params ) )
 				{
 					$access = unfix_quotes( $params[ 'access' ] );
-					echo "Set access=$access\n";
-					if ( $access != 'public' && $access != 'private' && $access != '' )
+					if ( ! Annotation::isAccessValid( $access ) )
 					{
 						AnnotationService::httpError( 400, 'Bad Request', 'Bad access value' );
 						break;
 					}
 					$annotation->setAccess( $access );
-					echo "Now access=".$annotation->getAccess( )."\n";
+				}
+				
+				// action
+				if ( array_key_exists( 'action', $params ) )
+				{
+					$action = unfix_quotes( 'action', $params );
+					if ( ! Annotation::isActionValid( $action ) )
+					{
+						AnnotationService::httpError( 400, 'Bad Request', 'Bad action value' );
+						break;
+					}
+					$annotation->setAction( $Action );
 				}
 				
 				// link
 				if ( array_key_exists( 'link', $params ) )
 				{
 					$link = unfix_quotes( $params[ 'link' ] );
-					if ( ! AnnotationService::isUrlSafe( $link ) )
+					if ( ! Annotation::isUrlSafe( $link ) )
 					{
 						AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
 						break;
@@ -326,7 +340,7 @@ class AnnotationService
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
 		
 		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.3'>\n";
+		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.4'>\n";
 		// This would be the link to the summary page:
 		//echo( " <link rel='alternate' type='text/html' href='" . htmlspecialchars( "$CFG->wwwroot$url/annotations" ) . "'/>\n" );
 		echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( "$CFG->annotate_servicePath" ) . "\"/>\n";
@@ -343,9 +357,10 @@ class AnnotationService
 			// Emit range in two formats:  block for sorting, xpath for authority and speed
 			echo "  <ptr:range format='block'>".$blockRange->toString( )."</ptr:range>\n";
 			// Make 100% certain that the XPath expression is no safe (e.g. no document() calls)
-			if ( $xpathRange && isXPathSafe( $xpathRange->start->getPathStr() ) && isXPathSafe( $xpathRange->end->getPathStr( ) ) )
+			if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 				echo "  <ptr:range format='xpath'>".$xpathRange->toString( )."</ptr:range>\n";
-			echo "  <ptr:access>$annotation->access</ptr:access>\n";
+			echo '  <ptr:access>'.$annotation->getAccess()."</ptr:access>\n";
+			echo '  <ptr:action>'.$annotation->getAction()."</ptr:action>\n";
 			// Annotation note as title
 			echo "  <title>" . htmlspecialchars( $annotation->getNote() ) . "</title>\n";
 			// Use double quotes for some attributes because it's easier than passing ENT_QUOTES to
@@ -386,21 +401,6 @@ class AnnotationService
 	}
 
 
-	/**
-	 * Check whether an untrusted URL is safe for insertion in a page
-	 * In particular, javascript: urls can be used for XSS attacks
-	 */
-	function isUrlSafe( $url )
-	{
-		$urlParts = parse_url( $url );
-		$scheme = $urlParts[ 'scheme' ];
-		if ( 'http' == $scheme || 'https' == $scheme || '' == $scheme )
-			return true;
-		else
-			return false;
-	}
-	
-
 	function httpError( $code, $message, $description )
 	{
 		header( "HTTP/1.1 $code $message" );
@@ -428,17 +428,6 @@ function sanitize( $field )
 function isnum( $field )
 {
 	return strspn( $field, '0123456789' ) == strlen( $field );
-}
-
-function isXPathSafe( $xpath )
-{
-	$parts = split( '\/', $xpath );
-	foreach ( $parts as $part )
-	{
-		if ( $part != '' && ! preg_match( '/^[a-zA-Z]+\[\d+\]$/', $part ) )
-			return false;
-	}
-	return true;
 }
 
 ?>

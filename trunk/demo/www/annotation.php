@@ -26,6 +26,13 @@
  * $Id$
  */
 
+/**
+ * Class representing an annotation
+ * For an extra bit of safety, setter methods typecast some fields and check
+ * to see whether others are valid, and (silently) fail if they aren't.
+ * That's right I'm paranoid - who knows, someone could get into the database 
+ * but this would still protect users.
+ */
 class Annotation
 {
 	function Annotation( )
@@ -37,6 +44,7 @@ class Annotation
 		$this->xpathRange = null;
 		$this->note = null;
 		$this->access = null;
+		$this->action = null;
 		$this->quote = null;
 		$this->quoteTitle = null;
 		$this->quoteAuthor = null;
@@ -75,6 +83,9 @@ class Annotation
 		if ( array_key_exists( 'note', $strings ) )
 			$this->setNote( $strings[ 'note' ] );
 			
+		if ( array_key_exists( 'action', $strings ) )
+			$this->setAction( $strings[ 'action' ] );
+			
 		if ( array_key_exists( 'access', $strings ) )
 			$this->setAccess( $strings[ 'access' ] );
 			
@@ -98,13 +109,16 @@ class Annotation
 	}
 
 	function setId( $id )
-	{ $this->id = $id; }
+	{ $this->id = (int) $id; }
 	
 	function getId( )
 	{ return $this->id; }
 	
 	function setUrl( $url )
-	{ $this->url = $url; }
+	{
+		if ( Annotation::isUrlSafe( $url ) )
+			$this->url = $url;
+	}
 	
 	function getUrl( )
 	{ return $this->url; }
@@ -133,8 +147,20 @@ class Annotation
 	function getNote( )
 	{ return $this->note; }
 	
+	function setAction( $action )
+	{
+		if ( Annotation::isActionValid( $action ) )
+			$this->action = $action;
+	}
+	
+	function getAction( )
+	{ return $this->action; }
+	
 	function setAccess( $access )
-	{ $this->access = $access; }
+	{
+		if ( Annotation::isAccessValid( $access ) )
+			$this->access = $access;
+	}
 	
 	function getAccess( )
 	{ return $this->access; }
@@ -158,7 +184,10 @@ class Annotation
 	{ return $this->quoteAuthor; }
 	
 	function setLink( $link )
-	{ $this->link = $link; }
+	{
+		if ( Annotation::isUrlSafe( $link ) )
+			$this->link = $link;
+	}
 	
 	function getLink( )
 	{ return $this->link; }
@@ -174,6 +203,36 @@ class Annotation
 	
 	function getModified( )
 	{ return $this->modified; }
+	
+	/**
+	 * Check whether an untrusted URL is safe for insertion in a page
+	 * In particular, javascript: urls can be used for XSS attacks
+	 */
+	function isUrlSafe( $url )
+	{
+		$urlParts = parse_url( $url );
+		$scheme = $urlParts[ 'scheme' ];
+		if ( 'http' == $scheme || 'https' == $scheme || '' == $scheme )
+			return true;
+		else
+			return false;
+	}
+		
+	/**
+	 * Check whether an action value is valid
+	 */
+	function isActionValid( $action )
+	{
+		return null === $action || '' === $action || 'insert' == $action || 'substitute' == $action || 'delete' == $action;
+	}
+	
+	/**
+	 * Check whether an access value is valid
+	 */
+	function isAccessValid( $access )
+	{
+		return '' === $access || 'public' == $access || 'private' == $access;
+	}
 }
 
 ?>
