@@ -223,7 +223,7 @@ class Annotation
 	 */
 	function isActionValid( $action )
 	{
-		return null === $action || '' === $action || 'insert' == $action || 'substitute' == $action || 'delete' == $action;
+		return null === $action || '' === $action || 'edit' == $action;
 	}
 	
 	/**
