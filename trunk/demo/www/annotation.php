@@ -235,4 +235,20 @@ class Annotation
 	}
 }
 
+// Useful for sorting by range start position:
+function annotationCompareStart( $a1, $a2 )
+{
+	$a1Block = $a1->getBlockRange( );
+	$a2Block = $a2->getBlockRange( );
+	return $a1Block->start->compare( $a2Block->start );
+}
+
+// Useful for sorting by range end position:
+function annotationCompareEnd( $a1, $a2 )
+{
+	$a1Block = $a1->getBlockRange( );
+	$a2Block = $a2->getBlockRange( );
+	return $a1Block->end->compare( $a2Block->end );
+}
+
 ?>

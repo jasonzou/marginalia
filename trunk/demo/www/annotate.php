@@ -106,7 +106,7 @@ class AnnotationService
 		// or some romanization of other languages, e.g. the old romanization of Mandarin
 		if ( $url == null || $url == '' || !sanitize( $url ) )
 			AnnotationService::httpError( 400, 'Bad Request', 'Bad URL' );
-		else if ( null == $format || 'atom' == $format )
+		else
 		{
 			$db = new AnnotationDB( );
 			if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
@@ -115,14 +115,17 @@ class AnnotationService
 			{
 				$annotations = &$db->listAnnotations( $url, $username );
 				$db->release( );
+				
 				if ( null === $annotations )
 					AnnotationService::httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
-				else
+				elseif ( null == $format || 'atom' == $format )
 					AnnotationService::getAtom( $annotations, $exclude );
+				elseif ( 'overlap' == $format )
+					AnnotationService::getOverlap( $annotations );
+				else
+					$this->httpError( 400, 'Bad Request', 'Unknown format' );
 			}
 		}
-		else
-			$this->httpError( 400, 'Bad Request', 'Unknown format' );
 	}
 	
 	
@@ -314,22 +317,164 @@ class AnnotationService
 	}
 
 
-	function getAtom( &$annotations, $exclude='' )
+	
+	function calculateOverlaps( &$annotations )
+	{
+		// Create two arrays:  one of range starts, the other of range ends
+		$starts = $annotations;
+		$ends = $annotations;
+		usort( $starts, 'annotationCompareStart' );
+		usort( $ends, 'annotationCompareEnd' );
+		
+		// Create an array to store overlap ranges
+		$overlap = null;
+		$overlaps = array( );
+		
+/*		// Debug
+		header( 'Content-Type: text/plain' );
+		echo "Starts\n";
+		for ( $i = 0;  $i < count( $starts ); ++$i )
+		{
+			$range = $starts[ $i ]->getXPathRange();
+			if ( $range )
+				echo $range->start->toString( ) . "\n";
+		}
+		echo "\nEnds\n";
+		for ( $i = 0;  $i < count( $starts ); ++$i )
+		{
+			$range = $ends[ $i ]->getXPathRange();
+			if ( $range )
+				echo $range->end->toString( ). "\n";
+		}
+		echo "\n";
+*/		
+		$start_i = 0;
+		$end_i = 0;
+		$depth = 0;
+		while ( $end_i < count( $ends ) )
+		{
+			$end =& $ends[ $end_i ];
+			$endBlock =& $end->getBlockRange( );
+			$endXPath =& $end->getXPathRange( );
+
+			if ( $start_i < count( $starts ) )
+			{
+				$start =& $starts[ $start_i ];
+				$startBlock =& $start->getBlockRange( );
+				$startXPath =& $start->getXPathRange( );
+				$comp = $startBlock->start->compare( $endBlock->end );
+			}
+			else
+				$comp = 1;	// Only ends remain
+			
+			if ( 0 == $comp )
+			{
+				; // Do nothing:  one starts, one ends - it's a wash
+			}
+			else
+			{
+				if ( $comp < 0 )
+				{
+					$blockPoint =& $startBlock->start;
+					if ( $startXPath)
+						$xpathPoint =& $startXPath->start;
+					else
+						$xpathPoint = null;
+					++$depth;
+					++$start_i;
+				}
+				else // $comp > 0
+				{
+					$blockPoint = &$endBlock->end;
+					if ( $endXPath )
+						$xpathPoint = &$endXPath->end;
+					else
+						$xpathPoint = null;
+					--$depth;
+					++$end_i;
+				}
+					
+				// Close any existing overlap
+				if ( $overlap )
+				{
+					$overlap->blockRange->end = $blockPoint;
+					$overlap->xpathRange->end = $xpathPoint;
+					$overlaps[ ] = $overlap;
+//					echo "Created overlap " . $overlap->depth . ' ' . $overlap->blockRange->toString( ) . "<br/>\n";
+					$overlap = null;
+				}
+				
+				// Begin any new overlap
+				if ( $depth > 0 )
+				{
+					$overlap = new Overlap( $depth );
+					$overlap->blockRange->start = $blockPoint;
+					$overlap->xpathRange->start = $xpathPoint;
+				}
+			}
+		}
+		return $overlaps;
+	}
+	
+	
+	/**
+	 * Get the most recent date on which an annotation was modified
+	 * Used for feed last modified dates
+	 */
+	function getLastModified( &$annotations )
 	{
 		global $CFG;
 		
 		// Get the last modification time of the feed
-		$feedLastModified = $CFG->installDate;
+		$lastModified = $CFG->installDate;
 		if ( $annotations )
 		{
 			foreach ( $annotations as $annotation )
 			{
 				$modified = $annotation->getModified( );
-				if ( null != $modified && $modified > $feedLastModified )
-					$feedLastModified = $modified;
+				if ( null != $modified && $modified > $lastModified )
+					$lastModified = $modified;
 			}
 		}
-				
+		return $lastModified;
+	}
+	
+	
+	/**
+	 * Emit a document for a list of overlaps
+	 * Format:
+	 *   depth block-range xpath-range
+	 *   1 /5/2/1.1;/5/2/2.3 /div[5]/p[2]/word(1)/char(1);/div[5]/p[2]/word(2)/char(3)
+	 * Note that fields are separated by whitespace, but the xpath might in future contain
+	 * space characters (that is why it must be last on the line)
+	 */
+	function getOverlap( &$annotations )
+	{
+		$overlaps = AnnotationService::calculateOverlaps( $annotations );
+		
+		header( 'Content-Type: text/plain' );
+		//echo "# depth blockRange xpathRange\n";
+		for ( $i = 0;  $i < count( $overlaps );  ++$i )
+		{
+			$overlap = $overlaps[ $i ];
+			echo $overlap->depth . ' ' . $overlap->blockRange->toString( );
+			if ( $overlap->xpathRange->start && $overlap->xpathRange->end )
+				echo ' ' . $overlap->xpathRange->toString( );
+			echo "\n";
+		}
+	}
+	
+	
+	/**
+	 * Emit an Atom document for a list of annotations
+	 * The annotations should already be sorted
+	 */
+	function getAtom( &$annotations, $exclude='' )
+	{
+		global $CFG;
+
+		$feedLastModified = AnnotationService::getLastModified( $annotations );
+		
 		$excludeFields = split( ' ', $exclude );
 		
 		$NS_PTR = 'http://www.geof.net/code/annotation/';
@@ -369,7 +514,7 @@ class AnnotationService
 			echo "  <link rel='alternate' type='text/html' title=\"" . htmlspecialchars( $annotation->getQuoteTitle() ) . "\" href=\"" . htmlspecialchars( $annotation->getUrl() ) . "\"/>\n";
 			if ( $annotation->link )
 				echo "  <link rel='related' type='text/html' title=\"" . htmlspecialchars( $annotation->getNote() ) . "\" href=\"" . htmlspecialchars( $annotation->getLink() ) . "\"/>\n";
-			// Is this international-safe?  I could use htmlsecialchars on it, but that might not match the
+			// TODO: Is this international-safe?  I could use htmlsecialchars on it, but that might not match the
 			// restrictions on IRIs.  #GEOF#
 			echo "  <id>tag:" . $CFG->host . ',' . date( 'Y-m-d', $annotation->getCreated() ) . ":".annotation/$annotation->getId()."</id>\n";
 			echo "  <updated>" . date( 'Y-m-d', $annotation->getModified() ) . 'T' . date( 'H:i:O', $annotation->getModified() ) . "</updated>\n";
@@ -408,6 +553,16 @@ class AnnotationService
 	}	
 }
 
+
+class Overlap
+{
+	function Overlap( $depth )
+	{
+		$this->blockRange = new BlockRange( );
+		$this->xpathRange = new XPathRange( );
+		$this->depth = $depth;
+	}
+}
 		
 
 // Frankly, I don't trust PHP's magic quotes.  The most dangerous characters,
