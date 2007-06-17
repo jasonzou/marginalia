@@ -30,8 +30,8 @@
 require_once( "config.php" );
 require_once( "annotation.php" );
 require_once( "annotate-db.php" );
-require_once( "block-range.php" );
-require_once( "xpath-range.php" );
+require_once( "marginalia-php/block-range.php" );
+require_once( "marginalia-php/xpath-range.php" );
 
 $annotationService = new AnnotationService( );
 $annotationService->dispatch( );
@@ -532,9 +532,9 @@ class AnnotationService
 			if ( ! in_array( 'content', $excludeFields ) )
 			{
 				echo "  <content type='xhtml'>\n";
-				echo "   <div xmlns='$NS_XHTML'>\n";
-				echo "    <p>" . htmlspecialchars( $annotation->getNote() ) . "</p>\n";
-				echo "    <blockquote><p>" . htmlspecialchars( $annotation->getQuote() ) . "</p></blockquote>\n";
+				echo "   <div xmlns='$NS_XHTML' class='annotation'>\n";
+				echo "    <p class='note'>" . htmlspecialchars( $annotation->getNote() ) . "</p>\n";
+				echo "    <blockquote cite='".htmlspecialchars( $annotation->getUrl() )."'><p>" . htmlspecialchars( $annotation->getQuote() ) . "</p></blockquote>\n";
 				echo "    <p><address>" . htmlspecialchars( $annotation->getQuoteAuthor() ) . "</address> ";
 				echo "in <cite><a href=\"" . htmlspecialchars( $annotation->getUrl() ) . "\">" . htmlspecialchars( $annotation->getQuoteTitle() ) . "</a></cite></p>\n";
 				echo "   </div>\n";

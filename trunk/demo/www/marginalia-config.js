@@ -53,7 +53,7 @@ function initLogging( )
 	log.setTrace( 'xpath-range', false );			// Trace XPath ranges
 	log.setTrace( 'find-quote', true );			// Check if quote matches current state of document
 	log.setTrace( 'node-walk', false );			// Used for going through nodes in document order
-	log.setTrace( 'show-highlight', true );		// Text highlighting calculations
+	log.setTrace( 'show-highlight', false );		// Text highlighting calculations
 	log.setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
 	log.setTrace( 'range-compare', false );		// Compare range positions
 	log.setTrace( 'range-string', false );			// Show conversions of word ranges to/from string
@@ -64,5 +64,5 @@ function initLogging( )
 	log.setTrace( 'BlockPoint.compare', false );	// Compare two BlockPoints
 	log.setTrace( 'range-timing', false );			// Calculate the speed of range calculations
 	log.setTrace( 'highlight-timing', false );	// Calculate the speed of highlight display
-	log.setTrace( 'actions', true );				// Insertion of action text
+	log.setTrace( 'actions', false );				// Insertion of action text
 }
