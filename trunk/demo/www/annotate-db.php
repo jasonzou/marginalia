@@ -289,19 +289,27 @@ class AnnotationDB
 	function rowToAnnotation( $row )
 	{
 		$annotation = new Annotation( );
-		$annotation->fromArray( $row );
-		$blockRange = new BlockRange(
-			new BlockPoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-			new BlockPoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
-		$annotation->setBlockRange( $blockRange );
-		if ( $row[ 'start_xpath' ] != null )
+		$error = $annotation->fromArray( $row );
+		if ( $error )
 		{
-			$xpathRange = new XPathRange(
-				new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-				new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
-			$annotation->setXPathRange( $xpathRange );
+			echo "[error: $error]";
+			return null;
 		}
-		return $annotation;
+		else
+		{
+			$blockRange = new BlockRange(
+				new BlockPoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+				new BlockPoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+			$annotation->setBlockRange( $blockRange );
+			if ( $row[ 'start_xpath' ] != null )
+			{
+				$xpathRange = new XPathRange(
+					new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+					new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+				$annotation->setXPathRange( $xpathRange );
+			}
+			return $annotation;
+		}
 	}
 	
 }

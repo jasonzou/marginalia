@@ -32,6 +32,8 @@ require_once( "annotation.php" );
 require_once( "annotate-db.php" );
 require_once( "marginalia-php/block-range.php" );
 require_once( "marginalia-php/xpath-range.php" );
+require_once( "marginalia-php/atom.php" );
+require_once( "marginalia-php/helper.php" );
 
 $annotationService = new AnnotationService( );
 $annotationService->dispatch( );
@@ -101,10 +103,9 @@ class AnnotationService
 		$format = unfix_quotes( $_GET[ 'format' ] );
 		$url = unfix_quotes( $_GET[ 'url' ] );
 		$username = unfix_quotes( $_GET[ 'user' ] );
-		$exclude = unfix_quotes( array_key_exists( 'exclude', $_GET ) ? $_GET[ 'exclude' ] : '' );
 		// Can't sanitize $username - it might contain a single quote, e.g. for some French names starting with d',
 		// or some romanization of other languages, e.g. the old romanization of Mandarin
-		if ( $url == null || $url == '' || !sanitize( $url ) )
+		if ( $url == null || $url == '' )
 			AnnotationService::httpError( 400, 'Bad Request', 'Bad URL' );
 		else
 		{
@@ -119,7 +120,7 @@ class AnnotationService
 				if ( null === $annotations )
 					AnnotationService::httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
 				elseif ( null == $format || 'atom' == $format )
-					AnnotationService::getAtom( $annotations, $exclude );
+					AnnotationService::getAtom( $annotations );
 				elseif ( 'overlap' == $format )
 					AnnotationService::getOverlap( $annotations );
 				else
@@ -133,50 +134,23 @@ class AnnotationService
 	{
 		global $CFG;
 		
-		$blockRange = new BlockRange( );
-		$blockRange->fromString( $_POST[ 'block-range' ] );
-		$xpathRange = new XPathRange( );
-		$xpathRange->fromString( $_POST[ 'xpath-range' ] );
-		
-		// TODO: Scan XPath to make sure it's safe
-		$note = unfix_quotes( $_POST[ 'note' ] );
-		$action = unfix_quotes( $_POST[ 'action' ] );
-		$access = unfix_quotes( $_POST[ 'access' ] );
-		$quote = unfix_quotes( $_POST[ 'quote' ] );
-		$quote_title = unfix_quotes( $_POST[ 'quote_title' ] );
-		$quote_author = unfix_quotes( $_POST[ 'quote_author' ] );
-		$url = unfix_quotes( $_POST[ 'url' ] );
-		$link = unfix_quotes( $_POST[ 'link' ] );
-		
-		if ( ! XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) || ! XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
-			AnnotationService::httpError( 400, 'Bad Request', 'Bad xpath' );
-			
-		if ( ! isnum( $offset ) || !isnum( $length ) || !sanitize( $date ) || !sanitize( $url ) )
-			AnnotationService::httpError( 400, 'Bad Request', 'Bad URL' );
-		elseif ( ! Annotation::isUrlSafe( $url ) || ! Annotation::isUrlSafe( $link ) )
-			AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
-		elseif ( ! Annotation::isAccessValid( $access ) )
-			AnnotationService::httpError( 400, 'Bad Request', 'Bad access value' );
-		elseif ( $action && ! Annotation::isActionValid( $action ) ) 
-			AnnotationService::httpError( 400, 'Bad Request', 'Bad action value' );
+		$db = new AnnotationDB( );
+		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
+			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
 		else
 		{
-			$db = new AnnotationDB( );
-			if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-				AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
+			// Strip magicquotes if necessary
+			$params = array();
+			foreach ( array_keys( $_POST ) as $param )
+				$params[ $param ] = unfix_quotes( $_POST[ $param ] );
+			// Parse annotation values
+			$annotation = new Annotation( );
+			$error = MarginaliaHelper::annotationFromParams( $annotation, $params );
+			if ( $error )
+				AnnotationService::httpError( MarginaliaHelper::httpResultCodeForError( $error ), 'Error', $error );
 			else
 			{
-				$annotation = new Annotation( );
-				$annotation->setUrl( $url );
-				$annotation->setBlockRange( $blockRange );
-				$annotation->setXPathRange( $xpathRange );
-				$annotation->setNote( $note );
-				$annotation->setAction( $action );
-				$annotation->setAccess( $access );
-				$annotation->setQuote( $quote );
-				$annotation->setQuoteTitle( $quote_title );
-				$annotation->setQuoteAuthor( $quote_author );
-				$annotation->setLink( $link );
+				// Store to the database
 				$id = $db->createAnnotation( $annotation );
 				$db->release( );
 				if ( $id != 0 )
@@ -185,7 +159,7 @@ class AnnotationService
 					header( "Location: $CFG->wwwroot$servicePath$id" );
 				}
 				else
-					AnnotationService::httpError( 500, 'Internal Service Error', 'Create failed' );
+					AnnotationService::httpError( 500, 'Internal Service Error', 'Create failed' );	
 			}
 		}
 	}
@@ -225,66 +199,7 @@ class AnnotationService
 				}
 
 				// Set only the fields that were passed in
-				
-				// blockRange
-				if ( array_key_exists( 'block-range', $params ) )
-				{
-					$blockRange = new BlockRange( );
-					$blockRange->fromString( $params[ 'block-range' ] );
-					$annotation->setBlockRange( $blockRange );
-				}
-				
-				// xpathRange
-				if ( array_key_exists( 'xpath-range', $params ) )
-				{
-					$xpathRange = new XPathRange( );
-					$xpathRange->fromString( $params[ 'xpath-range' ] );
-					$annotation->setXPathRange( $xpathRange );
-				}
-				
-				// note
-				if ( array_key_exists( 'note', $params ) )
-					$annotation->setNote( unfix_quotes( $params[ 'note' ] ) );
-				
-				// quote
-				if ( array_key_exists( 'quote', $params ) )
-					$annotation->setQuote( unfix_quotes( $params[ 'quote' ] ) );
-				
-				// access
-				if ( array_key_exists( 'access', $params ) )
-				{
-					$access = unfix_quotes( $params[ 'access' ] );
-					if ( ! Annotation::isAccessValid( $access ) )
-					{
-						AnnotationService::httpError( 400, 'Bad Request', 'Bad access value' );
-						break;
-					}
-					$annotation->setAccess( $access );
-				}
-				
-				// action
-				if ( array_key_exists( 'action', $params ) )
-				{
-					$action = unfix_quotes( 'action', $params );
-					if ( ! Annotation::isActionValid( $action ) )
-					{
-						AnnotationService::httpError( 400, 'Bad Request', 'Bad action value' );
-						break;
-					}
-					$annotation->setAction( $Action );
-				}
-				
-				// link
-				if ( array_key_exists( 'link', $params ) )
-				{
-					$link = unfix_quotes( $params[ 'link' ] );
-					if ( ! Annotation::isUrlSafe( $link ) )
-					{
-						AnnotationService::httpError( 400, 'Bad Request', 'Forbidden URL scheme' );
-						break;
-					}
-					$annotation->setLink( $link );
-				}
+				$annotation->fromArray( $params );
 				
 				// Update the annotation in the database
 				if ( $db->updateAnnotation( $annotation ) )
@@ -316,107 +231,6 @@ class AnnotationService
 		}
 	}
 
-
-	
-	function calculateOverlaps( &$annotations )
-	{
-		// Create two arrays:  one of range starts, the other of range ends
-		$starts = $annotations;
-		$ends = $annotations;
-		usort( $starts, 'annotationCompareStart' );
-		usort( $ends, 'annotationCompareEnd' );
-		
-		// Create an array to store overlap ranges
-		$overlap = null;
-		$overlaps = array( );
-		
-/*		// Debug
-		header( 'Content-Type: text/plain' );
-		echo "Starts\n";
-		for ( $i = 0;  $i < count( $starts ); ++$i )
-		{
-			$range = $starts[ $i ]->getXPathRange();
-			if ( $range )
-				echo $range->start->toString( ) . "\n";
-		}
-		echo "\nEnds\n";
-		for ( $i = 0;  $i < count( $starts ); ++$i )
-		{
-			$range = $ends[ $i ]->getXPathRange();
-			if ( $range )
-				echo $range->end->toString( ). "\n";
-		}
-		echo "\n";
-*/		
-		$start_i = 0;
-		$end_i = 0;
-		$depth = 0;
-		while ( $end_i < count( $ends ) )
-		{
-			$end =& $ends[ $end_i ];
-			$endBlock =& $end->getBlockRange( );
-			$endXPath =& $end->getXPathRange( );
-
-			if ( $start_i < count( $starts ) )
-			{
-				$start =& $starts[ $start_i ];
-				$startBlock =& $start->getBlockRange( );
-				$startXPath =& $start->getXPathRange( );
-				$comp = $startBlock->start->compare( $endBlock->end );
-			}
-			else
-				$comp = 1;	// Only ends remain
-			
-			if ( 0 == $comp )
-			{
-				; // Do nothing:  one starts, one ends - it's a wash
-			}
-			else
-			{
-				if ( $comp < 0 )
-				{
-					$blockPoint =& $startBlock->start;
-					if ( $startXPath)
-						$xpathPoint =& $startXPath->start;
-					else
-						$xpathPoint = null;
-					++$depth;
-					++$start_i;
-				}
-				else // $comp > 0
-				{
-					$blockPoint = &$endBlock->end;
-					if ( $endXPath )
-						$xpathPoint = &$endXPath->end;
-					else
-						$xpathPoint = null;
-					--$depth;
-					++$end_i;
-				}
-					
-				// Close any existing overlap
-				if ( $overlap )
-				{
-					$overlap->blockRange->end = $blockPoint;
-					$overlap->xpathRange->end = $xpathPoint;
-					$overlaps[ ] = $overlap;
-//					echo "Created overlap " . $overlap->depth . ' ' . $overlap->blockRange->toString( ) . "<br/>\n";
-					$overlap = null;
-				}
-				
-				// Begin any new overlap
-				if ( $depth > 0 )
-				{
-					$overlap = new Overlap( $depth );
-					$overlap->blockRange->start = $blockPoint;
-					$overlap->xpathRange->start = $xpathPoint;
-				}
-			}
-		}
-		return $overlaps;
-	}
-	
-	
 	/**
 	 * Get the most recent date on which an annotation was modified
 	 * Used for feed last modified dates
@@ -441,111 +255,22 @@ class AnnotationService
 	
 	
 	/**
-	 * Emit a document for a list of overlaps
-	 * Format:
-	 *   depth block-range xpath-range
-	 *   1 /5/2/1.1;/5/2/2.3 /div[5]/p[2]/word(1)/char(1);/div[5]/p[2]/word(2)/char(3)
-	 * Note that fields are separated by whitespace, but the xpath might in future contain
-	 * space characters (that is why it must be last on the line)
-	 */
-	function getOverlap( &$annotations )
-	{
-		$overlaps = AnnotationService::calculateOverlaps( $annotations );
-		
-		header( 'Content-Type: text/plain' );
-		//echo "# depth blockRange xpathRange\n";
-		for ( $i = 0;  $i < count( $overlaps );  ++$i )
-		{
-			$overlap = $overlaps[ $i ];
-			echo $overlap->depth . ' ' . $overlap->blockRange->toString( );
-			if ( $overlap->xpathRange->start && $overlap->xpathRange->end )
-				echo ' ' . $overlap->xpathRange->toString( );
-			echo "\n";
-		}
-	}
-	
-	
-	/**
 	 * Emit an Atom document for a list of annotations
 	 * The annotations should already be sorted
 	 */
-	function getAtom( &$annotations, $exclude='' )
+	function getAtom( &$annotations )
 	{
 		global $CFG;
 
 		$feedLastModified = AnnotationService::getLastModified( $annotations );
-		
-		$excludeFields = split( ' ', $exclude );
-		
-		$NS_PTR = 'http://www.geof.net/code/annotation/';
-		$NS_ATOM = 'http://www.w3.org/2005/Atom';
-		$NS_XHTML = 'http://www.w3.org/1999/xhtml';
+		$feedTagUri = "tag:" . $CFG->host . ',' . date( '2005-07-20', $CFG->installDate ) . ":annotation";
 		
 		header( 'Content-Type: application/xml' );
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
-		
-		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.4'>\n";
-		// This would be the link to the summary page:
-		//echo( " <link rel='alternate' type='text/html' href='" . htmlspecialchars( "$CFG->wwwroot$url/annotations" ) . "'/>\n" );
-		echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( "$CFG->annotate_servicePath" ) . "\"/>\n";
-		echo " <updated>" . date( 'Ymd', $feedLastModified ) . 'T' . date( 'HiO', $feedLastModified ) . "</updated>\n";
-		echo " <title>Annotations</title>";
-		echo " <id>tag:" . $CFG->host . ',' . date( '2005-07-20', $CFG->installDate ) . ":annotation</id>\n";
-		
-		for ( $i = 0;  $i < count( $annotations );  ++$i )
-		{
-			$annotation = $annotations[ $i ];
-			$blockRange = &$annotation->getBlockRange();
-			$xpathRange = &$annotation->getXPathRange();
-			echo " <entry>\n";
-			// Emit range in two formats:  block for sorting, xpath for authority and speed
-			echo "  <ptr:range format='block'>".$blockRange->toString( )."</ptr:range>\n";
-			// Make 100% certain that the XPath expression is no safe (e.g. no document() calls)
-			if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
-				echo "  <ptr:range format='xpath'>".$xpathRange->toString( )."</ptr:range>\n";
-			echo '  <ptr:access>'.$annotation->getAccess()."</ptr:access>\n";
-			echo '  <ptr:action>'.$annotation->getAction()."</ptr:action>\n";
-			// Annotation note as title
-			echo "  <title>" . htmlspecialchars( $annotation->getNote() ) . "</title>\n";
-			// Use double quotes for some attributes because it's easier than passing ENT_QUOTES to
-			// each call to htmlspecialchars
-			echo "  <link rel='self' type='application/xml' href=\"" . htmlspecialchars( "$CFG->annotate_servicePath/$annotation->id" ) . "\"/>\n";
-			echo "  <link rel='alternate' type='text/html' title=\"" . htmlspecialchars( $annotation->getQuoteTitle() ) . "\" href=\"" . htmlspecialchars( $annotation->getUrl() ) . "\"/>\n";
-			if ( $annotation->link )
-				echo "  <link rel='related' type='text/html' title=\"" . htmlspecialchars( $annotation->getNote() ) . "\" href=\"" . htmlspecialchars( $annotation->getLink() ) . "\"/>\n";
-			// TODO: Is this international-safe?  I could use htmlsecialchars on it, but that might not match the
-			// restrictions on IRIs.  #GEOF#
-			echo "  <id>tag:" . $CFG->host . ',' . date( 'Y-m-d', $annotation->getCreated() ) . ":".annotation/$annotation->getId()."</id>\n";
-			echo "  <updated>" . date( 'Y-m-d', $annotation->getModified() ) . 'T' . date( 'H:i:O', $annotation->getModified() ) . "</updated>\n";
-			// Selected text as summary
-			echo "  <summary>" . htmlspecialchars( $annotation->getQuote() ) . "</summary>\n";
-			// Author of the annotation
-			echo "  <author>\n";
-			echo "   <name>" . htmlspecialchars( $annotation->getUserId() ) . "</name>\n";
-			echo "  </author>\n";
-			// Contributor is the sources of the selected text
-			echo "  <contributor>\n";
-			echo "   <name>" . htmlspecialchars( $annotation->getQuoteAuthor() ) . "</name>\n";
-			echo "  </contributor>\n";
-			// Full annotation and selected text in HTML
-			if ( ! in_array( 'content', $excludeFields ) )
-			{
-				echo "  <content type='xhtml'>\n";
-				echo "   <div xmlns='$NS_XHTML' class='annotation'>\n";
-				echo "    <p class='note'>" . htmlspecialchars( $annotation->getNote() ) . "</p>\n";
-				echo "    <blockquote cite='".htmlspecialchars( $annotation->getUrl() )."'><p>" . htmlspecialchars( $annotation->getQuote() ) . "</p></blockquote>\n";
-				echo "    <p><address>" . htmlspecialchars( $annotation->getQuoteAuthor() ) . "</address> ";
-				echo "in <cite><a href=\"" . htmlspecialchars( $annotation->getUrl() ) . "\">" . htmlspecialchars( $annotation->getQuoteTitle() ) . "</a></cite></p>\n";
-				echo "   </div>\n";
-				echo "  </content>\n";
-			}
-			echo " </entry>\n";
-		}
-		echo "</feed>\n";
+		echo generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $CFG->annotate_servicePath, $tagHost );
 	}
 
-
+	
 	function httpError( $code, $message, $description )
 	{
 		header( "HTTP/1.1 $code $message" );
@@ -553,31 +278,6 @@ class AnnotationService
 	}	
 }
 
-
-class Overlap
-{
-	function Overlap( $depth )
-	{
-		$this->blockRange = new BlockRange( );
-		$this->xpathRange = new XPathRange( );
-		$this->depth = $depth;
-	}
-}
-		
-
-// Frankly, I don't trust PHP's magic quotes.  The most dangerous characters,
-// quote ('), semicolon (;), and less-than (<) aren't valid for most parameters anyway, so I'll
-// screen them out just to be sure.  #GEOF#
-function sanitize( $field )
-{
-	if ( strchr( $field, "'" ) !== false )
-		return false;
-	elseif ( strchr( $field, ';' ) !== false )
-		return false;
-	elseif ( strchr( $field, '<' ) !== false )
-		return false;
-	return true;
-}
 
 // It sure doesn't hurt to make sure that numbers are really numbers either.
 function isnum( $field )

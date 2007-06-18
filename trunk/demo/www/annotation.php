@@ -59,53 +59,9 @@ class Annotation
 	 * it will not be set.  The userid field cannot be set this way, because 
 	 * that is session information (i.e. it must be the current user).
 	 */
-	function fromArray( $strings )
+	function fromArray( $params )
 	{
-		if ( array_key_exists( 'id', $strings ) )
-			$this->setId( $strings[ 'id' ] );
-		if ( array_key_exists( 'userid', $strings ) )
-			$this->setUserId( $strings[ 'userid' ] );
-		if ( array_key_exists( 'url', $strings ) )
-			$this->setUrl( $strings[ 'url' ] );
-		if ( array_key_exists( 'block-range', $strings ) )
-		{
-			$range = new BlockRange( );
-			$range->fromString( $strings[ 'block-range' ] );
-			$this->setBlockRange( $range );
-		}
-		if ( array_key_exists( 'xpath-range', $strings ) )
-		{
-			$range = new XPathRange( );
-			$range->fromString( $strings[ 'xpath-range' ] );
-			$this->setXPathRange( $range );
-		}
-
-		if ( array_key_exists( 'note', $strings ) )
-			$this->setNote( $strings[ 'note' ] );
-			
-		if ( array_key_exists( 'action', $strings ) )
-			$this->setAction( $strings[ 'action' ] );
-			
-		if ( array_key_exists( 'access', $strings ) )
-			$this->setAccess( $strings[ 'access' ] );
-			
-		if ( array_key_exists( 'quote', $strings ) )
-			$this->setQuote( $strings[ 'quote' ] );
-			
-		if ( array_key_exists( 'quote_title', $strings ) )
-			$this->setQuoteTitle( $strings[ 'quote_title' ] );
-			
-		if ( array_key_exists( 'quote_author', $strings ) )
-			$this->setQuoteAuthor( $strings[ 'quote_author' ] );
-
-		if ( array_key_exists( 'link', $strings ) )
-			$this->setLink( $strings[ 'link' ] );
-			
-		if ( array_key_exists( 'created', $strings ) )
-			$this->setCreated( $strings[ 'created' ] );
-			
-		if ( array_key_exists( 'modified', $strings ) )
-			$this->setModified( $strings[ 'modified' ] );
+		return MarginaliaHelper::annotationFromParams( $this, $params );
 	}
 
 	function setId( $id )
@@ -116,7 +72,7 @@ class Annotation
 	
 	function setUrl( $url )
 	{
-		if ( Annotation::isUrlSafe( $url ) )
+		if ( MarginaliaHelper::isUrlSafe( $url ) )
 			$this->url = $url;
 	}
 	
@@ -185,7 +141,7 @@ class Annotation
 	
 	function setLink( $link )
 	{
-		if ( Annotation::isUrlSafe( $link ) )
+		if ( MarginaliaHelper::isUrlSafe( $link ) )
 			$this->link = $link;
 	}
 	
@@ -205,20 +161,6 @@ class Annotation
 	{ return $this->modified; }
 	
 	/**
-	 * Check whether an untrusted URL is safe for insertion in a page
-	 * In particular, javascript: urls can be used for XSS attacks
-	 */
-	function isUrlSafe( $url )
-	{
-		$urlParts = parse_url( $url );
-		$scheme = $urlParts[ 'scheme' ];
-		if ( 'http' == $scheme || 'https' == $scheme || '' == $scheme )
-			return true;
-		else
-			return false;
-	}
-		
-	/**
 	 * Check whether an action value is valid
 	 */
 	function isActionValid( $action )
@@ -231,24 +173,16 @@ class Annotation
 	 */
 	function isAccessValid( $access )
 	{
-		return '' === $access || 'public' == $access || 'private' == $access;
+		return ! $access || 'public' == $access || 'private' == $access;
 	}
-}
-
-// Useful for sorting by range start position:
-function annotationCompareStart( $a1, $a2 )
-{
-	$a1Block = $a1->getBlockRange( );
-	$a2Block = $a2->getBlockRange( );
-	return $a1Block->start->compare( $a2Block->start );
-}
-
-// Useful for sorting by range end position:
-function annotationCompareEnd( $a1, $a2 )
-{
-	$a1Block = $a1->getBlockRange( );
-	$a2Block = $a2->getBlockRange( );
-	return $a1Block->end->compare( $a2Block->end );
+	
+	/**
+	 * Convert to an Atom entry
+	 */
+	function toAtom( $tagHost, $servicePath )
+	{
+		return annotationToAtom( $this, $tagHost, $servicePath );
+	}
 }
 
 ?>
