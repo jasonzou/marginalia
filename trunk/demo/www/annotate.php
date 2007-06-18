@@ -267,7 +267,7 @@ class AnnotationService
 		
 		header( 'Content-Type: application/xml' );
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
-		echo generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $CFG->annotate_servicePath, $tagHost );
+		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $CFG->annotate_servicePath, $tagHost );
 	}
 
 	
