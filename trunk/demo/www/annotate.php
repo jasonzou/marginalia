@@ -32,7 +32,6 @@ require_once( "annotation.php" );
 require_once( "annotate-db.php" );
 require_once( "marginalia-php/block-range.php" );
 require_once( "marginalia-php/xpath-range.php" );
-require_once( "marginalia-php/atom.php" );
 require_once( "marginalia-php/helper.php" );
 
 $annotationService = new AnnotationService( );
@@ -123,6 +122,8 @@ class AnnotationService
 					AnnotationService::getAtom( $annotations );
 				elseif ( 'overlap' == $format )
 					AnnotationService::getOverlap( $annotations );
+				elseif ( 'block-users' == $format )
+					AnnotationService::getBlockUsers( $annotations, $url );
 				else
 					$this->httpError( 400, 'Bad Request', 'Unknown format' );
 			}
@@ -270,6 +271,20 @@ class AnnotationService
 		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $CFG->annotate_servicePath, $tagHost );
 	}
 
+	
+	function getOverlap( &$annotations )
+	{
+		$overlaps = MarginaliaHelper::calculateOverlaps( $annotations );
+		header( 'Content-Type: text/plain' );
+		echo MarginaliaHelper::generateOverlaps( $annotations );
+	}
+
+	function getBlockUsers( &$annotations, $url )
+	{
+		header( 'Content-Type: application/xml' );
+		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
+		echo MarginaliaHelper::generateBlockUsers( $annotations, $url );
+	}
 	
 	function httpError( $code, $message, $description )
 	{

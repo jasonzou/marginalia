@@ -64,10 +64,10 @@ class Annotation
 		return MarginaliaHelper::annotationFromParams( $this, $params );
 	}
 
-	function setId( $id )
+	function setAnnotationId( $id )
 	{ $this->id = (int) $id; }
 	
-	function getId( )
+	function getAnnotationId( )
 	{ return $this->id; }
 	
 	function setUrl( $url )
@@ -181,7 +181,7 @@ class Annotation
 	 */
 	function toAtom( $tagHost, $servicePath )
 	{
-		return annotationToAtom( $this, $tagHost, $servicePath );
+		return MarginaliaHelper::annotationToAtom( $this, $tagHost, $servicePath );
 	}
 }
 

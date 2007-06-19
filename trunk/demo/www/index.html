@@ -32,6 +32,7 @@
 	<script type="text/javascript" src="marginalia/marginalia.js"></script>
 	<script type="text/javascript" src="marginalia/annotation.js"></script>
 	<script type="text/javascript" src="marginalia/smartcopy.js"></script>
+	<script type="text/javascript" src="marginalia/user-count.js"></script>
 	<script type="text/javascript" src="marginalia/rest-annotate.js"></script>
 	<script type="text/javascript" src="marginalia/rest-prefs.js"></script>
 	<script type="text/javascript" src="marginalia/rest-keywords.js"></script>
@@ -95,6 +96,14 @@
 			return _skipSmartcopy( node ) || _skipAnnotationLinks( node ) || _skipAnnotationActions( node );
 		}
 
+		function myOnLoad( )
+		{
+			var url = "http://www.geof.net/code/annotation/demo/#*";
+			initLogging();
+			window.marginalia.showAnnotations( url );
+			window.marginalia.showPerBlockUserCounts( url );
+		}
+		
 		var serviceRoot = 'http://localhost/~geof/marginalia/demo/www';
 		var annotationService = new RestAnnotationService( serviceRoot );
 		//var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
@@ -118,7 +127,7 @@ whatever).  Here, the * is a wildcard.  The wildcarding convention and support a
 the back-end implementation;  most applications with only one region of content per web page 
 probably have no use for it.  The wildcard matches against the URL for each entry (look for
 the entrylink class). -->
-<body onload='initLogging(); window.marginalia.showAnnotations( "http://www.geof.net/code/annotation/demo/#*")'>
+<body onload='myOnLoad()'>
 
 	<!-- This is used for debugging.  A log of trace() calls in the annotation code can
 	be instructed to dump its output here. -->
