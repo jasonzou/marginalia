@@ -44,7 +44,7 @@ class BlockRange
 		if ( null != $this->start || null != $this->end )
 			die( "Attempt to modify BlockRange" );
 		// Standard format, e.g. /2/3.1;/2/3.5
-		if ( -1 != strpos( ';', $s ) )
+		if ( False !== strpos( $s, ';' ) )
 		{
 			$points = split( ';', $s );
 			$this->start = new BlockPoint( $points[ 0 ] );

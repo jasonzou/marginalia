@@ -265,15 +265,16 @@ ol#articles {
 }
 
 .hentry span.annotation-user-count {
+	cursor: pointer;
 	text-align: center;
-	width: 3ex;
 	padding: .25ex;
 	background: #6666ff;
 	font-family: sans-serif;
 	font-weight: bold;
 	color: white;
-	position: absolute;
-	left: -2.5em;
+	position: relative;
+	right: 3ex;
+	margin-right: -1.5ex;
 }
 
 .hentry .smart-copy {

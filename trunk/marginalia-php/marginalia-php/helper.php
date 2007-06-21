@@ -83,7 +83,7 @@ class MarginaliaHelper
 		if ( array_key_exists( 'url', $params ) )
 		{
 			$url = $params[ 'url' ];
-			if ( ! MarginaliaHelper::isUrlSafe( $url ) )
+			if ( ! $url || ! MarginaliaHelper::isUrlSafe( $url ) )
 				return URL_SCHEME_ERROR;
 			$annotation->setUrl( $url );
 		}
@@ -113,15 +113,15 @@ class MarginaliaHelper
 		if ( array_key_exists( 'quote_author', $params ) )
 		{
 			$quoteAuthor = $params[ 'quote_author' ];
-			$annotation->setQuoteAuthor( $quote_author );
+			$annotation->setQuoteAuthor( $quoteAuthor );
 		}
 		
 		// Access
 		if ( array_key_exists( 'access', $params ) )
 		{
+			$access = $params[ 'access' ];
 			if ( ! Annotation::isAccessValid( $access ) )
 				return ACCESS_VALUE_ERROR;
-			$access = $params[ 'access' ];
 			$annotation->setAccess( $access );
 		}
 		
@@ -138,8 +138,8 @@ class MarginaliaHelper
 		if ( array_key_exists( 'link', $params ) )
 		{
 			$link = $params[ 'link' ];
-			if ( ! MarginaliaHelper::isUrlSafe( $link ) )
-				return URL_SCHEME_ERROR;
+			if ( ! $link || ! MarginaliaHelper::isUrlSafe( $link ) )
+				return URL_SCHEME_ERROR + '( ' + $link + ')';
 			$annotation->setLink( $link );
 		}
 		
@@ -239,13 +239,13 @@ class MarginaliaHelper
 			. "  <title>$title</title>\n";
 		// Use double quotes for some attributes because it's easier than passing ENT_QUOTES to
 		// each call to htmlspecialchars
-		$s .= "  <link rel='self' type='application/xml' href=\"" . htmlspecialchars( "$servicePath/$annotation->id" ) . "\"/>\n"
+		$s .= "  <link rel='self' type='application/xml' href=\"" . htmlspecialchars( $servicePath.'/'.$annotation->getAnnotationId() ) . "\"/>\n"
 			. "  <link rel='alternate' type='text/html' title=\"$sQuoteTitle\" href=\"$sUrl\"/>\n";
-		if ( $annotation->link )
+		if ( $annotation->getLink() )
 			$s .= "  <link rel='related' type='text/html' title=\"$sNote\" href=\"$sLink\"/>\n";
 		// TODO: Is this international-safe?  I could use htmlsecialchars on it, but that might not match the
 		// restrictions on IRIs.  #GEOF#
-		$s .= "  <id>tag:$tagHost," . date( 'Y-m-d', $annotation->getCreated() ) . ":".annotation/$annotation->getAnnotationId()."</id>\n"
+		$s .= "  <id>tag:$tagHost," . date( 'Y-m-d', $annotation->getCreated() ) . ':annotation/'.$annotation->getAnnotationId()."</id>\n"
 			. "  <updated>" . date( 'Y-m-d', $annotation->getModified() ) . 'T' . date( 'H:i:O', $annotation->getModified() ) . "</updated>\n";
 		// Selected text as summary
 		//echo "  <summary>$summary</summary>\n";
@@ -262,7 +262,7 @@ class MarginaliaHelper
 		if ( $sLink )
 		{
 			if ( $sNote )
-				$sNote = "<a href=\"$sLink\">$note</a>";
+				$sNote = "<a href=\"$sLink\">$sNote</a>";
 			else
 				$sNote = "<a href=\"$sLink\">...</a>";
 		}
@@ -491,6 +491,8 @@ class MarginaliaHelper
 	function isUrlSafe( $url )
 	{
 		$urlParts = parse_url( $url );
+		if ( False === $urlParts )
+			return false;
 		$scheme = $urlParts[ 'scheme' ];
 		if ( 'http' == $scheme || 'https' == $scheme || '' == $scheme )
 			return true;
