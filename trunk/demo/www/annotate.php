@@ -157,7 +157,7 @@ class AnnotationService
 				if ( $id != 0 )
 				{
 					header( 'HTTP/1.1 201 Created' );
-					header( "Location: $CFG->wwwroot$servicePath$id" );
+					header( "Location: $CFG->wwwroot$servicePath/$id" );
 				}
 				else
 					AnnotationService::httpError( 500, 'Internal Service Error', 'Create failed' );	
