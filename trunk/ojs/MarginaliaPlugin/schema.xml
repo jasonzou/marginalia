@@ -20,6 +20,8 @@
 	
 	<field name="access" type="C2" size="32"/>
 	
+	<field name="action" type="C2" size="32"/>
+	
 	<field name="url" type="C2" size="255">
 		<NOTNULL/>
 	</field>
@@ -28,6 +30,8 @@
 		<NOTNULL/>
 	</field>
 	
+	<field name="start_xpath" type="C2" size="255"/>
+	
 	<field name="start_word" type="I8">
 		<NOTNULL/>
 	</field>
@@ -35,6 +39,8 @@
 	<field name="start_char" type="I8">
 		<NOTNULL/>
 	</field>
+	
+	<field name="end_xpath" type="C2" size="255"/>
 	
 	<field name="end_block" type="C2" size="255">
 		<NOTNULL/>
