@@ -73,7 +73,6 @@ class MarginaliaHelper
 		{
 			$xpathRange = new XPathRange( );
 			$xpathRange->fromString( $params[ 'xpath-range' ] );
-			// TODO: Scan XPath to make sure it's safe
 			if ( ! XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) || ! XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 				return XPATH_SECURITY_ERROR;
 			$annotation->setXPathRange( $xpathRange );

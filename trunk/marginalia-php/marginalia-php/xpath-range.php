@@ -112,14 +112,63 @@ class XPathPoint
 	 * document(), for example, are dangerous.  This implementation
 	 * only accepts a tiny subset of possible XPath expressions and
 	 * may need to be extended.
+	 * Will accept only xpaths components like the following:
+	 *  p[1]
+	 *  html:p
+	 *  following-sibling::p
+	 *  p[@attribute='value']
 	 */
 	function isXPathSafe( $xpath )
 	{
-		$parts = split( '\/', $xpath );
+		$parts = split( '/', $xpath );
 		foreach ( $parts as $part )
 		{
-			if ( $part != '' && ! preg_match( '/^[a-zA-Z]+\[\d+\]$/', $part ) )
+			$part = trim( $part );
+			if ( preg_match( '/^[a-zA-Z0-9_:-]+\s*(.*)$/', $part, $matches) )
+			{
+				$tail = trim( $matches[ 1 ] );
+				// Simple tag name, with or without axis and/or namespace
+				if ( '' == $tail )
+					;
+				// Qualification in [brackets]
+				elseif ( preg_match( '/^\[([^\]]+)\]\s*$/', $tail, $matches ) )
+				{
+					$test = trim( $matches[ 1 ] );
+					// Simple number index
+					if ( preg_match( '/^\d+$/', $test ) )
+						;
+					// Comparison of an attribute with a quoted value
+					elseif ( preg_match( '/^@[a-zA-Z0-9_-]+\s*=\s*([\'"])[^\'"]+([\'"])$/', $test, $matches ) )
+					{
+						if ( $matches[ 1 ] == $matches[ 2 ] ) // ensure quotes match
+							;
+						else
+						{
+//							echo "isXPathSafe failed(4)";
+							return false;
+						}
+					}
+					else
+					{
+//						echo "isXPathSafe failed(3)";
+						return false;
+					}
+				}
+				else
+				{
+//					echo "isXPathSafe failed(2)";
+					return false;
+				}
+			}
+			elseif ( '' == $part )
+				;
+			elseif ( '.' == $part )
+				;
+			else
+			{
+//				echo "isXPathSafe failed(1)";
 				return false;
+			}
 		}
 		return true;
 	}
