@@ -1,0 +1,109 @@
+<?xml version='1.0'?>
+<data>
+	<table name="keywords">
+		<row>
+			<field name="name">Pre-requisite</field>
+			<field name="description">Must be known before to ensure understanding or use of</field>
+		</row>
+		<row>
+			<field name="name">Summary</field>
+			<field name="description">summarizes</field>
+		</row>
+		<row>
+			<field name="name">Background</field>
+			<field name="description">Provides background for</field>
+		</row>
+		<row>
+			<field name="name">Explanation</field>
+			<field name="description">Explains </field>
+		</row>
+		<row>
+			<field name="name">Illustration</field>
+			<field name="description">Provides a graphical representation of</field>
+		</row>
+		<row>
+			<field name="name">Update</field>
+			<field name="description">Updates or makes more current</field>
+		</row>
+		<row>
+			<field name="name">Example</field>
+			<field name="description">Provides an example of</field>
+		</row>
+		<row>
+			<field name="name">Procedure</field>
+			<field name="description">Provides the procedure for an action</field>
+		</row>
+		<row>
+			<field name="name">Application</field>
+			<field name="description">Contains a theory that is applied in</field>
+		</row>
+		<row>
+			<field name="name">Purpose</field>
+			<field name="description">Describes the purpose of </field>
+		</row>
+		<row>
+			<field name="name">Evidence</field>
+			<field name="description">Provides evidence for</field>
+		</row>
+		<row>
+			<field name="name">Correction</field>
+			<field name="description">Corrects errors in</field>
+		</row>
+		<row>
+			<field name="name">Argument</field>
+			<field name="description">Contains the premises of an argument whose conclusions are in</field>
+		</row>
+		<row>
+			<field name="name">Usage</field>
+			<field name="description">Indicates where, when, or how to invoke an action stated in</field>
+		</row>
+		<row>
+			<field name="name">Condition</field>
+			<field name="description">A condition that insures the truth of</field>
+		</row>
+		<row>
+			<field name="name">Warning</field>
+			<field name="description">Warning of undesirable consequences</field>
+		</row>
+		<row>
+			<field name="name">Solution</field>
+			<field name="description">Contains a solution to a problem posed in</field>
+		</row>
+		<row>
+			<field name="name">Definition</field>
+			<field name="description">Defines or otherwise restricts meaning of</field>
+		</row>
+		<row>
+			<field name="name">Comment</field>
+			<field name="description">Gives additional information about</field>
+		</row>
+		<row>
+			<field name="name">Citation</field>
+			<field name="description">Identifies as the source of concepts and ideas</field>
+		</row>
+		<row>
+			<field name="name">Content</field>
+			<field name="description">Name what is contained</field>
+		</row>
+		<row>
+			<field name="name">Alternate view</field>
+			<field name="description">Contains an alternative view to that expressed in</field>
+		</row>
+		<row>
+			<field name="name">Future</field>
+			<field name="description">Provides an alter to forthcoming work in</field>
+		</row>
+		<row>
+			<field name="name">Genrealization</field>
+			<field name="description">Makes a generalization about</field>
+		</row>
+		<row>
+			<field name="name">Causation</field>
+			<field name="description">Describes the cause of</field>
+		</row>
+		<row>
+			<field name="name">Comparison</field>
+			<field name="description">Is compared to</field>
+		</row>
+	</table>
+</data>

@@ -1,0 +1,260 @@
+/* General layout */
+
+#debug {
+	margin-left: 12em;
+}
+
+#column-wrapper {
+	position: relative;
+}
+
+#content {
+	width: 68%;
+}
+
+
+/* Annotation styles */
+.hentry {
+	position: relative;
+	padding: 0 ;
+	margin: 2em 0 ;
+}
+
+.hentry .entry-content em.annotation {
+	background: #ffe880;
+	font-style: inherit;
+}
+
+.hentry .entry-content em.annotation em.annotation {
+	background: #ecd470;
+}
+
+.hentry .entry-content em.annotation em.annotation em.annotation {
+	background: #d8c666;
+}
+
+.hentry .entry-content em.annotation sup a {
+	text-decoration: none;
+	background-color: inherit;
+	cursor: pointer;
+}
+
+/*
+.hentry .entry-content em.annotation a,
+.hentry .entry-content a em.annotation {
+	text-decoration: underline;
+}
+*/
+
+.hentry .notes {
+	background: inherit;
+	position: absolute;
+	height: 100%;
+	width: 30%;
+	top: 0;
+	right: 0 ;
+	margin: 0;
+	padding: 0;
+}
+
+.hentry .button-wrapper {
+	height: 100%;
+	width: 1.5ex;
+	position: absolute;
+	top: 0;
+	border-left: #ddd 1px dotted;
+	border-right:  #ddd 1px dashed;
+}
+
+.hentry .button-wrapper:hover {
+	border-color: black;
+}
+
+.hentry button.createAnnotation {
+	height: 100%;
+	width: 100%;
+	position: absolute;
+	top: 0 ;
+	border: none;
+	background: inherit;
+	cursor: pointer;
+	padding: 0;
+	margin: 0;
+}
+
+.hentry button.createAnnotation:hover {
+	background: #ffe880;
+}
+
+.editing-note .button-wrapper {
+	border-right: none;
+}
+
+.editing-note .button-wrapper:hover {
+	border-color: #ddd;
+}
+
+.editing-note .hentry button.createAnnotation {
+	visibility: hidden;
+}
+
+.hentry .notes ol {
+	position: relative;
+	list-style-type: none;
+	margin: 0 0 0 1em ;
+	padding: 2px .5ex ;
+	background: inherit;
+}
+
+.hentry .notes li {
+	position: relative;
+	font-family: sans-serif;
+	font-size: 80%;	
+	margin: 0 ;
+	margin-bottom: 1ex;
+	padding: 0;
+	min-height: 1.2em;
+	width: 100%;
+	background: inherit;
+}
+
+.hentry .notes li.dummyfirst {
+	height: 1px;
+	cursor: default;
+	border: none;
+	background: none;
+	margin: 0;
+	padding: 0;
+}
+
+.hentry .notes li p {
+	margin: 0;
+	padding: 0;
+	cursor: pointer;
+	line-height: 1.2em;
+}
+
+/*
+.hentry .notes li:hover {
+	background: #e8e8e8;
+	z-index: 1;
+}
+*/
+
+.hentry .notes li .controls {
+	height: 1em;
+	line-height: 1em;
+	float: right;
+}
+
+.hentry .notes li input,
+.hentry .notes li textarea {
+	color: #555;
+}
+
+.hentry .notes li input.changed,
+.hentry .notes li textarea.changed
+{
+	color: black;
+}
+
+.hentry .notes li input {
+	width: 70%;
+	margin: 0 .25ex;
+	font-size: smaller;
+}
+
+.hentry .notes li select {
+	font-size: inherit;
+}
+
+.hentry .notes li button,
+.hentry .notes li a {
+	border: none;
+	background: inherit;
+	display: inline;
+	font-size: inherit;
+	padding: 0;
+	margin: 0;
+	vertical-align: top;
+	cursor: pointer;
+	text-decoration: none;
+	color: #555;
+}
+
+.hentry .notes li button:hover,
+.hentry .notes li a:hover {
+	color: black;
+}
+
+.hentry .notes li button.expand-edit {
+	position: absolute;
+	top: 0;
+	right: 100%;
+}
+
+.hentry .notes li textarea {
+	font-size: inherit;
+	font-family: sans-serif;
+	border: none;
+	background: white;
+	margin: 0;
+	outline: solid 1px #ddd;
+}
+
+.hentry .notes li select,
+.hentry .notes li textarea {
+	width: 95%;
+}
+
+.hentry .notes li.hover,
+.hentry .entry-content em.annotation.hover {
+	color: red;
+}
+
+#content.make-link-target p:hover,
+#content.make-link-target div:hover,
+#content.make-link-target tr:hover,
+#content.make-link-target * > li:hover,
+#content.make-link-target dl > dt:hover,
+#content.make-link-target dl > dd:hover,
+#content.make-link-target caption:hover,
+#content.make-link-target label:hover,
+#content.make-link-target legend:hover,
+#content.make-link-target h1:hover,
+#content.make-link-target h2:hover,
+#content.make-link-target h3:hover,
+#content.make-link-target h4:hover,
+#content.make-link-target h5:hover,
+#content.make-link-target h6:hover,
+#content.make-link-target pre:hover {
+	outline: gray 2px dotted;
+	cursor: pointer;
+}
+
+#content .link-target {
+	outline:  gray 2px solid;
+}
+
+/*
+.linkable {
+	position: relative;
+}
+
+.linkable-icon {
+	display: none;
+	position: absolute;
+	left: -1.5em;
+	top: 0;
+	width: 1em;
+	height: 1.2em;
+}
+
+.linkable:hover {
+	outline: gray 2px dashed;
+}
+
+.linkable:hover > .linkable-icon {
+	display: block;
+}
+*/
