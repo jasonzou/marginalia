@@ -102,6 +102,9 @@ class AnnotationService
 		$format = unfix_quotes( $_GET[ 'format' ] );
 		$url = unfix_quotes( $_GET[ 'url' ] );
 		$username = unfix_quotes( $_GET[ 'user' ] );
+		$block = null;
+		if ( array_key_exists( 'block', $_GET ) )
+			$block = new BlockPoint( unfix_quotes( $_GET[ 'block' ] ) );
 		// Can't sanitize $username - it might contain a single quote, e.g. for some French names starting with d',
 		// or some romanization of other languages, e.g. the old romanization of Mandarin
 		if ( $url == null || $url == '' )
@@ -113,7 +116,7 @@ class AnnotationService
 				AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
 			else
 			{
-				$annotations = &$db->listAnnotations( $url, $username );
+				$annotations = &$db->listAnnotations( $url, $username, $block );
 				$db->release( );
 				
 				if ( null === $annotations )

@@ -114,6 +114,9 @@ class BlockPoint
 				$blockStr = substr( $blockStr, 0, $slash );
 				$n -= 1;
 			}
+			else
+				$this->words = null;
+				$this->chars = null;
 		}
 		
 		// The blockStr may be padded with zeros.  Strip them.
@@ -125,10 +128,9 @@ class BlockPoint
 	}
 	
 	/**
-	 * Compare location with another point.
-	 * 0 - same point, -1 this one preceeds the other, 1 this one follows the other
+	 * Compare only the path components of two points
 	 */
-	function compare( $point2 )
+	function comparePath( $point2 )
 	{
 		$len1 = count( $this->path );
 		$len2 = count( $point2->path );
@@ -143,9 +145,34 @@ class BlockPoint
 			return -1;
 		elseif ( $len1 > $len2 )
 			return 1;
+		else
+			return 0;
+	}
+	
+	/**
+	 * Compare location with another point.
+	 * 0 - same point, -1 this one preceeds the other, 1 this one follows the other
+	 */
+	function compare( $point2 )
+	{
+		$r = $this->comparePath( $point2 );
+		if ( $r != 0 )
+			return $r;
+		elseif ( $this->words === null && $point2->words == null )
+			return 0;
+		elseif ( $this->words === null )
+			return -1;
+		elseif ( $point2->words === null )
+			return 1;
 		elseif ( $this->words < $point2->words )
 			return -1;
 		elseif ( $this->words > $point2->words )
+			return 1;
+		elseif ( $this->chars === null && $point2->chars === null )
+			return 0;
+		elseif ( $this->chars === null )
+			return -1;
+		elseif ( $point2->chars === null )
 			return 1;
 		elseif ( $this->chars < $point2->chars )
 			return -1;

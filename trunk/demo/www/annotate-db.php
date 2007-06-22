@@ -123,8 +123,8 @@ class AnnotationDB
 		$blockRange = $annotation->getBlockRange( );
 		if ( null !== $blockRange )
 		{
-			$sStartBlock = addslashes( $blockRange->start->getPathStr( ) );
-			$sEndBlock = addslashes( $blockRange->end->getPathStr( ) );
+			$sStartBlock = addslashes( $blockRange->start->getPaddedPathStr( ) );
+			$sEndBlock = addslashes( $blockRange->end->getPAddedPathStr( ) );
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_block='$sStartBlock'" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "end_block='$sEndBlock'" );
 			$rangeForWords = $blockRange;
@@ -217,7 +217,7 @@ class AnnotationDB
 			return $query . ', ' . $assignment;
 	}
 
-	function getQueryCondition( $url, $userid )
+	function getQueryCondition( $url, $userid, $block )
 	{
 		// determine the filter for the select statement
 		$sUrl = addslashes( $url );
@@ -226,6 +226,11 @@ class AnnotationDB
 		{
 			$sUser = addslashes( $userid );
 			$cond .= " and $user='$sUser'";
+		}
+		if ( $block != null )
+		{
+			$blockStr = $block->getPaddedPathStr( );
+			$cond .= " and start_block <= '$blockStr' and end_block >= '$blockStr'";
 		}
 		return $cond;
 	}
@@ -265,15 +270,16 @@ class AnnotationDB
 			return null;
 	}
 	
-	function listAnnotations( $url, $userid )
+	function listAnnotations( $url, $userid, $block )
 	{
 		global $CFG;
 		
-		$cond = AnnotationDB::getQueryCondition( $url, $userid );
+		$cond = AnnotationDB::getQueryCondition( $url, $userid, $block );
 		
 		// Get the data rows
 		$query = "select * from $CFG->dbannotation $cond";
 		$query .= " order by url, start_block, start_word, start_char, end_block, end_word, end_char";
+		// echo "Query: " . htmlspecialchars( $query ) ."<br/>";
 		$result = mysql_query( $query );
 
 		$annotations = array( );
