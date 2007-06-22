@@ -222,15 +222,15 @@ class AnnotationDB
 		// determine the filter for the select statement
 		$sUrl = addslashes( $url );
 		$cond .= strchr( $sUrl, '*' ) === false ? "where url='$sUrl' " : "where url like '" . str_replace( '*', '%', $sUrl ) . "'";
-		if ( $username != null )
+		if ( $userid != null )
 		{
 			$sUser = addslashes( $userid );
-			$cond .= " and $user='$sUser'";
+			$cond .= " and userid='$sUser'";
 		}
 		if ( $block != null )
 		{
-			$blockStr = $block->getPaddedPathStr( );
-			$cond .= " and start_block <= '$blockStr' and end_block >= '$blockStr'";
+			$sBlockStr = addslashes( $block->getPaddedPathStr( ) );
+			$cond .= " and start_block <= '$sBlockStr' and end_block >= '$sBlockStr'";
 		}
 		return $cond;
 	}
@@ -279,7 +279,7 @@ class AnnotationDB
 		// Get the data rows
 		$query = "select * from $CFG->dbannotation $cond";
 		$query .= " order by url, start_block, start_word, start_char, end_block, end_word, end_char";
-		// echo "Query: " . htmlspecialchars( $query ) ."<br/>";
+		//echo "Query: " . htmlspecialchars( $query ) ."<br/>";
 		$result = mysql_query( $query );
 
 		$annotations = array( );
