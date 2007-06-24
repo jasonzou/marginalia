@@ -129,12 +129,6 @@ probably have no use for it.  The wildcard matches against the URL for each entr
 the entrylink class). -->
 <body onload='myOnLoad()'>
 
-	<!-- This is used for debugging.  A log of trace() calls in the annotation code can
-	be instructed to dump its output here. -->
-	<ul id="debug" style="display:none">
-		<li></li>
-	</ul>
-	
 	<!-- I'm using the article list for styling in the DOM.  There's no need for it, and
 	no reason your list of entries should be an ol, or that your entries should be li
 	elements. -->
@@ -147,6 +141,10 @@ the entrylink class). -->
 			<!-- Every entry must have a field with a class of "title".  This is stored with 
 			the annotation in the database and shown on the summary page in Moodle. -->
 			<h3 class="entry-title">Web Annotation Demo</h3>
+			
+			<!-- -->
+			<div class="markers">
+			</div>
 			
 			<!-- Every entry must have a content area marked by the "content" class.  The 
 			content of this area should not change (so there shouldn't be user controls and 
@@ -219,6 +217,8 @@ the entrylink class). -->
 	
 		<li id="m2" class="hentry">
 			<h3 class="entry-title">Detailed Instructions</h3>
+			<div class="markers">
+			</div>
 			<div class="entry-content">
 				<h4>Annotation</h4>
 				

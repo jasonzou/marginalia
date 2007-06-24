@@ -66,7 +66,8 @@ ol#articles {
 }
 
 .hentry .entry-content {
-	width: 70% ;
+	width: 60% ;
+	margin-left: 3em;
 	font-size: medium;
 	font-family: Verdana, Arial, Helvetica, sans-serif;
 }
@@ -264,17 +265,34 @@ ol#articles {
 	width: 1em;
 }
 
+.hentry .markers {
+	position: absolute;
+	height: 100%;
+	width: 3em;
+	top: 0;
+	left: 0;
+	margin: 0;
+	padding: 0;
+}
+
+.hentry .markers .marker {
+	position: absolute;
+	right: .25em;
+	background-image:  url( 'marker-tail.png' );
+	background-repeat:  repeat-y;
+	background-position:  top right;
+}
+
 .hentry span.annotation-user-count {
 	cursor: pointer;
+	display:  block;
+	width: 1.5em;
 	text-align: center;
-	padding: .25ex;
+	padding: .25ex .5ex;
 	background: #6666ff;
 	font-family: sans-serif;
 	font-weight: bold;
 	color: white;
-	position: relative;
-	right: 3ex;
-	margin-right: -1.5ex;
 }
 
 .hentry .smart-copy {
