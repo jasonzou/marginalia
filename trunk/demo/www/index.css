@@ -278,6 +278,9 @@ ol#articles {
 .hentry .markers .marker {
 	position: absolute;
 	right: .25em;
+}
+
+.hentry .markers .marker:hover {
 	background-image:  url( 'marker-tail.png' );
 	background-repeat:  repeat-y;
 	background-position:  top right;
