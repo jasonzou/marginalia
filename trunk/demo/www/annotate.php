@@ -125,8 +125,8 @@ class AnnotationService
 					AnnotationService::getAtom( $annotations );
 				elseif ( 'overlap' == $format )
 					AnnotationService::getOverlap( $annotations );
-				elseif ( 'block-users' == $format )
-					AnnotationService::getBlockUsers( $annotations, $url );
+				elseif ( 'blocks' == $format )
+					AnnotationService::getBlocks( $annotations, $url );
 				else
 					$this->httpError( 400, 'Bad Request', 'Unknown format' );
 			}
@@ -282,11 +282,11 @@ class AnnotationService
 		echo MarginaliaHelper::generateOverlaps( $annotations );
 	}
 
-	function getBlockUsers( &$annotations, $url )
+	function getBlocks( &$annotations, $url )
 	{
 		header( 'Content-Type: application/xml' );
 		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
-		echo MarginaliaHelper::generateBlockUsers( $annotations, $url );
+		echo MarginaliaHelper::generateBlockInfo( $annotations, $url );
 	}
 	
 	function httpError( $code, $message, $description )

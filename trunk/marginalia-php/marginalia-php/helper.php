@@ -289,10 +289,10 @@ class MarginaliaHelper
 	/**
 	 * Count the number of *users* who have annotated a given block of text
 	 */
-	function calculateBlockUsers( &$annotations )
+	function calculateBlockInfo( &$annotations )
 	{
 		// Array to store counts for specific paragraphs
-		$counts = array();
+		$blockInfoArray = array();
 		
 		// Iterate over start/end points
 		$iter = new AnnotationPointIterator( $annotations );
@@ -315,15 +315,15 @@ class MarginaliaHelper
 			// Now increment counts
 			// Will cause strange results if xpath range not present for all points
 			$annotation =& $iter->getAnnotation();
-			if ( $counts[ count( $counts ) - 1 ]->xpath != $xpath )
-				$counts[ ] = new BlockUsers( $annotation->url, $xpath, $block );
-			$counts[ count( $counts ) - 1 ]->addUser( $annotation->getUserId() );
+			if ( $blockInfoArray[ count( $blockInfoArray ) - 1 ]->xpath != $xpath )
+				$blockInfoArray[ ] = new BlockInfo( $annotation->url, $xpath, $block );
+			$blockInfoArray[ count( $blockInfoArray ) - 1 ]->addUser( $annotation->getUserId() );
 //			echo "addUser(".$annotation->getUserId().") (xpath=".$blockUsers->xpath.") ";
 		}
 		
 		// Now we have an array of paragraphs, each element of which is an array of
 		// users who have annotated that paragraph.
-		return $counts;
+		return $blockInfoArray;
 	}
 	
 	/**
@@ -333,29 +333,29 @@ class MarginaliaHelper
 	 * TODO: include block path, thusly:
 	 *   geof fred john /5 p[5]
 	 */
-	function generateBlockUsers( &$annotations )
+	function generateBlockInfo( &$annotations )
 	{
-		$s = "<block-users>\n";
-		$counts = MarginaliaHelper::calculateBlockUsers( $annotations );
-		for ( $i = 0;  $i < count( $counts );  ++$i )
+		$s = "<blocks>\n";
+		$blockInfoArray = MarginaliaHelper::calculateBlockInfo( $annotations );
+		for ( $i = 0;  $i < count( $blockInfoArray );  ++$i )
 		{
-			$blockUsers = $counts[ $i ];
-			$s .= "\t<element url=\"".htmlspecialchars($blockUsers->url)."\"";
+			$info = $blockInfoArray[ $i ];
+			$s .= "\t<block url=\"".htmlspecialchars($info->url)."\"";
 			
-			if ( $blockUsers->xpath )
-				$s .= ' xpath="'.htmlspecialchars( $blockUsers->xpath ).'"';
+			if ( $info->xpath )
+				$s .= ' xpath="'.htmlspecialchars( $info->xpath ).'"';
 
-			if ( $blockUsers->block )
-				$s .= ' block="'.htmlspecialchars( $blockUsers->block ).'"';
+			if ( $info->block )
+				$s .= ' block="'.htmlspecialchars( $info->block ).'"';
 			
 			$s .= ">\n";
 			
 //			echo "[xpath: ".$blockUsers->xpath.", ".$blockUsers->users.']';
-			foreach ( $blockUsers->getUsers() as $user )
+			foreach ( $info->getUsers() as $user )
 				$s .= "\t\t<user>".htmlspecialchars( $user )."</user>\n";
-			$s .= "\t</element>\n";
+			$s .= "\t</block>\n";
 		}
-		return $s . '</block-users>';
+		return $s . '</blocks>';
 	}
 	
 	/**
@@ -510,9 +510,9 @@ class Overlap
 	}
 }
 
-class BlockUsers
+class BlockInfo
 {
-	function BlockUsers( $url, $xpath, $block )
+	function BlockInfo( $url, $xpath, $block )
 	{
 		$this->url = $url;
 		$this->xpath = $xpath;
