@@ -1,6 +1,6 @@
 <?
 /*
- * block-range.php
+ * sequence-range.php
  * representations for points in an HTML document and for ranges (defined by of points)
  *
  * Marginalia has been developed with funding and support from
@@ -30,9 +30,9 @@
  * Used for locating highlights
  * Immutable (fromString should be treated only as a constructor)
  */
-class BlockRange
+class SequenceRange
 {
-	function BlockRange( $startPoint=null, $endPoint=null )
+	function SequenceRange( $startPoint=null, $endPoint=null )
 	{
 		$this->start = $startPoint;
 		$this->end = $endPoint;
@@ -42,25 +42,25 @@ class BlockRange
 	{
 		$r = true;
 		if ( null != $this->start || null != $this->end )
-			die( "Attempt to modify BlockRange" );
+			die( "Attempt to modify SequenceRange" );
 		// Standard format, e.g. /2/3.1;/2/3.5
 		if ( False !== strpos( $s, ';' ) )
 		{
 			$points = split( ';', $s );
-			$this->start = new BlockPoint( $points[ 0 ] );
-			$this->end = new BlockPoint( $points[ 1 ] );
+			$this->start = new SequencePoint( $points[ 0 ] );
+			$this->end = new SequencePoint( $points[ 1 ] );
 		}
 		// Old block format, e.g. /2 3.1 3.5
 		elseif ( preg_match( '/^\s*(\/[\/0-9]*)\s+(\d+)\.(\d+)\s+(\d+)\.(\d+)\s*$/', $s, $matches ) )
 		{
-			$this->start = new BlockPoint( $matches[1], (int) $matches[2], (int) $matches[3] );
-			$this->end = new BlockPoint( $matches[1], (int) $matches[4], (int) $matches[5] );
+			$this->start = new SequencePoint( $matches[1], (int) $matches[2], (int) $matches[3] );
+			$this->end = new SequencePoint( $matches[1], (int) $matches[4], (int) $matches[5] );
 		}
 		// Old word format, e.g. 7.1 7.5
 		elseif ( preg_match( '/^\s*(\d+)\.(\d+)\s+(\d+)\.(\d+)\s*$/', $s, $matches ) )
 		{
-			$this->start = new BlockPoint( '/', (int) $matches[1], (int) $matches[2] );
-			$this->end = new BlockPoint( '/', (int) $matches[3], (int) $matches[4] );
+			$this->start = new SequencePoint( '/', (int) $matches[1], (int) $matches[2] );
+			$this->end = new SequencePoint( '/', (int) $matches[3], (int) $matches[4] );
 		}
 		else
 			$r = false;
@@ -82,6 +82,12 @@ class BlockRange
 //		echo "this->start=" . $this->start . ", this->end=" . $this->end . "\n";
 		return $this->start->toString( ) . ';' . $this->end->toString( );
 	}
+	
+	function makeblockLevel( )
+	{
+		$this->start->makeBlockLevel( );
+		$this->end->makeBlockLevel( );
+	}
 }
 
 
@@ -89,14 +95,14 @@ class BlockRange
  *  Used for locating start and end of highlight ranges
  *  Immutable.
  */
-class BlockPoint
+class SequencePoint
 {
 	/**
 	 * Two ways to call:
 	 * - BlockPoint( '/2/7/1', 15, 3 )
 	 * - BlockPoint( '/2/7/1/15.3' )
 	 */
-	function BlockPoint( $blockStr, $words=null, $chars=null )
+	function SequencePoint( $blockStr, $words=null, $chars=null )
 	{
 		$dot = strpos( $blockStr, '.' );
 		$parts = split( '/', $blockStr );
@@ -218,6 +224,12 @@ class BlockPoint
 	function toString( )
 	{
 		return $this->getPathStr( ) . '/' . $this->words . '.' . $this->chars;
+	}
+	
+	function makeBlockLevel( )
+	{
+		$this->words = null;
+		$this->chars = null;
 	}
 }
 
