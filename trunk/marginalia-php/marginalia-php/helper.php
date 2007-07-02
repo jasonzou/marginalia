@@ -60,12 +60,12 @@ class MarginaliaHelper
 			$this->setUserId( $userid );
 		}
 
-		// Block Range
-		if ( array_key_exists( 'block-range', $params ) )
+		// Sequence Range
+		if ( array_key_exists( 'sequence-range', $params ) )
 		{
-			$blockRange = new BlockRange( );
-			$blockRange->fromString( $params[ 'block-range' ] );
-			$annotation->setBlockRange( $blockRange );
+			$sequenceRange = new SequenceRange( );
+			$sequenceRange->fromString( $params[ 'sequence-range' ] );
+			$annotation->setSequenceRange( $sequenceRange );
 		}
 		
 		// XPath Range
@@ -223,13 +223,13 @@ class MarginaliaHelper
 		else
 			$summary = $sQuote;
 		
-		$blockRange = $annotation->getBlockRange( );
-		$sBlockRange = htmlspecialchars( $blockRange->toString() );
+		$sequenceRange = $annotation->getSequenceRange( );
+		$sSequenceRange = htmlspecialchars( $sequenceRange->toString() );
 		$xpathRange = $annotation->getXPathRange( );
 		
 		$s = " <entry>\n";
-		// Emit range in two formats:  block for sorting, xpath for authority and speed
-		$s .= "  <ptr:range format='block'>$sBlockRange</ptr:range>\n";
+		// Emit range in two formats:  sequence for sorting, xpath for authority and speed
+		$s .= "  <ptr:range format='sequence'>$sSequenceRange</ptr:range>\n";
 		// Make 100% certain that the XPath expression contains no unsafe calls (e.g. to document())
 		if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 			$s .= "  <ptr:range format='xpath'>".htmlspecialchars($xpathRange->toString())."</ptr:range>\n";
@@ -300,25 +300,31 @@ class MarginaliaHelper
 		{
 			$xpathPoint = $iter->getXPathPoint( );
 			if ( $xpathPoint )
-				$xpath = $xpathPoint->getPathStr( );
+				$xpathBlock = $xpathPoint->getPathStr( );
 			else
-				$xpath = null;
+				$xpathBlock = null;
 				
-			$blockPoint = $iter->getBlockPoint( );
-			if ( $blockPoint )
-				$block = $blockPoint->getPathStr( );
+			$sequencePoint = $iter->getSequencePoint( );
+			if ( $sequencePoint )
+				$sequenceBlock = $sequencePoint->getPathStr( );
 			else
-				$block = null;
-				
-			
+				$sequenceBlock = null;
 			
 			// Now increment counts
 			// Will cause strange results if xpath range not present for all points
 			$annotation =& $iter->getAnnotation();
-			if ( $blockInfoArray[ count( $blockInfoArray ) - 1 ]->xpath != $xpath )
-				$blockInfoArray[ ] = new BlockInfo( $annotation->url, $xpath, $block );
-			$blockInfoArray[ count( $blockInfoArray ) - 1 ]->addUser( $annotation->getUserId() );
-//			echo "addUser(".$annotation->getUserId().") (xpath=".$blockUsers->xpath.") ";
+			$blockInfo = null;
+			if ( count( $blockInfoArray ) > 0
+				&& $blockInfoArray[ count( $blockInfoArray ) - 1 ]->sequenceBlock == $sequenceBlock )
+			{
+				$blockInfoArray[ count( $blockInfoArray ) - 1 ]->addUser( $annotation->getUserId() );
+			}
+			else
+			{
+				$blockInfo = new BlockInfo( $annotation->url, $xpathBlock, $sequenceBlock );
+				$blockInfo->addUser( $annotation->getUserId() );
+				$blockInfoArray[ ] = $blockInfo;
+			}
 		}
 		
 		// Now we have an array of paragraphs, each element of which is an array of
@@ -342,15 +348,14 @@ class MarginaliaHelper
 			$info = $blockInfoArray[ $i ];
 			$s .= "\t<block url=\"".htmlspecialchars($info->url)."\"";
 			
-			if ( $info->xpath )
-				$s .= ' xpath="'.htmlspecialchars( $info->xpath ).'"';
+			if ( $info->xpathBlock )
+				$s .= ' xpath-block="'.htmlspecialchars( $info->xpathBlock ).'"';
 
-			if ( $info->block )
-				$s .= ' block="'.htmlspecialchars( $info->block ).'"';
+			if ( $info->sequenceBlock )
+				$s .= ' sequence-block="'.htmlspecialchars( $info->sequenceBlock ).'"';
 			
 			$s .= ">\n";
 			
-//			echo "[xpath: ".$blockUsers->xpath.", ".$blockUsers->users.']';
 			foreach ( $info->getUsers() as $user )
 				$s .= "\t\t<user>".htmlspecialchars( $user )."</user>\n";
 			$s .= "\t</block>\n";
@@ -373,7 +378,7 @@ class MarginaliaHelper
 		for ( $i = 0;  $i < count( $overlaps );  ++$i )
 		{
 			$overlap = $overlaps[ $i ];
-			$s .= $overlap->depth . ' ' . $overlap->blockRange->toString( );
+			$s .= $overlap->depth . ' ' . $overlap->sequenceRange->toString( );
 			if ( $overlap->xpathRange->start && $overlap->xpathRange->end )
 				$s .= ' ' . $overlap->xpathRange->toString( );
 			$s .= "\n";
@@ -406,15 +411,15 @@ class MarginaliaHelper
 		while ( $end_i < count( $ends ) )
 		{
 			$end =& $ends[ $end_i ];
-			$endBlock =& $end->getBlockRange( );
+			$endSequence =& $end->getSequenceRange( );
 			$endXPath =& $end->getXPathRange( );
 
 			if ( $start_i < count( $starts ) )
 			{
 				$start =& $starts[ $start_i ];
-				$startBlock =& $start->getBlockRange( );
+				$startSequence =& $start->getSequenceRange( );
 				$startXPath =& $start->getXPathRange( );
-				$comp = $startBlock->start->compare( $endBlock->end );
+				$comp = $startSequence->start->compare( $endSequence->end );
 			}
 			else
 				$comp = 1;	// Only ends remain
@@ -427,7 +432,7 @@ class MarginaliaHelper
 			{
 				if ( $comp < 0 )
 				{
-					$blockPoint =& $startBlock->start;
+					$sequencePoint =& $startSequence->start;
 					if ( $startXPath)
 						$xpathPoint =& $startXPath->start;
 					else
@@ -437,7 +442,7 @@ class MarginaliaHelper
 				}
 				else // $comp > 0
 				{
-					$blockPoint = &$endBlock->end;
+					$sequencePoint = &$endSequence->end;
 					if ( $endXPath )
 						$xpathPoint = &$endXPath->end;
 					else
@@ -449,7 +454,7 @@ class MarginaliaHelper
 				// Close any existing overlap
 				if ( $overlap )
 				{
-					$overlap->blockRange->end = $blockPoint;
+					$overlap->sequenceRange->end = $sequencePoint;
 					$overlap->xpathRange->end = $xpathPoint;
 					$overlaps[ ] = $overlap;
 //					echo "Created overlap " . $overlap->depth . ' ' . $overlap->blockRange->toString( ) . "<br/>\n";
@@ -460,7 +465,7 @@ class MarginaliaHelper
 				if ( $depth > 0 )
 				{
 					$overlap = new Overlap( $depth );
-					$overlap->blockRange->start = $blockPoint;
+					$overlap->sequenceRange->start = $sequencePoint;
 					$overlap->xpathRange->start = $xpathPoint;
 				}
 			}
@@ -504,7 +509,7 @@ class Overlap
 {
 	function Overlap( $depth )
 	{
-		$this->blockRange = new BlockRange( );
+		$this->sequenceRange = new SequenceRange( );
 		$this->xpathRange = new XPathRange( );
 		$this->depth = $depth;
 	}
@@ -512,11 +517,11 @@ class Overlap
 
 class BlockInfo
 {
-	function BlockInfo( $url, $xpath, $block )
+	function BlockInfo( $url, $xpathBlock, $sequenceBlock )
 	{
 		$this->url = $url;
-		$this->xpath = $xpath;
-		$this->block = $block;
+		$this->xpathBlock = $xpathBlock;
+		$this->sequenceBlock = $sequenceBlock;
 		$this->users = array();
 	}
 	
@@ -551,7 +556,7 @@ class AnnotationPointIterator
 		$this->comp = 0;
 		
 		// Current reference
-		$this->blockPoint = null;
+		$this->sequencePoint = null;
 		$this->xpathPoint = null;
 		$this->annotation = null;
 	}
@@ -575,9 +580,9 @@ class AnnotationPointIterator
 		return $this->comp >= 0;
 	}
 	
-	function getBlockPoint( )
+	function getSequencePoint( )
 	{
-		return $this->blockPoint;
+		return $this->sequencePoint;
 	}
 	
 	function getXPathPoint( )
@@ -595,15 +600,15 @@ class AnnotationPointIterator
 		if ( $this->hasMore( ) )
 		{
 			$end =& $this->ends[ $this->end_i ];
-			$endBlock =& $end->getBlockRange( );
+			$endSequence =& $end->getSequenceRange( );
 			$endXPath =& $end->getXPathRange( );
 			
 			if ( $start_i < count( $starts ) )
 			{
 				$start =& $this->starts[ $this->start_i ];
-				$startBlock =& $this->start->getBlockRange( );
+				$startSequence =& $this->start->getSequenceRange( );
 				$startXPath =& $this->start->getXPathRange( );
-				$this->comp = $startBlock->start->compare( $endBlock->end );
+				$this->comp = $startSequence->start->compare( $endSequence->end );
 			}
 			else
 				$this->comp = 1;	// Only ends remain
@@ -612,10 +617,10 @@ class AnnotationPointIterator
 			{
 				$this->annotation =& $end;
 				
-				if ( $endBlock )
-					$this->blockPoint =& $endBlock->end;
+				if ( $endSequence )
+					$this->sequencePoint =& $endSequence->end;
 				else
-					$this->blockPoint = null;
+					$this->sequencePoint = null;
 					
 				if ( $endXPath )
 					$this->xpathPoint =& $endXPath->end;
@@ -628,10 +633,10 @@ class AnnotationPointIterator
 			{
 				$this->annotation =& $start;
 				
-				if ( $startBlock )
-					$this->blockPoint =& $startBlock->start;
+				if ( $startSequence )
+					$this->sequencePoint =& $startSequence->start;
 				else
-					$this->blockPoint = null;
+					$this->sequencePoint = null;
 				
 				if ( $startXPath )
 					$this->xpathPoint =& $startXPath->start;
@@ -651,17 +656,17 @@ class AnnotationPointIterator
 // Useful for sorting by range start position:
 function annotationCompareStart( $a1, $a2 )
 {
-	$a1Block = $a1->getBlockRange( );
-	$a2Block = $a2->getBlockRange( );
-	return $a1Block->start->compare( $a2Block->start );
+	$a1Sequence = $a1->getSequenceRange( );
+	$a2Sequence = $a2->getSequenceRange( );
+	return $a1Sequence->start->compare( $a2Sequence->start );
 }
 
 // Useful for sorting by range end position:
 function annotationCompareEnd( $a1, $a2 )
 {
-	$a1Block = $a1->getBlockRange( );
-	$a2Block = $a2->getBlockRange( );
-	return $a1Block->end->compare( $a2Block->end );
+	$a1Sequence = $a1->getSequenceRange( );
+	$a2Sequence = $a2->getSequenceRange( );
+	return $a1Sequence->end->compare( $a2Sequence->end );
 }
 
 ?>

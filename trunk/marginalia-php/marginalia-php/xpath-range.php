@@ -57,6 +57,12 @@ class XPathRange
 	{
 		return $this->start->toString( ) . ';' . $this->end->toString( );
 	}
+	
+	function makeBlockLevel( )
+	{
+		$this->start->makeBlockLevel( );
+		$this->end->makeBlockLevel( );
+	}
 }
 
 class XPathPoint
@@ -171,6 +177,12 @@ class XPathPoint
 			}
 		}
 		return true;
+	}
+	
+	function makeBlockLevel( )
+	{
+		$this->words = null;
+		$this->chars = null;
 	}
 }
 

@@ -40,7 +40,7 @@ class Annotation
 		$this->id = null;
 		$this->url = null;
 		$this->userId = null;
-		$this->blockRange = null;
+		$this->sequenceRange = null;
 		$this->xpathRange = null;
 		$this->note = null;
 		$this->access = null;
@@ -85,11 +85,11 @@ class Annotation
 	function getUserId( )
 	{ return $this->userId; }
 	
-	function setBlockRange( &$range )
-	{ $this->blockRange = $range; }
+	function setSequenceRange( &$range )
+	{ $this->sequenceRange = $range; }
 		
-	function getBlockRange( )
-	{ return $this->blockRange; }
+	function getSequenceRange( )
+	{ return $this->sequenceRange; }
 	
 	function setXPathRange( &$range )
 	{ $this->xpathRange = $range; }

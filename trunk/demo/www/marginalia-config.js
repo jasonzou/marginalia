@@ -61,8 +61,9 @@ function initLogging( )
 	log.setTrace( 'WordPointWalker', false );		// Show return values from WordPointWalker
 	log.setTrace( 'prefs', false );				// List fetched preferences
 	log.setTrace( 'keywords', false );				// List fetched keywords
-	log.setTrace( 'BlockPoint.compare', false );	// Compare two BlockPoints
+	log.setTrace( 'SequencePoint.compare', false );	// Compare two BlockPoints
 	log.setTrace( 'range-timing', false );			// Calculate the speed of range calculations
 	log.setTrace( 'highlight-timing', false );	// Calculate the speed of highlight display
 	log.setTrace( 'actions', false );				// Insertion of action text
+	log.setTrace( 'markers', true );				// left margin marker calculations
 }

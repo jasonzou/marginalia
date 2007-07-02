@@ -30,7 +30,7 @@
 require_once( "config.php" );
 require_once( "annotation.php" );
 require_once( "annotate-db.php" );
-require_once( "marginalia-php/block-range.php" );
+require_once( "marginalia-php/sequence-range.php" );
 require_once( "marginalia-php/xpath-range.php" );
 require_once( "marginalia-php/helper.php" );
 
@@ -104,7 +104,7 @@ class AnnotationService
 		$username = unfix_quotes( $_GET[ 'user' ] );
 		$block = null;
 		if ( array_key_exists( 'block', $_GET ) )
-			$block = new BlockPoint( unfix_quotes( $_GET[ 'block' ] ) );
+			$block = new SequencePoint( unfix_quotes( $_GET[ 'block' ] ) );
 		// Can't sanitize $username - it might contain a single quote, e.g. for some French names starting with d',
 		// or some romanization of other languages, e.g. the old romanization of Mandarin
 		if ( $url == null || $url == '' )
