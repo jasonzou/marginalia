@@ -284,15 +284,15 @@ class AnnotationService
 
 	function getBlocks( &$annotations, $url )
 	{
-		$blocks = MarginaliaHelper::annotationsToBlocks( $annotations );
-		for ( $i = 0;  $i < count( $blocks );  ++$i )
-			$blocks[ $i ]->makeBlockLevel( );
+		$infos = MarginaliaHelper::annotationsToRangeInfos( $annotations );
+		for ( $i = 0;  $i < count( $infos );  ++$i )
+			$infos[ $i ]->makeBlockLevel( );
 //		$blocks = MarginaliaHelper::calculateBlockOverlaps( $blocks );
-		$blocks = MarginaliaHelper::mergeBlocks( $blocks );
+		$infos = MarginaliaHelper::mergeRangeInfos( $infos );
 		
 		header( 'Content-Type: application/xml' );
 		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
-		echo MarginaliaHelper::generateBlockInfo( $blocks, $url );
+		echo MarginaliaHelper::getRangeInfoXml( $infos );
 	}
 	
 	function httpError( $code, $message, $description )

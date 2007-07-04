@@ -287,39 +287,40 @@ class MarginaliaHelper
 	}
 
 	/**
-	 * Reduce the number of blocks as much as possible.
-	 * Subsequent blocks with the same stand and end will be collapsed to a single block.
+	 * Reduce the number of range infos as much as possible.
+	 * Subsequent infos with the same stand and end will be collapsed to a single info.
 	 * This is very effective for annotations that don't cross block boundaries, and should significantly
-	 * speed up the client display.  However, the client may still have to deal with overlapping blocks.
+	 * speed up the client display.  However, the client may still have to deal with overlapping infos.
+	 * Modifies the passed infos and returns them.
 	 */
-	function mergeBlocks( &$blocks )
+	function mergeRangeInfos( &$infos )
 	{
 		// Make sure the blocks are sorted
-		usort( $blocks, 'blockCompare' );
+		usort( $infos, 'rangeInfoCompare' );
 		
 		$i = 0;
-		while ( $i < count( $blocks ) - 1 )
+		while ( $i < count( $infos ) - 1 )
 		{
-			$block =& $blocks[ $i ];
-			$nextBlock =& $blocks[ $i + 1 ];
+			$info =& $infos[ $i ];
+			$nextInfo =& $infos[ $i + 1 ];
 			
 			// If ranges are the same, collapse the blocks
-			if ( $block->sequenceRange->equals( $nextBlock->sequenceRange ) )
+			if ( $info->sequenceRange->equals( $nextInfo->sequenceRange ) )
 			{
 				// Patch up xpaths if possible
-				if ( ! $block->xpathRange->start && $nextBlock->xpathRange->start )
-					$block->xpathRange->start = $nextBlock->xpathRange->start;
-				if ( ! $block->xpathRange->end && $nextBlock->xpathRange->end )
-					$block->xpathRange->end = $nextBlock->xpathRange->end;
+				if ( ! $info->xpathRange->start && $nextInfo->xpathRange->start )
+					$info->xpathRange->start = $nextInfo->xpathRange->start;
+				if ( ! $info->xpathRange->end && $nextInfo->xpathRange->end )
+					$info->xpathRange->end = $nextInfo->xpathRange->end;
 					
-				foreach ( $nextBlock->annotations as $annotation )
-					$block->addAnnotation( $annotation );
-				array_splice( $blocks, $i + 1, 1 );
+				foreach ( $nextInfo->annotations as $annotation )
+					$info->addAnnotation( $annotation );
+				array_splice( $infos, $i + 1, 1 );
 			}
 			else
 				$i += 1;
 		}
-		return $blocks;
+		return $infos;
 	}
 	
 	/**
@@ -329,35 +330,35 @@ class MarginaliaHelper
 	 * TODO: include block path, thusly:
 	 *   geof fred john /5 p[5]
 	 */
-	function generateBlockInfo( &$blocks )
+	function getRangeInfoXml( $infos )
 	{
-		$s = "<block-info>\n";
-		for ( $i = 0;  $i < count( $blocks );  ++$i )
+		$s = "<ranges>\n";
+		for ( $i = 0;  $i < count( $infos );  ++$i )
 		{
-			$info = $blocks[ $i ];
+			$info = $infos[ $i ];
 			$s .= $info->toXml( );
 		}
-		return $s . '</block-info>';
+		return $s . '</ranges>';
 	}
 	
 
 	/** Convert a list of annotations to a list of BlockInfo records
 	 * These will have a 1-to-1 correspondence, they should then be merged
 	 * using calculateBlockOverlaps */
-	function annotationsToBlocks( &$annotations )
+	function annotationsToRangeInfos( $annotations )
 	{
-		$blocks = array();
+		$infos = array();
 		foreach ( $annotations as $annotation )
 		{
-			$blocks[ count( $blocks ) ] = new BlockInfo(
+			$infos[ count( $infos ) ] = new BlockInfo(
 				$annotation->getUrl( ), $annotation->getXPathRange( ), $annotation->getSequenceRange( ) );
-			$blocks[ count( $blocks ) - 1 ]->annotations[ ] = $annotation;
+			$infos[ count( $infos ) - 1 ]->annotations[ ] = $annotation;
 		}
-		return $blocks;
+		return $infos;
 	}
 
 	
-	/** Calculate overlaps between BlockInfo records. */
+	/** Calculate overlaps between BlockInfo records.
 	function calculateBlockOverlaps( &$blocks )
 	{
 		// Create two arrays:  one of range starts, the other of range ends
@@ -460,7 +461,7 @@ class MarginaliaHelper
 		}
 		return $overlaps;
 	}
-	
+*/	
 	
 	function httpResultCodeForError( $error )
 	{
@@ -523,7 +524,7 @@ class BlockInfo
 	
 	function toXml( )
 	{
-		$s .= "\t<block url=\"".htmlspecialchars($this->url)."\">\n";
+		$s .= "\t<range-info url=\"".htmlspecialchars($this->url)."\">\n";
 		
 		if ( $this->xpathRange )
 			$s .= "\t\t<range format=\"xpath\">".htmlspecialchars( $this->xpathRange->toString( ) )."</range>\n";
@@ -537,7 +538,7 @@ class BlockInfo
 			$users[ $annotation->getUserId( ) ] = true;
 		foreach ( array_keys( $users ) as $user )
 			$s .= "\t\t<user>".htmlspecialchars( $user )."</user>\n";
-		$s .= "\t</block>\n";
+		$s .= "\t</range-info>\n";
 		return $s;
 	}
 }
@@ -658,7 +659,7 @@ class BlockPointIterator
 }	
 
 // Compare two blocks (sort first on start, then on end)
-function blockCompare( $b1, $b2 )
+function rangeInfoCompare( $b1, $b2 )
 {
 	return $b1->sequenceRange->compare( $b2->sequenceRange );
 }
