@@ -123,8 +123,8 @@ class AnnotationService
 					AnnotationService::httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
 				elseif ( null == $format || 'atom' == $format )
 					AnnotationService::getAtom( $annotations );
-				elseif ( 'overlap' == $format )
-					AnnotationService::getOverlap( $annotations );
+//				elseif ( 'overlap' == $format )
+//					AnnotationService::getOverlap( $annotations );
 				elseif ( 'blocks' == $format )
 					AnnotationService::getBlocks( $annotations, $url );
 				else
@@ -284,9 +284,15 @@ class AnnotationService
 
 	function getBlocks( &$annotations, $url )
 	{
+		$blocks = MarginaliaHelper::annotationsToBlocks( $annotations );
+		for ( $i = 0;  $i < count( $blocks );  ++$i )
+			$blocks[ $i ]->makeBlockLevel( );
+//		$blocks = MarginaliaHelper::calculateBlockOverlaps( $blocks );
+		$blocks = MarginaliaHelper::mergeBlocks( $blocks );
+		
 		header( 'Content-Type: application/xml' );
 		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
-		echo MarginaliaHelper::generateBlockInfo( $annotations, $url );
+		echo MarginaliaHelper::generateBlockInfo( $blocks, $url );
 	}
 	
 	function httpError( $code, $message, $description )
