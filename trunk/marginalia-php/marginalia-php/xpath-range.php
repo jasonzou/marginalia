@@ -55,7 +55,13 @@ class XPathRange
 	
 	function toString( )
 	{
-		return $this->start->toString( ) . ';' . $this->end->toString( );
+		$s = '';
+		if ( $this->start )
+			$s = $this->start->toString( );
+		$s .= ';';
+		if ( $this->end )
+			$s .= $this->end->toString( );
+		return $s;
 	}
 	
 	function makeBlockLevel( )
@@ -110,7 +116,12 @@ class XPathPoint
 	
 	function toString( )
 	{
-		return $this->path . '/word(' . $this->words . ')/char(' . $this->chars . ')';
+		if ( $this->chars !== null )
+			return $this->path . '/word(' . $this->words . ')/char(' . $this->chars . ')';
+		elseif ( $this->words !== null )
+			return $this->path . '/word(' . $this->words;
+		else
+			return $this->path;
 	}
 	
 	/**

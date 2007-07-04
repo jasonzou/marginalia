@@ -79,14 +79,32 @@ class SequenceRange
 	
 	function toString( )
 	{
-//		echo "this->start=" . $this->start . ", this->end=" . $this->end . "\n";
-		return $this->start->toString( ) . ';' . $this->end->toString( );
+		$s = '';
+		if ( $this->start )
+			$s .= $this->start->toString( );
+		$s .= ';';
+		if ( $this->end )
+			$s .= $this->end->toString( );
+		return $s;
 	}
 	
 	function makeblockLevel( )
 	{
 		$this->start->makeBlockLevel( );
 		$this->end->makeBlockLevel( );
+	}
+	
+	function compare( $range2 )
+	{
+		$r = $this->start->compare( $range2->start );
+		if ( 0 !== r )
+			return $r;
+		return $this->end->compare( $range2->end );
+	}
+	
+	function equals( $range2 )
+	{
+		return $this->start->equals( $range2->start ) && $this->end->equals( $range2->end );
 	}
 }
 
@@ -164,7 +182,7 @@ class SequencePoint
 		$r = $this->comparePath( $point2 );
 		if ( $r != 0 )
 			return $r;
-		elseif ( $this->words === null && $point2->words == null )
+		elseif ( $this->words === null && $point2->words === null )
 			return 0;
 		elseif ( $this->words === null )
 			return -1;
@@ -185,6 +203,11 @@ class SequencePoint
 		elseif ( $this->chars > $point2->chars )
 			return 1;
 		return 0;
+	}
+	
+	function equals( $point2 )
+	{
+		return 0 === $this->compare( $point2 );
 	}
 	
 	/**
@@ -223,7 +246,14 @@ class SequencePoint
 	
 	function toString( )
 	{
-		return $this->getPathStr( ) . '/' . $this->words . '.' . $this->chars;
+		$s = $this->getPathStr( );
+		if ( $this->words !== null )
+		{
+			$s .= '/' . $this->words . '.';
+			if ( $this->chars !== null )
+				$s .= $this->chars;
+		}
+		return $s;
 	}
 	
 	function makeBlockLevel( )

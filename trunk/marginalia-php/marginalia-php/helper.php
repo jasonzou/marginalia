@@ -287,49 +287,39 @@ class MarginaliaHelper
 	}
 
 	/**
-	 * Count the number of *users* who have annotated a given block of text
+	 * Reduce the number of blocks as much as possible.
+	 * Subsequent blocks with the same stand and end will be collapsed to a single block.
+	 * This is very effective for annotations that don't cross block boundaries, and should significantly
+	 * speed up the client display.  However, the client may still have to deal with overlapping blocks.
 	 */
-	function calculateBlockInfo( &$annotations )
+	function mergeBlocks( &$blocks )
 	{
-		// Array to store counts for specific paragraphs
-		$blockInfoArray = array();
+		// Make sure the blocks are sorted
+		usort( $blocks, 'blockCompare' );
 		
-		// Iterate over start/end points
-		$iter = new AnnotationPointIterator( $annotations );
-		while ( $iter->next( ) )
+		$i = 0;
+		while ( $i < count( $blocks ) - 1 )
 		{
-			$xpathPoint = $iter->getXPathPoint( );
-			if ( $xpathPoint )
-				$xpathBlock = $xpathPoint->getPathStr( );
-			else
-				$xpathBlock = null;
-				
-			$sequencePoint = $iter->getSequencePoint( );
-			if ( $sequencePoint )
-				$sequenceBlock = $sequencePoint->getPathStr( );
-			else
-				$sequenceBlock = null;
+			$block =& $blocks[ $i ];
+			$nextBlock =& $blocks[ $i + 1 ];
 			
-			// Now increment counts
-			// Will cause strange results if xpath range not present for all points
-			$annotation =& $iter->getAnnotation();
-			$blockInfo = null;
-			if ( count( $blockInfoArray ) > 0
-				&& $blockInfoArray[ count( $blockInfoArray ) - 1 ]->sequenceBlock == $sequenceBlock )
+			// If ranges are the same, collapse the blocks
+			if ( $block->sequenceRange->equals( $nextBlock->sequenceRange ) )
 			{
-				$blockInfoArray[ count( $blockInfoArray ) - 1 ]->addUser( $annotation->getUserId() );
+				// Patch up xpaths if possible
+				if ( ! $block->xpathRange->start && $nextBlock->xpathRange->start )
+					$block->xpathRange->start = $nextBlock->xpathRange->start;
+				if ( ! $block->xpathRange->end && $nextBlock->xpathRange->end )
+					$block->xpathRange->end = $nextBlock->xpathRange->end;
+					
+				foreach ( $nextBlock->annotations as $annotation )
+					$block->addAnnotation( $annotation );
+				array_splice( $blocks, $i + 1, 1 );
 			}
 			else
-			{
-				$blockInfo = new BlockInfo( $annotation->url, $xpathBlock, $sequenceBlock );
-				$blockInfo->addUser( $annotation->getUserId() );
-				$blockInfoArray[ ] = $blockInfo;
-			}
+				$i += 1;
 		}
-		
-		// Now we have an array of paragraphs, each element of which is an array of
-		// users who have annotated that paragraph.
-		return $blockInfoArray;
+		return $blocks;
 	}
 	
 	/**
@@ -339,71 +329,47 @@ class MarginaliaHelper
 	 * TODO: include block path, thusly:
 	 *   geof fred john /5 p[5]
 	 */
-	function generateBlockInfo( &$annotations )
+	function generateBlockInfo( &$blocks )
 	{
-		$s = "<blocks>\n";
-		$blockInfoArray = MarginaliaHelper::calculateBlockInfo( $annotations );
-		for ( $i = 0;  $i < count( $blockInfoArray );  ++$i )
+		$s = "<block-info>\n";
+		for ( $i = 0;  $i < count( $blocks );  ++$i )
 		{
-			$info = $blockInfoArray[ $i ];
-			$s .= "\t<block url=\"".htmlspecialchars($info->url)."\"";
-			
-			if ( $info->xpathBlock )
-				$s .= ' xpath-block="'.htmlspecialchars( $info->xpathBlock ).'"';
+			$info = $blocks[ $i ];
+			$s .= $info->toXml( );
+		}
+		return $s . '</block-info>';
+	}
+	
 
-			if ( $info->sequenceBlock )
-				$s .= ' sequence-block="'.htmlspecialchars( $info->sequenceBlock ).'"';
-			
-			$s .= ">\n";
-			
-			foreach ( $info->getUsers() as $user )
-				$s .= "\t\t<user>".htmlspecialchars( $user )."</user>\n";
-			$s .= "\t</block>\n";
-		}
-		return $s . '</blocks>';
-	}
-	
-	/**
-	 * Emit a document for a list of overlaps
-	 * Format:
-	 *   depth block-range xpath-range
-	 *   1 /5/2/1.1;/5/2/2.3 /div[5]/p[2]/word(1)/char(1);/div[5]/p[2]/word(2)/char(3)
-	 * Note that fields are separated by whitespace, but the xpath might in future contain
-	 * space characters (that is why it must be last on the line)
-	 */
-	function generateOverlaps( &$annotations )
+	/** Convert a list of annotations to a list of BlockInfo records
+	 * These will have a 1-to-1 correspondence, they should then be merged
+	 * using calculateBlockOverlaps */
+	function annotationsToBlocks( &$annotations )
 	{
-		$s = '';
-		//echo "# depth blockRange xpathRange\n";
-		for ( $i = 0;  $i < count( $overlaps );  ++$i )
+		$blocks = array();
+		foreach ( $annotations as $annotation )
 		{
-			$overlap = $overlaps[ $i ];
-			$s .= $overlap->depth . ' ' . $overlap->sequenceRange->toString( );
-			if ( $overlap->xpathRange->start && $overlap->xpathRange->end )
-				$s .= ' ' . $overlap->xpathRange->toString( );
-			$s .= "\n";
+			$blocks[ count( $blocks ) ] = new BlockInfo(
+				$annotation->getUrl( ), $annotation->getXPathRange( ), $annotation->getSequenceRange( ) );
+			$blocks[ count( $blocks ) - 1 ]->annotations[ ] = $annotation;
 		}
-		return $s;
+		return $blocks;
 	}
+
 	
-	
-	/**
-	 * Calculate overlapping regions of highlight.  Instead of listing individual highlights,
-	 * this provides a sequence of non-overlapping ranges - each of which represents one or
-	 * more overlapping portions of highlighted ranges, plus a depth to say how many.
-	 * Inspired by the GPL3 annotation implementation, but not currently used anywhere.
-	 */
-	function calculateOverlaps( &$annotations )
+	/** Calculate overlaps between BlockInfo records. */
+	function calculateBlockOverlaps( &$blocks )
 	{
 		// Create two arrays:  one of range starts, the other of range ends
-		$starts = $annotations;
-		$ends = $annotations;
-		usort( $starts, 'annotationCompareStart' );
-		usort( $ends, 'annotationCompareEnd' );
+		$starts = $blocks;
+		$ends = $blocks;
+		usort( $starts, 'blockCompareStart' );
+		usort( $ends, 'blockCompareEnd' );
 		
 		// Create an array to store overlap ranges
-		$overlap = null;
+		$info = null;
 		$overlaps = array( );
+		$annotations = array( );
 		
 		$start_i = 0;
 		$end_i = 0;
@@ -411,63 +377,85 @@ class MarginaliaHelper
 		while ( $end_i < count( $ends ) )
 		{
 			$end =& $ends[ $end_i ];
-			$endSequence =& $end->getSequenceRange( );
-			$endXPath =& $end->getXPathRange( );
+			$endSequence =& $end->sequenceRange;
+			$endXPath =& $end->xpathRange;
 
 			if ( $start_i < count( $starts ) )
 			{
 				$start =& $starts[ $start_i ];
-				$startSequence =& $start->getSequenceRange( );
-				$startXPath =& $start->getXPathRange( );
+				$startSequence = $start->sequenceRange;
+				$startXPath = $start->xpathRange;
 				$comp = $startSequence->start->compare( $endSequence->end );
 			}
 			else
 				$comp = 1;	// Only ends remain
 			
-			if ( 0 == $comp )
+			if ( $comp < 0 )
 			{
-				; // Do nothing:  one starts, one ends - it's a wash
+				$sequencePoint =& $startSequence->start;
+				if ( $startXPath)
+					$xpathPoint =& $startXPath->start;
+				else
+					$xpathPoint = null;
+				++$depth;
+				++$start_i;
+			
+				// Add all the start block's annotations to the list
+				foreach ( $start->annotations as $annotation )
+				{
+					$id = $annotation->getAnnotationId( );
+					$annotations[ $id ] = $annotation;
+					$annotationCounts[ $id ] = $annotationCounts[ $id ] ? $annotationCounts[ $id ] + 1 : 1;
+				}
 			}
-			else
+			else // $comp >= 0
 			{
-				if ( $comp < 0 )
-				{
-					$sequencePoint =& $startSequence->start;
-					if ( $startXPath)
-						$xpathPoint =& $startXPath->start;
-					else
-						$xpathPoint = null;
-					++$depth;
-					++$start_i;
-				}
-				else // $comp > 0
-				{
-					$sequencePoint = &$endSequence->end;
-					if ( $endXPath )
-						$xpathPoint = &$endXPath->end;
-					else
-						$xpathPoint = null;
-					--$depth;
-					++$end_i;
-				}
-					
-				// Close any existing overlap
-				if ( $overlap )
-				{
-					$overlap->sequenceRange->end = $sequencePoint;
-					$overlap->xpathRange->end = $xpathPoint;
-					$overlaps[ ] = $overlap;
-//					echo "Created overlap " . $overlap->depth . ' ' . $overlap->blockRange->toString( ) . "<br/>\n";
-					$overlap = null;
-				}
+				$sequencePoint = $endSequence->end;
+				if ( $endXPath )
+					$xpathPoint = $endXPath->end;
+				else
+					$xpathPoint = null;
+				--$depth;
+				++$end_i;
+			}
 				
-				// Begin any new overlap
-				if ( $depth > 0 )
+			// Close any existing overlap
+			if ( $info )
+			{
+				$info->sequenceRange->end = $sequencePoint;
+				if ( $info->xpathRange && $xpathPoint )
+					$info->xpathRange->end = $xpathPoint;
+				else
+					$info->xpathRange = null;
+				$info->annotations = array_values( $annotations );
+				$annotations = array( );
+				$overlaps[ ] = $info;
+				echo "Add Info<br/>";
+				$info = null;
+			}
+			
+			// Remove all the end block's annotations from the list (if applicable)
+			if ( $comp >= 0 )
+			{
+				foreach ( $end->annotations as $annotation )
 				{
-					$overlap = new Overlap( $depth );
-					$overlap->sequenceRange->start = $sequencePoint;
-					$overlap->xpathRange->start = $xpathPoint;
+					$id = $annotation->getAnnotationId( );
+					if ( 1 == $annotationCounts[ $id ] )
+					{
+						unset( $annotations[ $id ] );
+						unset( $annotationCounts[ $id ] );
+					}
+					else
+						$annotationCounts[ $id ] -= 1;
 				}
+			}
+			
+			// Begin any new overlap
+			if ( $depth > 0 )
+			{
+				$info = new BlockInfo( $end->url,
+					new SequenceRange( $sequencePoint, null ),
+					$xpathPoint ? new XPathRange( $xpathPoint, null ) : null );
 			}
 		}
 		return $overlaps;
@@ -505,51 +493,66 @@ class MarginaliaHelper
 	}
 }
 
-class Overlap
-{
-	function Overlap( $depth )
-	{
-		$this->sequenceRange = new SequenceRange( );
-		$this->xpathRange = new XPathRange( );
-		$this->depth = $depth;
-	}
-}
-
 class BlockInfo
 {
-	function BlockInfo( $url, $xpathBlock, $sequenceBlock )
+	function BlockInfo( $url, $xpathRange, $sequenceRange )
 	{
 		$this->url = $url;
-		$this->xpathBlock = $xpathBlock;
-		$this->sequenceBlock = $sequenceBlock;
-		$this->users = array();
+		$this->sequenceRange = $sequenceRange;
+		$this->xpathRange = $xpathRange;
+		$this->annotations = array();
 	}
 	
-	function addUser( $user )
+	function addAnnotation( &$annotation )
 	{
-		if ( $this->users[ $user ] )
-			$this->users[ $user ] += 1;
-		else
-			$this->users[ $user ] = 1;
+		$this->annotations[ $annotation->getAnnotationId( ) ] = $annotation;
 	}
 	
-	function getUsers( )
+	function getAnnotations( )
 	{
-		return array_keys( $this->users );
+		return array_values( $this->annotations );
+	}
+	
+	function makeBlockLevel( )
+	{
+		if ( $this->xpathRange )
+			$this->xpathRange->makeBlockLevel( );
+		if ( $this->sequenceRange )
+			$this->sequenceRange->makeBlockLevel( );
+	}
+	
+	function toXml( )
+	{
+		$s .= "\t<block url=\"".htmlspecialchars($this->url)."\">\n";
+		
+		if ( $this->xpathRange )
+			$s .= "\t\t<range format=\"xpath\">".htmlspecialchars( $this->xpathRange->toString( ) )."</range>\n";
+
+		if ( $this->sequenceRange )
+			$s .= "\t\t<range format=\"sequence\">".htmlspecialchars( $this->sequenceRange->toString( ) )."</range>\n";
+		
+		$users = array();
+		$annotations = array_values( $this->annotations );
+		foreach ( $annotations as $annotation )
+			$users[ $annotation->getUserId( ) ] = true;
+		foreach ( array_keys( $users ) as $user )
+			$s .= "\t\t<user>".htmlspecialchars( $user )."</user>\n";
+		$s .= "\t</block>\n";
+		return $s;
 	}
 }
 	
-class AnnotationPointIterator
+class BlockPointIterator
 {
-	function AnnotationPointIterator( &$annotations )
+	function BlockPointIterator( &$blocks )
 	{
-		$this->annotations =& $annotations;
+		$this->blocks =& $blocks;
 		
 		// Create two arrays:  one of range starts, the other of range ends
-		$this->starts = $annotations;
-		$this->ends = $annotations;
-		usort( $this->starts, 'annotationCompareStart' );
-		usort( $this->ends, 'annotationCompareEnd' );
+		$this->starts = $blocks;
+		$this->ends = $blocks;
+		usort( $this->starts, 'blockCompareStart' );
+		usort( $this->ends, 'blockCompareEnd' );
 		
 		$this->start_i = 0;
 		$this->end_i = 0;
@@ -558,7 +561,7 @@ class AnnotationPointIterator
 		// Current reference
 		$this->sequencePoint = null;
 		$this->xpathPoint = null;
-		$this->annotation = null;
+		$this->block = null;
 	}
 	
 	function hasMore( )
@@ -590,32 +593,34 @@ class AnnotationPointIterator
 		return $this->xpathPoint;
 	}
 	
-	function getAnnotation( )
+	function getBlock( )
 	{
-		return $this->annotation;
+		return $this->block;
 	}
 	
 	function next( )
 	{
-		if ( $this->hasMore( ) )
+		if ( $this->end_i < count( $this->ends ) )
 		{
 			$end =& $this->ends[ $this->end_i ];
-			$endSequence =& $end->getSequenceRange( );
-			$endXPath =& $end->getXPathRange( );
+			$endSequence =& $end->sequenceRange;
+			$endXPath =& $end->xpathRange;
 			
-			if ( $start_i < count( $starts ) )
+			if ( $this->start_i < count( $this->starts ) )
 			{
 				$start =& $this->starts[ $this->start_i ];
-				$startSequence =& $this->start->getSequenceRange( );
-				$startXPath =& $this->start->getXPathRange( );
+				$startSequence =& $start->sequenceRange;
+				$startXPath =& $start->xpathRange;
+				//echo "start: ".$startSequence . "<br/>";
 				$this->comp = $startSequence->start->compare( $endSequence->end );
 			}
 			else
 				$this->comp = 1;	// Only ends remain
 				
+			//echo "comp: ".$this->comp."<br/>";
 			if ( $this->comp >= 0 )
 			{
-				$this->annotation =& $end;
+				$this->block =& $end;
 				
 				if ( $endSequence )
 					$this->sequencePoint =& $endSequence->end;
@@ -629,9 +634,9 @@ class AnnotationPointIterator
 				
 				++$this->end_i;
 			}
-			elseif ( $comp < 0 )
+			elseif ( $this->comp < 0 )
 			{
-				$this->annotation =& $start;
+				$this->block =& $start;
 				
 				if ( $startSequence )
 					$this->sequencePoint =& $startSequence->start;
@@ -652,21 +657,22 @@ class AnnotationPointIterator
 	}
 }	
 
+// Compare two blocks (sort first on start, then on end)
+function blockCompare( $b1, $b2 )
+{
+	return $b1->sequenceRange->compare( $b2->sequenceRange );
+}
 
 // Useful for sorting by range start position:
-function annotationCompareStart( $a1, $a2 )
+function blockCompareStart( $a1, $a2 )
 {
-	$a1Sequence = $a1->getSequenceRange( );
-	$a2Sequence = $a2->getSequenceRange( );
-	return $a1Sequence->start->compare( $a2Sequence->start );
+	return $a1->sequenceRange->start->compare( $a2->sequenceRange->start );
 }
 
 // Useful for sorting by range end position:
-function annotationCompareEnd( $a1, $a2 )
+function blockCompareEnd( $a1, $a2 )
 {
-	$a1Sequence = $a1->getSequenceRange( );
-	$a2Sequence = $a2->getSequenceRange( );
-	return $a1Sequence->end->compare( $a2Sequence->end );
+	return $a1->sequenceRange->end->compare( $a2->sequenceRange->end );
 }
 
 ?>
