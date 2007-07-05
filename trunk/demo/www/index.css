@@ -159,6 +159,10 @@ ol#articles {
 	cursor: pointer;
 }
 
+.hentry .notes li.other-user {
+	color: #555;
+}
+
 .hentry .notes li.quote-error p:before {
 	content: '!';
 	padding: 0 .75ex;
@@ -265,6 +269,10 @@ ol#articles {
 	width: 1em;
 }
 
+.hentry .notes .username {
+	font-style: italic;
+}
+
 .hentry .markers {
 	position: absolute;
 	height: 100%;
@@ -277,7 +285,7 @@ ol#articles {
 
 .hentry .markers .marker {
 	position: absolute;
-	right: .25em;
+	right: .35em;
 }
 
 .hentry .markers .marker:hover {
@@ -286,16 +294,25 @@ ol#articles {
 	background-position:  top right;
 }
 
-.hentry span.annotation-user-count {
+.hentry .markers .annotation-user-count {
 	cursor: pointer;
 	display:  block;
 	width: 1.5em;
 	text-align: center;
-	padding: .25ex .5ex;
-	background: #6666ff;
+	padding: .25ex .25ex;
+	background: #bbb;
 	font-family: sans-serif;
 	font-weight: bold;
 	color: white;
+}
+
+.hentry .markers .marker.fetched .annotation-user-count {
+	background: transparent;
+	color: #bbb;
+}
+
+.hentry .markers .marker:hover .annotation-user-count {
+	background: #66f;
 }
 
 .hentry .smart-copy {

@@ -127,6 +127,8 @@ class AnnotationService
 //					AnnotationService::getOverlap( $annotations );
 				elseif ( 'blocks' == $format )
 					AnnotationService::getBlocks( $annotations, $url );
+				elseif ( 'summary' == $format )
+					AnnotationService::getSummary( $annotations, $url );
 				else
 					$this->httpError( 400, 'Bad Request', 'Unknown format' );
 			}
@@ -262,7 +264,7 @@ class AnnotationService
 	 * Emit an Atom document for a list of annotations
 	 * The annotations should already be sorted
 	 */
-	function getAtom( &$annotations )
+	function getAtom( $annotations )
 	{
 		global $CFG;
 
@@ -275,14 +277,14 @@ class AnnotationService
 	}
 
 	
-	function getOverlap( &$annotations )
+	function getOverlap( $annotations )
 	{
 		$overlaps = MarginaliaHelper::calculateOverlaps( $annotations );
 		header( 'Content-Type: text/plain' );
 		echo MarginaliaHelper::generateOverlaps( $annotations );
 	}
 
-	function getBlocks( &$annotations, $url )
+	function getBlocks( $annotations, $url )
 	{
 		$infos = MarginaliaHelper::annotationsToRangeInfos( $annotations );
 		for ( $i = 0;  $i < count( $infos );  ++$i )
@@ -293,6 +295,14 @@ class AnnotationService
 		header( 'Content-Type: application/xml' );
 		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
 		echo MarginaliaHelper::getRangeInfoXml( $infos );
+	}
+	
+	function getSummary( $annotations, $url )
+	{
+		$summary = new AnnotationSummary( $annotations, $url );
+		header( 'Content-Type: application/xml' );
+		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
+		echo $summary->toXml( );
 	}
 	
 	function httpError( $code, $message, $description )

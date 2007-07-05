@@ -494,6 +494,45 @@ class MarginaliaHelper
 	}
 }
 
+class AnnotationSummary
+{
+	function AnnotationSummary( $annotations, $url )
+	{
+		$this->url = $url;
+		$this->noteUsers = array();
+		$this->editUsers = array();
+		$this->allUsers = array();
+		
+		foreach ( $annotations as $annotation )
+		{
+			$userid = $annotation->getUserId();
+			if ( 'edit' == $annotation->getAction( ) )
+				$this->editUsers[ $userid ] = array_key_exists( $userid, $this->editUsers ) ? $this->editUsers[ $userid ] + 1 : 1;
+			else
+				$this->noteUsers[ $userid ] = array_key_exists( $userid, $this->noteUsers ) ? $this->noteUsers[ $userid ] + 1 : 1;
+			$this->allUsers[ $userid ] = true;
+		}
+	}
+	
+	function toXml( )
+	{
+		$s = "<annotation-summary href=\"".htmlspecialchars( $this->url ) ."\">\n";
+		
+		foreach ( array_keys( $this->allUsers ) as $user )
+		{
+			$s .= "\t<user ";
+			if ( $this->noteUsers[ $user ] )
+				$s .= ' notes="'.$this->noteUsers[ $user ].'"';
+			if ( $this->editUsers[ $user ] )
+				$s .= ' edits="'.$this->editUsers[ $user ].'"';
+			$s .= ">".htmlspecialchars( $user )."</user>\n";
+		}
+		
+		$s .= "</annotation-summary>\n";
+		return $s;
+	}
+}
+
 class BlockInfo
 {
 	function BlockInfo( $url, $xpathRange, $sequenceRange )
@@ -532,12 +571,28 @@ class BlockInfo
 		if ( $this->sequenceRange )
 			$s .= "\t\t<range format=\"sequence\">".htmlspecialchars( $this->sequenceRange->toString( ) )."</range>\n";
 		
-		$users = array();
+		$noteUsers = array();
+		$editUsers = array();
+		$allUsers = array();
 		$annotations = array_values( $this->annotations );
 		foreach ( $annotations as $annotation )
-			$users[ $annotation->getUserId( ) ] = true;
-		foreach ( array_keys( $users ) as $user )
-			$s .= "\t\t<user>".htmlspecialchars( $user )."</user>\n";
+		{
+			$userid = $annotation->getUserId( );
+			if ( 'edit' == $annotation->getAction( ) )
+				$editUsers[ $userid ] = array_key_exists( $userid, $editUsers ) ? $editUsers[ $userid ] + 1 : 1;
+			else
+				$noteUsers[ $userid ] = array_key_exists( $userid, $noteUsers ) ? $noteUsers[ $userid ] + 1 : 1;
+			$allUsers[ $userid ] = true;
+		}
+		foreach ( array_keys( $allUsers ) as $user )
+		{
+			$s .= "\t\t<user";
+			if ( array_key_exists( $user, $noteUsers ) )
+				$s .= ' notes="'.$noteUsers[ $user ].'"';
+			if ( array_key_exists( $user, $editUsers ) )
+				$s .= ' edits="'.$editUsers[ $user ].'"';
+			$s .= '>'.htmlspecialchars( $user )."</user>\n";
+		}
 		$s .= "\t</range-info>\n";
 		return $s;
 	}
