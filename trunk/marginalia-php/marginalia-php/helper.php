@@ -332,13 +332,13 @@ class MarginaliaHelper
 	 */
 	function getRangeInfoXml( $infos )
 	{
-		$s = "<ranges>\n";
+		$s = "<range-infos>\n";
 		for ( $i = 0;  $i < count( $infos );  ++$i )
 		{
 			$info = $infos[ $i ];
 			$s .= $info->toXml( );
 		}
-		return $s . '</ranges>';
+		return $s . '</range-infos>';
 	}
 	
 
