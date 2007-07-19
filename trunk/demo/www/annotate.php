@@ -63,7 +63,7 @@ class AnnotationService
 				if ( False === $id )
 					AnnotationService::listAnnotations( );
 				else
-					AnnotationService::httpError( 404, 'Not Found', 'Can\'t address annotation by ID' );
+					AnnotationService::getAnnotationById( $id );
 				break;
 			
 			// create a new annotation
@@ -131,6 +131,32 @@ class AnnotationService
 					AnnotationService::getSummary( $annotations, $url );
 				else
 					$this->httpError( 400, 'Bad Request', 'Unknown format' );
+			}
+		}
+	}
+	
+	/**
+	 * Retrieve a single annotation by ID
+	 */
+	function getAnnotationById( $id )
+	{
+		$db = new AnnotationDB( );
+		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
+			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
+		else
+		{
+			$annotation = $db->getAnnotation( $id );
+			$db->release( );
+			
+			if ( null === $annotation )
+				AnnotationService::httpError( 404, 'Not Found Error', 'No such annotation' );
+			else
+			{
+				$annotations = array( $annotation );
+				if ( null == $format || 'atom' == $format )
+					AnnotationService::getAtom( $annotations );
+				else
+					$this->httpError( 400, 'Bad Request', 'Format unknown or unsupported for single annotations' );
 			}
 		}
 	}

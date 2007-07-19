@@ -49,6 +49,7 @@ class Annotation
 		$this->quoteTitle = null;
 		$this->quoteAuthor = null;
 		$this->link = null;
+		$this->linkTitle = null;
 		$this->created = null;
 		$this->modified = null;
 	}
@@ -147,6 +148,12 @@ class Annotation
 	
 	function getLink( )
 	{ return $this->link; }
+	
+	function setLinkTitle( $title )
+	{ $this->linkTitle = $title; }
+	
+	function getLinkTitle( )
+	{ return $this->linkTitle; }
 	
 	function setCreated( $created )
 	{ $this->created = strtotime( $created ); }

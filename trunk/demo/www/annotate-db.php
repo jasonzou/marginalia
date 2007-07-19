@@ -74,17 +74,18 @@ class AnnotationDB
 		$sQuote_title	= addslashes( $annotation->getQuoteTitle( ) );
 		$sQuote_author	= addslashes( $annotation->getQuoteAuthor( ) );
 		$sLink			= null == $link ? 'null' : "'".addslashes( $link )."'";
+		$sLinkTitle		= addslashes( $annotation->getLinkTitle( ) );
 		
 		// In a running application, all queries should be parameterized for security,
 		// not concatenated together as I am doing here.
 		$query = "insert into $CFG->dbannotation "
 			. "(userid, url, note, access, action"
-			. ", quote, quote_title, quote_author, link, created"
+			. ", quote, quote_title, quote_author, link, link_title, created"
 			. ", start_xpath, start_block, start_word, start_char"
 			. ", end_xpath, end_block, end_word, end_char"
 			. ") values ("
 			. "'$sUser', '$sUrl', '$sNote', '$sAccess', '$sAction'"
-			. ", '$sQuote', '$sQuote_title', '$sQuote_author', $sLink, now()"
+			. ", '$sQuote', '$sQuote_title', '$sQuote_author', $sLink, '$sLinkTitle', now()"
 			. ", '".$xpathStart->getPathStr()."', '".$sequenceStart->getPaddedPathStr()."', ".$sequenceStart->getWords().", ".$sequenceStart->getChars()
 			. ", '".$xpathEnd->getPathStr()."', '".$sequenceEnd->getPaddedPathStr()."', ".$sequenceEnd->getWords().", ".$sequenceEnd->getChars()
 			. ")";
@@ -194,6 +195,14 @@ class AnnotationDB
 			// TODO: Add extra security check on URL here
 			$sLink = addslashes( $link );
 			$query = AnnotationDB::appendToUpdateStr( $query, "link='$sLink'" );
+		}
+		
+		// Link Title
+		$linkTitle = $annotation->getLinkTitle( );
+		if ( null !== $linkTitle )
+		{
+			$sLinkTitle = addslashes( $linkTitle );
+			$query = AnnotationDB::appendToUpdateStr( $query, "link_title='$sLinkTitle'" );
 		}
 		
 		// TODO: In a running application, all queries should be parameterized for security,

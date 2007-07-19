@@ -66,4 +66,5 @@ function initLogging( )
 	log.setTrace( 'highlight-timing', false );	// Calculate the speed of highlight display
 	log.setTrace( 'actions', false );				// Insertion of action text
 	log.setTrace( 'markers', true );				// left margin marker calculations
+	log.setTrace( 'showNote', true );
 }

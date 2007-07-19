@@ -13,6 +13,7 @@ create table annotations (
 	end_char int not null,
 	note varchar(255) null,
 	link varchar(255) null,
+	link_title varchar(255) null,
 	action varchar(32) null,
 	created datetime not null,	
 	modified timestamp not null,
