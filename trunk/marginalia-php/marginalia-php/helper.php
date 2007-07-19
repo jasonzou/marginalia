@@ -142,6 +142,13 @@ class MarginaliaHelper
 			$annotation->setLink( $link );
 		}
 		
+		// Link Title
+		if ( array_key_exists( 'link_title', $params ) )
+		{
+			$title = $params[ 'link_title' ];
+			$annotation->setLinkTitle( $title );
+		}
+		
 		// Created
 		if ( array_key_exists( 'created', $params ) )
 		{
