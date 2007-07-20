@@ -30,8 +30,8 @@
 	<script type="text/javascript" src="marginalia/XPathRange.js"></script>
 	<script type="text/javascript" src="marginalia/annotation.js"></script>
 	<script type="text/javascript" src="marginalia/post-micro.js"></script>
-<!--	<script type="text/javascript" src="marginalia/linkable.js"></script>
-	<script type="text/javascript" src="marginalia/link-ui-clicktolink.js"></script> -->
+	<script type="text/javascript" src="marginalia/linkable.js"></script>
+	<script type="text/javascript" src="marginalia/link-ui-clicktolink.js"></script>
 	
 	<script type="text/javascript" src="marginalia/marginalia.js"></script>
 	<script type="text/javascript" src="marginalia/blockmarker-ui.js"></script>
@@ -115,6 +115,7 @@
 			keywordService.init( );
 			marginaliaInit( annotationService, 'anonymous', 'anonymous', null,
 				preferences, keywordService );
+			window.marginalia.linkUi = new ClickToLinkUi( );
 			smartcopyInit( );
 			smartcopyOn( );
 			

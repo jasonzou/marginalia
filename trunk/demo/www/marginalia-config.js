@@ -26,7 +26,6 @@
  * $Id$
  */
 
-ANNOTATION_LINKING = true;		// If true, include the linking feature
 ANNOTATION_KEYWORDS = true;	// If true, include the keywords feature
 ANNOTATION_ACCESS = true;		// If true, include the public/private feature
 ANNOTATION_EXTERNAL_LINKING = true;	// If true, link editor accepts any http/https URL
