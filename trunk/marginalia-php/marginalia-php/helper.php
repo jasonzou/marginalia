@@ -177,7 +177,7 @@ class MarginaliaHelper
 		$NS_ATOM = 'http://www.w3.org/2005/Atom';
 		
 		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.4'>\n";
+		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.5'>\n";
 		// This would be the link to the summary page:
 		//echo( " <link rel='alternate' type='text/html' href='" . htmlspecialchars( "$CFG->wwwroot$url/annotations" ) . "'/>\n" );
 		echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( $servicePath ) . "\"/>\n";
@@ -273,6 +273,7 @@ class MarginaliaHelper
 				$sNote = "<a href=\"$sLink\">...</a>";
 		}
 		
+		$sQuote = "<q>$sQuote</q>";
 		if ( 'edit' == $annotation->getAction() )
 		{
 			if ( $sNote )
@@ -280,12 +281,23 @@ class MarginaliaHelper
 			if ( $sQuote )
 				$sQuote = "<del>$sQuote</del>";
 		}
+		
+		$link = '';
+		if ( $annotation->getLink( ) )
+		{
+			$link = htmlspecialchars( $annotation->getLink( ) );
+			if ( $annotation->getLinkTitle() )
+				$link = "<cite><a href=\"$link\">".htmlspecialchars($annotation->getLinkTitle())."</a></cite>";
+			else
+				$link = "<a href=\"$link\">See Also</a>";
+		}
 	
-		$s .= "  <content type='xhtml'>\n"
+		$s .= "  <content type='xhtml'>\n" 
 			. "   <div xmlns='$NS_XHTML' class='annotation'>\n"
-			. "<p><cite><a href=\"$sUrl\">$sQuoteTitle</a></cite> (<span class='quoteAuthor'>$sQuoteAuthor</span>):</p>\n"
-			. "<blockquote cite=\"$sUrl\"><p>$sQuote</p></blockquote>\n"
+			. "<p class='quote'>$sQuote &#x2015; <span class='quoteAuthor'>$sQuoteAuthor</span> in "
+			.   "<cite><a href=\"$sUrl\">$sQuoteTitle</a></cite></p>\n"
 			. "<p class='note'>$sNote</p>\n"
+			. $link
 			. "   </div>\n"
 			. "  </content>\n"
 			. " </entry>\n";
