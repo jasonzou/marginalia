@@ -3,20 +3,22 @@ AN_PERBLOCKANNOTATIONS_CLASS = 'per-block-annotations';
 
 function ojsAnnotationInit( serviceRoot, currentUser )
 {
-	var annotationService = new RestAnnotationService( serviceRoot );
-	var preferences = new Preferences( new RestPreferenceService( serviceRoot ) );
-	var keywordService = new RestKeywordService( serviceRoot + '/keywords' );
-	keywordService.init( );
-	marginaliaInit( annotationService, currentUser, currentUser, null, preferences, keywordService );
-	window.addEventListener( 'load', ojsAnnotationOnLoad, false );
-
-	var marginaliaDirect = new MarginaliaDirect( annotationService );
-	marginaliaDirect.init( );
+	addEvent( window, 'load', function() { ojsAnnotationOnLoad( serviceRoot, currentUser ); });
 }
 
 
 function ojsAnnotationOnLoad()
 {
+	var annotationService = new RestAnnotationService( serviceRoot );
+	var preferences = new Preferences( new RestPreferenceService( serviceRoot ) );
+	var keywordService = new RestKeywordService( serviceRoot + '/keywords' );
+	keywordService.init( );
+	marginaliaInit( annotationService, currentUser, currentUser, null, preferences, keywordService );
+	window.marginalia.linkUi = new ClickToLinkUi( );
+
+	var marginaliaDirect = new MarginaliaDirect( annotationService );
+	marginaliaDirect.init( );
+
 	initLogging();
 
 	var mainNode = document.getElementById( "main" );
