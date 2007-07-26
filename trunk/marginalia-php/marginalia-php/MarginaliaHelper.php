@@ -1,7 +1,7 @@
 <?php
 
 /*
- * helper.php
+ * MarginaliaHelper.php
  * shared helper functions for marginalia server implementations
  *
  * Marginalia has been developed with funding and support from
@@ -171,7 +171,7 @@ class MarginaliaHelper
 		return 0;
 	}
 	
-	function generateAnnotationFeed( &$annotations, $feedTagUri, $feedLastModified, $servicePath, $tagHost )
+	function generateAnnotationFeed( &$annotations, $feedTagUri, $feedLastModified, $servicePath, $tagHost, $feedUrl )
 	{
 		$NS_PTR = 'http://www.geof.net/code/annotation/';
 		$NS_ATOM = 'http://www.w3.org/2005/Atom';
@@ -180,7 +180,8 @@ class MarginaliaHelper
 		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.5'>\n";
 		// This would be the link to the summary page:
 		//echo( " <link rel='alternate' type='text/html' href='" . htmlspecialchars( "$CFG->wwwroot$url/annotations" ) . "'/>\n" );
-		echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( $servicePath ) . "\"/>\n";
+		echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( $feedUrl ) . "\"/>\n";
+		//echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( $servicePath ) . "\"/>\n";
 		echo " <updated>" . date( 'Ymd', $feedLastModified ) . 'T' . date( 'HiO', $feedLastModified ) . "</updated>\n";
 		echo " <title>Annotations</title>";
 		echo " <id>$feedTagUri</id>\n";
@@ -361,7 +362,7 @@ class MarginaliaHelper
 	}
 	
 
-	/** Convert a list of annotations to a list of BlockInfo records
+	/** Convert a list of annotations to a list of RangeInfo records
 	 * These will have a 1-to-1 correspondence, they should then be merged
 	 * using calculateBlockOverlaps */
 	function annotationsToRangeInfos( $annotations )
@@ -369,119 +370,13 @@ class MarginaliaHelper
 		$infos = array();
 		foreach ( $annotations as $annotation )
 		{
-			$infos[ count( $infos ) ] = new BlockInfo(
+			$infos[ count( $infos ) ] = new RangeInfo(
 				$annotation->getUrl( ), $annotation->getXPathRange( ), $annotation->getSequenceRange( ) );
 			$infos[ count( $infos ) - 1 ]->annotations[ ] = $annotation;
 		}
 		return $infos;
 	}
 
-	
-	/** Calculate overlaps between BlockInfo records.
-	function calculateBlockOverlaps( &$blocks )
-	{
-		// Create two arrays:  one of range starts, the other of range ends
-		$starts = $blocks;
-		$ends = $blocks;
-		usort( $starts, 'blockCompareStart' );
-		usort( $ends, 'blockCompareEnd' );
-		
-		// Create an array to store overlap ranges
-		$info = null;
-		$overlaps = array( );
-		$annotations = array( );
-		
-		$start_i = 0;
-		$end_i = 0;
-		$depth = 0;
-		while ( $end_i < count( $ends ) )
-		{
-			$end =& $ends[ $end_i ];
-			$endSequence =& $end->sequenceRange;
-			$endXPath =& $end->xpathRange;
-
-			if ( $start_i < count( $starts ) )
-			{
-				$start =& $starts[ $start_i ];
-				$startSequence = $start->sequenceRange;
-				$startXPath = $start->xpathRange;
-				$comp = $startSequence->start->compare( $endSequence->end );
-			}
-			else
-				$comp = 1;	// Only ends remain
-			
-			if ( $comp < 0 )
-			{
-				$sequencePoint =& $startSequence->start;
-				if ( $startXPath)
-					$xpathPoint =& $startXPath->start;
-				else
-					$xpathPoint = null;
-				++$depth;
-				++$start_i;
-			
-				// Add all the start block's annotations to the list
-				foreach ( $start->annotations as $annotation )
-				{
-					$id = $annotation->getAnnotationId( );
-					$annotations[ $id ] = $annotation;
-					$annotationCounts[ $id ] = $annotationCounts[ $id ] ? $annotationCounts[ $id ] + 1 : 1;
-				}
-			}
-			else // $comp >= 0
-			{
-				$sequencePoint = $endSequence->end;
-				if ( $endXPath )
-					$xpathPoint = $endXPath->end;
-				else
-					$xpathPoint = null;
-				--$depth;
-				++$end_i;
-			}
-				
-			// Close any existing overlap
-			if ( $info )
-			{
-				$info->sequenceRange->end = $sequencePoint;
-				if ( $info->xpathRange && $xpathPoint )
-					$info->xpathRange->end = $xpathPoint;
-				else
-					$info->xpathRange = null;
-				$info->annotations = array_values( $annotations );
-				$annotations = array( );
-				$overlaps[ ] = $info;
-				echo "Add Info<br/>";
-				$info = null;
-			}
-			
-			// Remove all the end block's annotations from the list (if applicable)
-			if ( $comp >= 0 )
-			{
-				foreach ( $end->annotations as $annotation )
-				{
-					$id = $annotation->getAnnotationId( );
-					if ( 1 == $annotationCounts[ $id ] )
-					{
-						unset( $annotations[ $id ] );
-						unset( $annotationCounts[ $id ] );
-					}
-					else
-						$annotationCounts[ $id ] -= 1;
-				}
-			}
-			
-			// Begin any new overlap
-			if ( $depth > 0 )
-			{
-				$info = new BlockInfo( $end->url,
-					new SequenceRange( $sequencePoint, null ),
-					$xpathPoint ? new XPathRange( $xpathPoint, null ) : null );
-			}
-		}
-		return $overlaps;
-	}
-*/	
-	
 	function httpResultCodeForError( $error )
 	{
 		switch ( $error )
@@ -511,243 +406,6 @@ class MarginaliaHelper
 		else
 			return false;
 	}
-}
-
-class AnnotationSummary
-{
-	function AnnotationSummary( $annotations, $url )
-	{
-		$this->url = $url;
-		$this->noteUsers = array();
-		$this->editUsers = array();
-		$this->allUsers = array();
-		
-		foreach ( $annotations as $annotation )
-		{
-			$userid = $annotation->getUserId();
-			if ( 'edit' == $annotation->getAction( ) )
-				$this->editUsers[ $userid ] = array_key_exists( $userid, $this->editUsers ) ? $this->editUsers[ $userid ] + 1 : 1;
-			else
-				$this->noteUsers[ $userid ] = array_key_exists( $userid, $this->noteUsers ) ? $this->noteUsers[ $userid ] + 1 : 1;
-			$this->allUsers[ $userid ] = true;
-		}
-	}
-	
-	function toXml( )
-	{
-		$s = "<annotation-summary href=\"".htmlspecialchars( $this->url ) ."\">\n";
-		
-		foreach ( array_keys( $this->allUsers ) as $user )
-		{
-			$s .= "\t<user ";
-			if ( $this->noteUsers[ $user ] )
-				$s .= ' notes="'.$this->noteUsers[ $user ].'"';
-			if ( $this->editUsers[ $user ] )
-				$s .= ' edits="'.$this->editUsers[ $user ].'"';
-			$s .= ">".htmlspecialchars( $user )."</user>\n";
-		}
-		
-		$s .= "</annotation-summary>\n";
-		return $s;
-	}
-}
-
-class BlockInfo
-{
-	function BlockInfo( $url, $xpathRange, $sequenceRange )
-	{
-		$this->url = $url;
-		$this->sequenceRange = $sequenceRange;
-		$this->xpathRange = $xpathRange;
-		$this->annotations = array();
-	}
-	
-	function addAnnotation( &$annotation )
-	{
-		$this->annotations[ $annotation->getAnnotationId( ) ] = $annotation;
-	}
-	
-	function getAnnotations( )
-	{
-		return array_values( $this->annotations );
-	}
-	
-	function makeBlockLevel( )
-	{
-		if ( $this->xpathRange )
-			$this->xpathRange->makeBlockLevel( );
-		if ( $this->sequenceRange )
-			$this->sequenceRange->makeBlockLevel( );
-	}
-	
-	function toXml( )
-	{
-		$s .= "\t<range-info url=\"".htmlspecialchars($this->url)."\">\n";
-		
-		if ( $this->xpathRange )
-			$s .= "\t\t<range format=\"xpath\">".htmlspecialchars( $this->xpathRange->toString( ) )."</range>\n";
-
-		if ( $this->sequenceRange )
-			$s .= "\t\t<range format=\"sequence\">".htmlspecialchars( $this->sequenceRange->toString( ) )."</range>\n";
-		
-		$noteUsers = array();
-		$editUsers = array();
-		$allUsers = array();
-		$annotations = array_values( $this->annotations );
-		foreach ( $annotations as $annotation )
-		{
-			$userid = $annotation->getUserId( );
-			if ( 'edit' == $annotation->getAction( ) )
-				$editUsers[ $userid ] = array_key_exists( $userid, $editUsers ) ? $editUsers[ $userid ] + 1 : 1;
-			else
-				$noteUsers[ $userid ] = array_key_exists( $userid, $noteUsers ) ? $noteUsers[ $userid ] + 1 : 1;
-			$allUsers[ $userid ] = true;
-		}
-		foreach ( array_keys( $allUsers ) as $user )
-		{
-			$s .= "\t\t<user";
-			if ( array_key_exists( $user, $noteUsers ) )
-				$s .= ' notes="'.$noteUsers[ $user ].'"';
-			if ( array_key_exists( $user, $editUsers ) )
-				$s .= ' edits="'.$editUsers[ $user ].'"';
-			$s .= '>'.htmlspecialchars( $user )."</user>\n";
-		}
-		$s .= "\t</range-info>\n";
-		return $s;
-	}
-}
-	
-class BlockPointIterator
-{
-	function BlockPointIterator( &$blocks )
-	{
-		$this->blocks =& $blocks;
-		
-		// Create two arrays:  one of range starts, the other of range ends
-		$this->starts = $blocks;
-		$this->ends = $blocks;
-		usort( $this->starts, 'blockCompareStart' );
-		usort( $this->ends, 'blockCompareEnd' );
-		
-		$this->start_i = 0;
-		$this->end_i = 0;
-		$this->comp = 0;
-		
-		// Current reference
-		$this->sequencePoint = null;
-		$this->xpathPoint = null;
-		$this->block = null;
-	}
-	
-	function hasMore( )
-	{
-		return $this->end_i < count( $this->ends );
-	}
-	
-	function isStartPoint( )
-	{
-		return $this->comp < 0;
-	}
-	
-	/**
-	 * Treat an end/start pair as an end point, then iterate past and look at the start
-	 * on next()
-	 */
-	function isEndPoint( )
-	{
-		return $this->comp >= 0;
-	}
-	
-	function getSequencePoint( )
-	{
-		return $this->sequencePoint;
-	}
-	
-	function getXPathPoint( )
-	{
-		return $this->xpathPoint;
-	}
-	
-	function getBlock( )
-	{
-		return $this->block;
-	}
-	
-	function next( )
-	{
-		if ( $this->end_i < count( $this->ends ) )
-		{
-			$end =& $this->ends[ $this->end_i ];
-			$endSequence =& $end->sequenceRange;
-			$endXPath =& $end->xpathRange;
-			
-			if ( $this->start_i < count( $this->starts ) )
-			{
-				$start =& $this->starts[ $this->start_i ];
-				$startSequence =& $start->sequenceRange;
-				$startXPath =& $start->xpathRange;
-				//echo "start: ".$startSequence . "<br/>";
-				$this->comp = $startSequence->start->compare( $endSequence->end );
-			}
-			else
-				$this->comp = 1;	// Only ends remain
-				
-			//echo "comp: ".$this->comp."<br/>";
-			if ( $this->comp >= 0 )
-			{
-				$this->block =& $end;
-				
-				if ( $endSequence )
-					$this->sequencePoint =& $endSequence->end;
-				else
-					$this->sequencePoint = null;
-					
-				if ( $endXPath )
-					$this->xpathPoint =& $endXPath->end;
-				else
-					$this->xpathPoint = null;
-				
-				++$this->end_i;
-			}
-			elseif ( $this->comp < 0 )
-			{
-				$this->block =& $start;
-				
-				if ( $startSequence )
-					$this->sequencePoint =& $startSequence->start;
-				else
-					$this->sequencePoint = null;
-				
-				if ( $startXPath )
-					$this->xpathPoint =& $startXPath->start;
-				else
-					$this->xpathPoint = null;
-				
-				++$this->start_i;
-			}
-			return True;
-		}
-		else
-			return False;
-	}
-}	
-
-// Compare two blocks (sort first on start, then on end)
-function rangeInfoCompare( $b1, $b2 )
-{
-	return $b1->sequenceRange->compare( $b2->sequenceRange );
-}
-
-// Useful for sorting by range start position:
-function blockCompareStart( $a1, $a2 )
-{
-	return $a1->sequenceRange->start->compare( $a2->sequenceRange->start );
-}
-
-// Useful for sorting by range end position:
-function blockCompareEnd( $a1, $a2 )
-{
-	return $a1->sequenceRange->end->compare( $a2->sequenceRange->end );
 }
 
 ?>

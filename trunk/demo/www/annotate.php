@@ -6,9 +6,11 @@
  *
  * Marginalia has been developed with funding and support from
  * BC Campus, Simon Fraser University, and the Government of
- * Canada, and units and individuals within those organizations.
- * Many thanks to all of them.  See CREDITS.html for details.
- * Copyright (C) 2005-2007 Geoffrey Glass www.geof.net
+ * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
+ * units and individuals within those organizations.  Many 
+ * thanks to all of them.  See CREDITS.html for details.
+ * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
+ * http://www.geof.net/code/annotation
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -27,322 +29,68 @@
  * $Id$
  */
 
+require_once( "marginalia-php/MarginaliaHelper.php" );
+require_once( "marginalia-php/Annotation.php" );
+require_once( "marginalia-php/AnnotationService.php" );
 require_once( "config.php" );
-require_once( "annotation.php" );
 require_once( "annotate-db.php" );
-require_once( "marginalia-php/sequence-range.php" );
-require_once( "marginalia-php/xpath-range.php" );
-require_once( "marginalia-php/helper.php" );
 
-$annotationService = new AnnotationService( );
-$annotationService->dispatch( );
-
-class AnnotationService
+class DemoAnnotationService extends AnnotationService
 {
-	function parseAnnotationId( )
+	var $db;
+	
+	function DemoAnnotationService( )
 	{
-		$urlString = $_SERVER[ 'REQUEST_URI' ];
-		$pos = strpos( $urlString, $CFG->annotate_servicePath );
-		if ( False == $pos )
-			$id = ( array_key_exists( 'id', $_GET ) ? (int) $_GET[ 'id' ] : False );
-		else
-			$id = (int) substr( $urlString, $pos + strlen( $CFG->annotate_servicePath ) + 1 );
-		if ( $id == '' || $id == 0 || !isnum( $id ) )
+		global $CFG;
+
+		AnnotationService::AnnotationService( $CFG->host, $CFG->annotate_servicePath, $CFG->installDate );
+	}
+
+	function beginRequest( )
+	{
+		global $CFG;
+
+		$this->db = new AnnotationDB( );
+		if ( ! $this->db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
+		{
+			$this->httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
 			return False;
-		return $id;
-	}
-
-	
-	function dispatch( )
-	{
-		$id = $this->parseAnnotationId( );
-		switch( $_SERVER[ 'REQUEST_METHOD' ] )
-		{
-			// get a list of annotations
-			case 'GET':
-				if ( False === $id )
-					AnnotationService::listAnnotations( );
-				else
-					AnnotationService::getAnnotationById( $id );
-				break;
-			
-			// create a new annotation
-			case 'POST':
-				AnnotationService::createAnnotation( );
-				break;
-			
-			// update an existing annotation
-			case 'PUT':
-				if ( False === $id )
-					AnnotationService::httpError( 400, 'Bad Request', 'No such annotation #'.(int)$id );
-				else
-					AnnotationService::updateAnnotation( $id );
-				break;
-			
-			// delete an existing annotation
-			case 'DELETE':
-				if ( False === $id )
-					AnnotationService::httpError( 400, 'Bad Request', 'No such annotation #'.(int)$id );
-				else
-					AnnotationService::deleteAnnotation( $id );
-				break;
-			
-			default:
-				header( "HTTP:/1.1 405 Method Not Allowed" );
-				header( "Allow:  GET, POST, DELETE" );
-				echo "<h1>405 Method Not Allowed</h1>Allow: GET, POST, DELETE";
 		}
+		return True;
 	}
 	
-	
-	function listAnnotations()
+	function endRequest( )
 	{
-		global $CFG;
+		$this->db->release( );
+	}
 		
-		$format = unfix_quotes( $_GET[ 'format' ] );
-		$url = unfix_quotes( $_GET[ 'url' ] );
-		$username = unfix_quotes( $_GET[ 'user' ] );
-		$block = null;
-		if ( array_key_exists( 'block', $_GET ) )
-			$block = new SequencePoint( unfix_quotes( $_GET[ 'block' ] ) );
-		// Can't sanitize $username - it might contain a single quote, e.g. for some French names starting with d',
-		// or some romanization of other languages, e.g. the old romanization of Mandarin
-		if ( $url == null || $url == '' )
-			AnnotationService::httpError( 400, 'Bad Request', 'Bad URL' );
-		else
-		{
-			$db = new AnnotationDB( );
-			if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-				AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
-			else
-			{
-				$annotations = &$db->listAnnotations( $url, $username, $block );
-				$db->release( );
-				
-				if ( null === $annotations )
-					AnnotationService::httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
-				elseif ( null == $format || 'atom' == $format )
-					AnnotationService::getAtom( $annotations );
-//				elseif ( 'overlap' == $format )
-//					AnnotationService::getOverlap( $annotations );
-				elseif ( 'blocks' == $format )
-					AnnotationService::getBlocks( $annotations, $url );
-				elseif ( 'summary' == $format )
-					AnnotationService::getSummary( $annotations, $url );
-				else
-					$this->httpError( 400, 'Bad Request', 'Unknown format' );
-			}
-		}
+	function doListAnnotations( $url, $username, $block )
+	{
+		return $this->db->listAnnotations( $url, $username, $block );
 	}
 	
-	/**
-	 * Retrieve a single annotation by ID
-	 */
-	function getAnnotationById( $id )
+	function doGetAnnotation( $id )
 	{
-		$db = new AnnotationDB( );
-		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
-		else
-		{
-			$annotation = $db->getAnnotation( $id );
-			$db->release( );
-			
-			if ( null === $annotation )
-				AnnotationService::httpError( 404, 'Not Found Error', 'No such annotation' );
-			else
-			{
-				$annotations = array( $annotation );
-				if ( null == $format || 'atom' == $format )
-					AnnotationService::getAtom( $annotations );
-				else
-					$this->httpError( 400, 'Bad Request', 'Format unknown or unsupported for single annotations' );
-			}
-		}
+		return $this->db->getAnnotation( $id );
 	}
 	
-	
-	function createAnnotation()
+	function doCreateAnnotation( $annotation )
 	{
-		global $CFG;
-		
-		$db = new AnnotationDB( );
-		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
-		else
-		{
-			// Strip magicquotes if necessary
-			$params = array();
-			foreach ( array_keys( $_POST ) as $param )
-				$params[ $param ] = unfix_quotes( $_POST[ $param ] );
-			// Parse annotation values
-			$annotation = new Annotation( );
-			$error = MarginaliaHelper::annotationFromParams( $annotation, $params );
-			if ( $error )
-				AnnotationService::httpError( MarginaliaHelper::httpResultCodeForError( $error ), 'Error', $error );
-			else
-			{
-				// Store to the database
-				$id = $db->createAnnotation( $annotation );
-				$db->release( );
-				if ( $id != 0 )
-				{
-					header( 'HTTP/1.1 201 Created' );
-					header( "Location: $CFG->wwwroot$servicePath/$id" );
-				}
-				else
-					AnnotationService::httpError( 500, 'Internal Service Error', 'Create failed' );	
-			}
-		}
+		return $this->db->createAnnotation( $annotation );
 	}
 	
-	
-	function updateAnnotation( $id )
+	function doUpdateAnnotation( $annotation )
 	{
-		global $CFG;
-		
-		// Now for some joy.  PHP isn't clever enough to populate $_POST if the
-		// Content-Type is application/x-www-form-urlencoded - it only does
-		// that if the request method is POST.  Bleargh.
-		// Plus, how do I ensure the charset is respected correctly?  Hmph.
-		
-		// Should fail if not Content-Type: application/x-www-form-urlencoded; charset: UTF-8
-		$fp = fopen( 'php://input', 'rb' );
-		$urlencoded = '';
-		while ( $data = fread( $fp, 1024 ) )
-			$urlencoded .= $data;
-		parse_str( $urlencoded, $params );
-
-		$db = new AnnotationDB( );
-		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
-		else
-		{
-			// This is like a try...catch block, but since exceptions don't (?) exist in PHP4,
-			// if something goes wrong, simply break out of the do...while without executing
-			// remaining code in the block.
-			do
-			{
-				$annotation = $db->getAnnotation( $id );
-				if ( null === $annotation )
-				{
-					AnnotationService::httpError( 404, 'Not Found', 'No such annotation' );
-					break;
-				}
-
-				// Set only the fields that were passed in
-				$annotation->fromArray( $params );
-				
-				// Update the annotation in the database
-				if ( $db->updateAnnotation( $annotation ) )
-					header( 'HTTP/1.1 204 Updated' );
-				else
-					AnnotationService::httpError( 500, 'Internal Service Error', 'Update failed' );
-			}
-			while( 0 );
-
-			$db->release( );
-		}
-	}
-
-	
-	function deleteAnnotation( $id )
-	{
-		global $CFG;
-		
-		$db = new AnnotationDB( );
-		if ( ! $db->open( $CFG->dbhost, $CFG->dbuser, $CFG->dbpass, $CFG->db ) )
-			AnnotationService::httpError( 500, 'Internal Service Error', 'Unable to connect to database' );
-		else
-		{
-			if ( $db->deleteAnnotation( $id ) )
-				header( "HTTP/1.1 204 Deleted" );
-			else
-				AnnotationService::httpError( 500, 'Internal Service Error', 'Deleted failed' );
-			$db->release( );
-		}
-	}
-
-	/**
-	 * Get the most recent date on which an annotation was modified
-	 * Used for feed last modified dates
-	 */
-	function getLastModified( &$annotations )
-	{
-		global $CFG;
-		
-		// Get the last modification time of the feed
-		$lastModified = $CFG->installDate;
-		if ( $annotations )
-		{
-			foreach ( $annotations as $annotation )
-			{
-				$modified = $annotation->getModified( );
-				if ( null != $modified && $modified > $lastModified )
-					$lastModified = $modified;
-			}
-		}
-		return $lastModified;
+		return $this->db->updateAnnotation( $annotation );
 	}
 	
-	
-	/**
-	 * Emit an Atom document for a list of annotations
-	 * The annotations should already be sorted
-	 */
-	function getAtom( $annotations )
+	function doDeleteAnnotation( $id )
 	{
-		global $CFG;
-
-		$feedLastModified = AnnotationService::getLastModified( $annotations );
-		$feedTagUri = "tag:" . $CFG->host . ',' . date( '2005-07-20', $CFG->installDate ) . ":annotation";
-		
-		header( 'Content-Type: application/xml' );
-		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
-		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $CFG->annotate_servicePath, $tagHost );
+		return $this->db->deleteAnnotation( $id );
 	}
-
-	
-	function getOverlap( $annotations )
-	{
-		$overlaps = MarginaliaHelper::calculateOverlaps( $annotations );
-		header( 'Content-Type: text/plain' );
-		echo MarginaliaHelper::generateOverlaps( $annotations );
-	}
-
-	function getBlocks( $annotations, $url )
-	{
-		$infos = MarginaliaHelper::annotationsToRangeInfos( $annotations );
-		for ( $i = 0;  $i < count( $infos );  ++$i )
-			$infos[ $i ]->makeBlockLevel( );
-//		$blocks = MarginaliaHelper::calculateBlockOverlaps( $blocks );
-		$infos = MarginaliaHelper::mergeRangeInfos( $infos );
-		
-		header( 'Content-Type: application/xml' );
-		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
-		echo MarginaliaHelper::getRangeInfoXml( $infos );
-	}
-	
-	function getSummary( $annotations, $url )
-	{
-		$summary = new AnnotationSummary( $annotations, $url );
-		header( 'Content-Type: application/xml' );
-		echo '<?xml version="1.0" encoding="utf-8"?>'."\n";
-		echo $summary->toXml( );
-	}
-	
-	function httpError( $code, $message, $description )
-	{
-		header( "HTTP/1.1 $code $message" );
-		echo ( "<h1>$message</h1>\n$description" );
-	}	
 }
 
-
-// It sure doesn't hurt to make sure that numbers are really numbers either.
-function isnum( $field )
-{
-	return strspn( $field, '0123456789' ) == strlen( $field );
-}
+$annotationService = new DemoAnnotationService( );
+$annotationService->dispatch( );
 
 ?>
