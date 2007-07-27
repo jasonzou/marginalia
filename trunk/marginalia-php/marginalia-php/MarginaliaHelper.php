@@ -137,10 +137,11 @@ class MarginaliaHelper
 		if ( array_key_exists( 'link', $params ) )
 		{
 			$link = $params[ 'link' ];
-			if ( ! $link || ! MarginaliaHelper::isUrlSafe( $link ) )
-				return URL_SCHEME_ERROR + '( ' + $link + ')';
+			if ( $link && ! MarginaliaHelper::isUrlSafe( $link ) )
+				return URL_SCHEME_ERROR;
 			$annotation->setLink( $link );
 		}
+
 		
 		// Link Title
 		if ( array_key_exists( 'link_title', $params ) )
