@@ -43,15 +43,17 @@ class XPathRange
 		$this->end = new XPathPoint( $points[ 1 ] );
 	}
 
+	function setStart( $point )
+	{  $this->start = $point;  }
+	
 	function getStart( )
-	{
-		return $this->start;
-	}
+	{  return $this->start;  }
+	
+	function setEnd( $point )
+	{  $this->end = $point;  }
 	
 	function getEnd( )
-	{
-		return $this->end;
-	}
+	{  return $this->end;  }
 	
 	function toString( )
 	{

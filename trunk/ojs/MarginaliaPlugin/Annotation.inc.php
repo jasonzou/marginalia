@@ -38,11 +38,11 @@ class Annotation extends DataObject
 			return false;
 	}
 	
-	function getBlockRange( )
-	{  return $this->getData( 'blockRange' );  }
+	function getSequenceRange( )
+	{  return $this->getData( 'sequenceRange' );  }
 	
-	function setBlockRange( $range )
-	{  $this->setData( 'blockRange', $range );  }
+	function setSequenceRange( $range )
+	{  $this->setData( 'sequenceRange', $range );  }
 	
 	function getXPathRange( )
 	{  return $this->getData( 'xpathRange' );  }
@@ -107,6 +107,12 @@ class Annotation extends DataObject
 		else
 			return false;
 	}
+	
+	function getLinkTitle( )
+	{  return $this->getData( 'link_title' );  }
+	
+	function setLinkTitle( $title )
+	{  $this->setData( 'link_title', $title );  }
 	
 	function getCreated( )
 	{  return $this->getData( 'created' );  }

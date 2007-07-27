@@ -58,6 +58,8 @@
 	
 	<field name="link" type="C2" size="255"/>
 	
+	<field name="link_title" type="C2" size="255"/>
+	
 	<field name="created" type="T">	<!-- datetime -->
 		<NOTNULL/>
 	</field>

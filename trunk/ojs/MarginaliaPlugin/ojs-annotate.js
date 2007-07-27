@@ -7,7 +7,7 @@ function ojsAnnotationInit( serviceRoot, currentUser )
 }
 
 
-function ojsAnnotationOnLoad()
+function ojsAnnotationOnLoad( serviceRoot, currentUser )
 {
 	var annotationService = new RestAnnotationService( serviceRoot );
 	var preferences = new Preferences( new RestPreferenceService( serviceRoot ) );
@@ -55,20 +55,21 @@ function ojsAnnotationOnLoad()
 		// Create the margin notes area
 		var notes = wrapper.appendChild( domutil.element( 'div', {
 			className: 'notes',
-			content:  domutil.element( 'div', {
-				className: 'button-wrapper',
-				content:  [
-					domutil.button ( {
-						className: 'createAnnotation',
-						title: 'Click here to create an annotation',
-						onclick: ojsCreateAnnotation,
-						content: '>'
-					} ),
-					domutil.element( 'ol', {
-						content:  domutil.element( 'li', { } )
-					} )
-				]
-			} )
+			content:  [ 
+				domutil.element( 'div', {
+					className: 'button-wrapper',
+					content:
+						domutil.button ( {
+							className: 'createAnnotation',
+							title: 'Click here to create an annotation',
+							onclick: ojsCreateAnnotation,
+							content: '>'
+						} ),
+				} ),
+				domutil.element( 'ol', {
+					content:  domutil.element( 'li', { } )
+				} )
+			]
 		} ) );
 	
 	//  Slow, but can be made to work in IE:

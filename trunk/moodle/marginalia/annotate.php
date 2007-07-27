@@ -20,7 +20,7 @@ if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
    require_login();
 
    
-$service = new MoodleAnnotationService( $CFG->wwwroot, $USER->username, $CFG->prefix );
+$service = new MoodleAnnotationService( $CFG->wwwroot, isguest() ? null : $USER->username, $CFG->prefix );
 $service->dispatch( );
 
 class MoodleAnnotation extends Annotation
@@ -48,7 +48,7 @@ class MoodleAnnotationService extends AnnotationService
 		$urlParts = parse_url( $wwroot );
 		$host = $urlParts[ 'host' ];
 		$servicePath = $this->getMoodlePath( ) + $annotateServicePath ;
-		AnnotationService::AnnotationService( $host, $servicePath, $username );
+		AnnotationService::AnnotationService( $host, $servicePath, Date( '2007-07-26' ), $username );
 	}
 	
 	/** Get the moodle path - that is, the path to moodle from the root of the server.  Typically this is 'moodle/'.
@@ -122,27 +122,12 @@ class MoodleAnnotationService extends AnnotationService
 	
 	function doCreateAnnotation( $annotation )
 	{
-		global $CFG, $USER;
-
-		// create a new annotation
-		if ( isguest() )
-		{
-			header( 'HTTP/1.1 403 Forbidden' );
-			echo '<h1>403 Forbidden</h1>Guests may not create annotations</h1>';
-		}
-		elseif ( strlen( $annotation->getNote( ) ) > MAX_NOTE_LENGTH )
-		{
-			header( 'HTTP/1.1 400 Bad Request' );
-			echo "<h1>400 Bad Request</h1>Note too long";
-		}
+		if ( strlen( $annotation->getNote( ) ) > MAX_NOTE_LENGTH )
+			$this->httpError( 400, 'Bad Request', 'Note too long' );
 		elseif ( strlen( $annotation->getQuote( ) ) > MAX_QUOTE_LENGTH )
-		{
-			header( 'HTTP/1.1 400 Bad Request' );
-			echo "<h1>400 Bad Request</h1>Quote too long";
-		}
+			$this->httpError( 400, 'Bad Request', 'Quote too long' );
 		else
-		{			
-			$annotation->setUserId( $USER->username );
+		{
 			$record = $this->annotationToRecord( $annotation );
 			
 			// Figure out the object type and ID from the url
@@ -163,45 +148,25 @@ class MoodleAnnotationService extends AnnotationService
 			{
 				$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 				add_to_log( null, 'annotation', 'create', $logUrl, "$id" );
+				return $id;
 			}
-			else
-				return 0;
 		}
+		return 0;
 	}
 	
 	function doUpdateAnnotation( $annotation )
 	{
-		global $USER;
-		
-		// Get current value of annotation fields and verify it belongs to this user
-		// Verify that the annotation belongs to this user
-		$annotation = $this->doGetAnnotation( $id );
-		if ( null != $annotation && $annotation->getUserId() == $USER->username )
-		{
-			$this->annotationToRecord( $annotation );
-			$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
-			add_to_log( null, 'annotation', 'update', $logUrl, "$id" );
-			return update_record( $this->tablePrefix.'annotation', $record );
-		}
-		else
-			return False;
+		$record = $this->annotationToRecord( $annotation );
+		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
+		add_to_log( null, 'annotation', 'update', $logUrl, "$id" );
+		return update_record( $this->tablePrefix.'annotation', $record );
 	}
 	
 	function doDeleteAnnotation( $id )
 	{
-		global $USER;
-		
-		// Verify that the annotation belongs to this user
-		$annotation = $this->doGetAnnotation( $id );
-		if ( null != $annotation && $annotation->getUserId() == $USER->username )
-		{
-			delete_records( $this->tablePrefix.'annotation', 'id', $id );
-			$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
-			add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
-			return True;
-		}
-		else
-			return False;
+		delete_records( $this->tablePrefix.'annotation', 'id', $id );
+		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
+		add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
 	}
 	
 	function recordToAnnotation( $r )

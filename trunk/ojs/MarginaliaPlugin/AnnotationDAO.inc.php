@@ -71,6 +71,7 @@ class AnnotationDAO extends DAO
 		$annotation->setQuoteTitle( $row[ 'quote_title' ] );
 		$annotation->setQuoteAuthor( $row[ 'quote_author' ] );
 		$annotation->setLink( $row[ 'link' ] );
+		$annotation->setLinkTitle( $row[ 'link_title' ] );
 		$annotation->setCreated( $row[ 'created' ] );
 		$annotation->setModified( $row[ 'modified' ] );
 		
@@ -82,24 +83,26 @@ class AnnotationDAO extends DAO
 		// Create the block range
 		if ( $row[ 'start_block' ] )
 		{
-			$startPoint = new BlockPoint( $row[ 'start_block' ], $start_word, $start_char );
-			$endPoint = new BlockPoint( $row[ 'end_block' ], $end_word, $end_char );
-			$annotation->setBlockRange( new BlockRange( $startPoint, $endPoint ) );
+			$range = new SequenceRange( );
+			$range->setStart( new SequencePoint( $row[ 'start_block' ], $start_word, $start_char ) );
+			$range->setEnd( new SequencePoint( $row[ 'end_block' ], $end_word, $end_char ) );
+			$annotation->setSequenceRange( $range );
 		}
 		// Create a block range using the out-of-date old format
 		elseif ( array_key_exists( 'range', $row ) && $row[ 'range' ] )
 		{
-			$blockRange = new BlockRange( );
-			$blockRange->fromString( $row[ 'range' ] );
-			$annotation->setBlockRange( $blockRange );
+			$range = new SequenceRange( );
+			$range->fromString( $row[ 'range' ] );
+			$annotation->setSequenceRange( $range );
 		}
 		
 		// Create the xpath range
 		if ( $row[ 'start_xpath' ] )
 		{
-			$startPoint = new XPathPoint( $row[ 'start_xpath' ], $start_word, $start_char );
-			$endPoint = new XPathPoint( $row[ 'end_xpath' ], $end_word, $end_char );
-			$annotation->setXPathRange( new XPathRange( $startPoint, $endPoint ) );
+			$range = new XPathRange( );
+			$range->setStart( new XPathPoint( $row[ 'start_xpath' ], $start_word, $start_char ) );
+			$range->setEnd( new XPathPoint( $row[ 'end_xpath' ], $end_word, $end_char ) );
+			$annotation->setXPathRange( $range );
 		}
 
 		HookRegistry::call( 'AnnotationDAO::_returnAnnotationFromRow', array( &$annotation, &$row ) );
@@ -117,17 +120,17 @@ class AnnotationDAO extends DAO
 		{
 			//$annotation->stampModified( );
 			$now = Core::getCurrentDate();
-			$blockRange = $annotation->getBlockRange( );
+			$sequenceRange = $annotation->getSequenceRange( );
 			$xpathRange = $annotation->getXPathRange( );
-			$blockStart = $blockRange->getStart( );
-			$blockEnd = $blockRange->getEnd( );
+			$sequenceStart = $sequenceRange->getStart( );
+			$sequenceEnd = $sequenceRange->getEnd( );
 			$xpathStart = $xpathRange->getStart( );
 			$xpathEnd = $xpathRange->getEnd( );
 			$this->update(
 				sprintf(
 					'INSERT INTO annotations'
 					.' (userid, url, note, access, action'
-					.', quote, quote_title, quote_author, link'
+					.', quote, quote_title, quote_author, link, link_title'
 					.', start_xpath, start_block, start_word, start_char'
 					.', end_xpath, end_block, end_word, end_char'
 					.', created, modified)'
@@ -147,6 +150,7 @@ class AnnotationDAO extends DAO
 					$annotation->getQuoteTitle( ),
 					$annotation->getQuoteAuthor( ),
 					$annotation->getLink( ),
+					$annotation->getLinkTitle( ),
 					
 					$xpathStart->getPathStr( ),
 					$blockStart->getPaddedPathStr( ),
@@ -179,10 +183,10 @@ class AnnotationDAO extends DAO
 		if ( $currentUser && $currentUser->getUsername() == $annotation->getUserId() )
 		{
 	//		$annotation->stampModified();
-			$blockRange = $annotation->getBlockRange( );
+			$sequenceRange = $annotation->getSequenceRange( );
 			$xpathRange = $annotation->getXPathRange( );
-			$blockStart = $blockRange->getStart( );
-			$blockEnd = $blockRange->getEnd( );
+			$sequenceStart = $sequenceRange->getStart( );
+			$sequenceEnd = $sequenceRange->getEnd( );
 			$xpathStart = $xpathRange->getStart( );
 			$xpathEnd = $xpathRange->getEnd( );
 			$this->update(
@@ -204,16 +208,17 @@ class AnnotationDAO extends DAO
 				.' , quote_title=?'
 				.' , quote_author=?'
 				.' , link=?'
+				.' , link_title=?'
 				.' , modified=?'
 				.' WHERE id=?',
 				array(
 					$annotation->getUrl( ),
 					$xpathStart->getPathStr( ),
-					$blockStart->getPaddedPathStr( ),
+					$sequenceStart->getPaddedPathStr( ),
 					$xpathStart->getWords( ),
 					$xpathStart->getChars( ),
 					$xpathEnd->getPathStr( ),
-					$blockEnd->getPaddedPathStr( ),
+					$sequenceEnd->getPaddedPathStr( ),
 					$xpathEnd->getWords( ),
 					$xpathEnd->getChars( ),
 					$annotation->getNote( ),
@@ -223,6 +228,7 @@ class AnnotationDAO extends DAO
 					$annotation->getQuoteTitle( ),
 					$annotation->getQuoteAuthor( ),
 					$annotation->getLink( ),
+					$annotation->getLinkTitle( ),
 					$this->datetimeToDB( Core::getCurrentDate() ),
 					$annotation->getAnnotationId( )
 					)
@@ -267,32 +273,35 @@ class AnnotationDAO extends DAO
 	 * Get all public annotations for a particular point in the text of a particular URL.
 	 *
 	 * @param $url string
+	 * @param $username string
 	 * @param $block string
 	 * @return array Annotations
 	 */
-	function &getVisibleAnnotationsByUrlPoint( $url, &$point, $username )
+	function &getVisibleAnnotationsByUrlUserBlock( $url, $username, $block )
 	{
 		$annotations = array();
 		$currentUser = Request::getUser();
-		
-		$testBlockStr = $point->getPaddedPathStr( );
+		$queryParams = array( $url );
+		$query = "SELECT * FROM annotations WHERE url=?";
 		
 		// Only fetch annotations visible to the current user
-		if ( $currentUser && $currentUser->getUsername() == $username )
-			$query = "SELECT * FROM annotations WHERE url=? AND userid=?";
-		elseif ( $username )
-			$query = "SELECT * FROM annotations WHERE url=? AND access='public' AND userid=?";
+		if ( $username )
+		{
+			if ( $currentUser && $currentUser->getUsername() == $username )
+				$query .= " AND userid=?";
+			elseif ( $username )
+				$query .= " AND access='public' AND userid=?";
+			array_push( $queryParams, $username );
+		}
 		else
-			$query = "SELECT * FROM annotations WHERE url=? AND access='public'";
+			$query .= " AND access='public'";
 			
-		if ( null === $point )
-			$queryParams = array( $url, $username );
-		else
+		if ( $block )
 		{
 			// This implementation ignores the word and char fields of point
-			$testBlockStr = $point->getPaddedPathStr( );
+			$testBlockStr = $block->getPaddedPathStr( );
 			$query .= " AND start_block <= ? AND end_block >= ?";
-			$queryParams = array( $url, $username, $testBlockStr, $testBlockStr );
+			array_push( $queryParams, $testBlockStr, $testBlockStr );
 		}
 		
 		$query .= " ORDER BY start_block, start_word, start_char";
@@ -327,12 +336,13 @@ class AnnotationDAO extends DAO
 	 * @param $url string
 	 * @param $username string
 	 * @return array Annotations
-	 */
-	function &getVisibleAnnotationsByUrlUser( $url, $username )
+	 *
+	function &getVisibleAnnotationsByUrlUserBlock( $url, $username, $block )
 	{
 		$annotations = array();
 		$currentUser = Request::getUser();
 		
+//		echo "currentUser: $currentUserx , ".$currentUserx->getUsername()." ";
 		// Only fetch annotations visible to the current user
 		if ( $currentUser && $currentUser->getUsername() == $username )
 		{
@@ -357,7 +367,7 @@ class AnnotationDAO extends DAO
 
 		return $annotations;
 	}
-	
+	*/
 	/**
 	 * Get the ID of the last inserted annotation.
 	 * @return int

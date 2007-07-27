@@ -43,7 +43,7 @@ class DemoAnnotationService extends AnnotationService
 	{
 		global $CFG;
 
-		AnnotationService::AnnotationService( $CFG->host, $CFG->annotate_servicePath, $CFG->installDate );
+		AnnotationService::AnnotationService( $CFG->host, $CFG->annotate_servicePath, $CFG->installDate, 'anonymous' );
 	}
 
 	function beginRequest( )
