@@ -152,7 +152,7 @@ class OjsAnnotationService extends AnnotationService
 
 	function newAnnotation( )
 	{
-		return new AnnotationDao( );
+		return new Annotation( );
 	}
 	
 	function beginRequest( )
@@ -176,7 +176,7 @@ class OjsAnnotationService extends AnnotationService
 	
 	function doGetAnnotation( $id )
 	{
-		return $this->annotationDao->getAnnotationById( $id );
+		return $this->annotationDao->getAnnotation( $id );
 	}
 	
 	function doCreateAnnotation( $annotation )

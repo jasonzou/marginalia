@@ -10,6 +10,11 @@ class Annotation extends DataObject
 		parent::DataObject( );
 	}
 	
+	function fromArray( $params )
+	{
+		return MarginaliaHelper::annotationFromParams( $this, $params );
+	}
+
 	function getAnnotationId( )
 	{  return $this->getData( 'id' );  }
 	

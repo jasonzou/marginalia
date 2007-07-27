@@ -135,7 +135,7 @@ class AnnotationDAO extends DAO
 					.', end_xpath, end_block, end_word, end_char'
 					.', created, modified)'
 					.' VALUES '
-					.' (?,?,?,?,?, ?,?,?,?,  ?,?,?,?, ?,?,?,?, %s, %s)',
+					.' (?,?,?,?,?, ?,?,?,?,?,  ?,?,?,?, ?,?,?,?, %s, %s)',
 					$this->datetimeToDB( $now ),
 					$this->datetimeToDB( $now )
 				),
@@ -153,12 +153,12 @@ class AnnotationDAO extends DAO
 					$annotation->getLinkTitle( ),
 					
 					$xpathStart->getPathStr( ),
-					$blockStart->getPaddedPathStr( ),
+					$sequenceStart->getPaddedPathStr( ),
 					$xpathStart->getWords( ),
 					$xpathStart->getChars( ),
 
 					$xpathEnd->getPathStr( ),
-					$blockEnd->getPaddedPathStr( ),
+					$sequenceEnd->getPaddedPathStr( ),
 					$xpathEnd->getWords( ),
 					$xpathEnd->getChars( )
 				)
@@ -187,8 +187,8 @@ class AnnotationDAO extends DAO
 			$xpathRange = $annotation->getXPathRange( );
 			$sequenceStart = $sequenceRange->getStart( );
 			$sequenceEnd = $sequenceRange->getEnd( );
-			$xpathStart = $xpathRange->getStart( );
-			$xpathEnd = $xpathRange->getEnd( );
+			$xpathStart = $xpathRange ? $xpathRange->getStart( ) : null;
+			$xpathEnd = $xpathRange ? $xpathRange->getEnd( ) : null;
 			$this->update(
 				'UPDATE annotations'
 				.' SET'
@@ -213,14 +213,14 @@ class AnnotationDAO extends DAO
 				.' WHERE id=?',
 				array(
 					$annotation->getUrl( ),
-					$xpathStart->getPathStr( ),
+					$xpathStart ? $xpathStart->getPathStr( ) : null,
 					$sequenceStart->getPaddedPathStr( ),
-					$xpathStart->getWords( ),
-					$xpathStart->getChars( ),
-					$xpathEnd->getPathStr( ),
+					$sequenceStart->getWords( ),
+					$sequenceStart->getChars( ),
+					$xpathEnd ? $xpathEnd->getPathStr( ) : null,
 					$sequenceEnd->getPaddedPathStr( ),
-					$xpathEnd->getWords( ),
-					$xpathEnd->getChars( ),
+					$sequenceEnd->getWords( ),
+					$sequenceEnd->getChars( ),
 					$annotation->getNote( ),
 					$annotation->getAccess( ),
 					$annotation->getAction( ),
@@ -233,7 +233,9 @@ class AnnotationDAO extends DAO
 					$annotation->getAnnotationId( )
 					)
 				);
+			return True;
 		}
+		return False;
 	}
 	
 	/**

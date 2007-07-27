@@ -99,9 +99,8 @@
 	<script type="text/javascript">
 		function myCreateAnnotation( event, postId )
 		{
-			event = getEvent( event );
-			stopPropagation( event );
-			createAnnotation( postId,true );
+			event.stopPropagation( );
+			createAnnotation( postId, true );
 		}
 		
 		function _skipContent( node )
