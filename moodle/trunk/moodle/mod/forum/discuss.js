@@ -63,12 +63,12 @@ DiscussMarginalia.prototype.onload = function( )
  */
 function fixControlMarginIE( )
 {
-	if ( 'exploder' == detectBrowser( ) )
+	if ( 'exploder' == domutil.detectBrowser( ) )
 	{
-		var controlMargins = getChildrenByTagClass( document.documentElement, 'td', 'control-margin', null );
+		var controlMargins = domutil.hildrenByTagClass( document.documentElement, 'td', 'control-margin', null );
 		for ( var i = 0;  i < controlMargins.length;  ++i )
 		{
-			var button = getChildByTagClass( controlMargins[ i ], 'button', null );
+			var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );
 			button.style.height = '' + controlMargins[ i ].offsetHeight + 'px';
 		}
 	}
