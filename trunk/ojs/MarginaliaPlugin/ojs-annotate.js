@@ -10,7 +10,7 @@ function ojsAnnotationInit( serviceRoot, currentUser )
 function ojsAnnotationOnLoad( serviceRoot, currentUser )
 {
 	var annotationService = new RestAnnotationService( serviceRoot );
-	var preferences = new Preferences( new RestPreferenceService( serviceRoot ) );
+	var preferences = new Preferences( new RestPreferenceService( serviceRoot + '/preference', true ) );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords' );
 	keywordService.init( );
 	marginaliaInit( annotationService, currentUser, currentUser, null, preferences, keywordService );
