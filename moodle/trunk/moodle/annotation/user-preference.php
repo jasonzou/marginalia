@@ -3,14 +3,8 @@
     require_once("../config.php");
 	
 	$url = $_SERVER[ 'REQUEST_URI' ];
-	$urlParts = parse_url( $url );
-	$urlPath = $urlParts[ 'path' ];
 	
-	$pos = strstr( $urlPath, '/prefs/' );
-	if ( False == $pos )	// Ugly URL
-		$prefName = array_key_exists( 'setting', $_GET ) ? $_GET[ 'setting' ] : null;
-	else					// Nice URL
-		$prefName = substr( strstr( $url, '/prefs/' ), strlen( '/prefs/' ) );
+	$prefName = array_key_exists( 'name', $_GET ) ? $_GET[ 'name' ] : null;
 
 	switch ( $_SERVER[ 'REQUEST_METHOD' ] )
 	{
@@ -33,6 +27,7 @@
 				$value = $_POST[ 'value' ];
 				set_user_preference( $prefName, $value);
 				header( 'HTTP/1.1 204 Preference Set' );
+				$prefs = get_user_preferences( $prefName, null );
 			}
 			break;
 		

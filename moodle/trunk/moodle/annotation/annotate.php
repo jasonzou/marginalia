@@ -115,8 +115,14 @@ class MoodleAnnotationService extends AnnotationService
 			  FROM {$this->tablePrefix}annotation a
 			WHERE a.id = $id";
 		$resultSet = get_record_sql( $query );
-		if ( $resultSet && count( $resultSet ) == 0 )
-			return $this->recordToAnnotation( $resultSet[ 0 ] );
+		if ( $resultSet && count( $resultSet ) != 0 )
+		{
+			$annotation = $this->recordToAnnotation( $resultSet[ 0 ] );
+			echo "Annotation: $annotation\n";
+			return $annotation;
+		}
+		else
+			return null;
 	}
 	
 	function doCreateAnnotation( $annotation )
