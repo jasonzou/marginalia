@@ -1,10 +1,10 @@
 <?php // handles annotation actions
 
 require_once( "../config.php" );
-require_once( "lib.php" );
 require_once( 'marginalia-php/Annotation.php' );
 require_once( 'marginalia-php/AnnotationService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
+require_once( 'AnnotationSummaryQuery.php' );
 
 define( 'MAX_NOTE_LENGTH', 250 );
 define( 'MAX_QUOTE_LENGTH', 1000 );
@@ -13,16 +13,12 @@ define( 'MAX_QUOTE_LENGTH', 1000 );
 // When false, anyone on the Web can retrieve public annotations via an Atom feed
 define( 'ANNOTATION_REQUIRE_USER', false );
 
-
-$annotateServicePath = '/annotate';
+define( 'ANNOTATE_SERVICE_PATH', '/annotate' );
 
 if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
    require_login();
 
    
-$service = new MoodleAnnotationService( $CFG->wwwroot, isguest() ? null : $USER->username, $CFG->prefix );
-$service->dispatch( );
-
 class MoodleAnnotation extends Annotation
 {
 	function isActionValid( $action )
@@ -40,14 +36,12 @@ class MoodleAnnotation extends Annotation
 
 class MoodleAnnotationService extends AnnotationService
 {
-	var $tablePrefix;
-	
 	function MoodleAnnotationService( $wwwroot, $username, $tablePrefix )
 	{
 		$this->tablePrefix = $tablePrefix;
-		$urlParts = parse_url( $wwroot );
+		$urlParts = parse_url( $wwwroot );
 		$host = $urlParts[ 'host' ];
-		$servicePath = $this->getMoodlePath( ) + $annotateServicePath ;
+		$servicePath = $this->getMoodlePath( ) + ANNOTATE_SERVICE_PATH;
 		AnnotationService::AnnotationService( $host, $servicePath, Date( '2007-07-26' ), $username );
 	}
 	
@@ -100,6 +94,7 @@ class MoodleAnnotationService extends AnnotationService
 				foreach ( $annotationSet as $r )
 					$annotations[ $i++ ] = $this->recordToAnnotation( $r );
 			}
+			$format = $this->getQueryParam( 'format', 'atom' );
 			$logUrl = 'annotate.php?format='.$format.($username ? '&user='.$username : '').'&url='.$url;
 			add_to_log( $query->handler->courseId, 'annotation', 'list', $logUrl );
 			return $annotations;
@@ -111,7 +106,11 @@ class MoodleAnnotationService extends AnnotationService
 		global $CFG;
 	
 		// Caller should ensure that id is numeric
-		$query = "SELECT a.id, a.userid, a.url, a.range, a.note, a.access, a.quote, a.quote_title, a.quote_author,
+		$query = "SELECT a.id, a.userid, a.url,
+			  a.start_block, a.start_xpath, a.start_word, a.start_char,
+			  a.end_block, a.end_xpath, a.end_word, a.end_char,
+			  a.note, a.access, a.quote, a.quote_title, a.quote_author,
+			  a.link, a.link_title, a.action,
 			  a.created, a.modified
 			  FROM {$this->tablePrefix}annotation a
 			WHERE a.id = $id";
@@ -135,16 +134,18 @@ class MoodleAnnotationService extends AnnotationService
 			// The cost of doing it here is low because annotations are created one-by one.  In essence,
 			// this is really caching derived fields in the database to make queries easier.  (If only
 			// MySQL had added views before v5).
-			if ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $url, $matches ) )
+			if ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $annotation->getUrl(), $matches ) )
 			{
 				$record->object_type = 'post';
 				$record->object_id = (int) $matches[ 1 ];
 			}
 	
 			// must preprocess fields
-			$id = insert_record( $this->tablePrefix.'annotation', $record );
+			echo "Insert record into {$this->tablePrefix}annotation\n";
+			$id = insert_record( 'annotation', $record, true );
+			echo "Record ID=$id\n";
 			
-			if ( $id != 0 )
+			if ( $id )
 			{
 				$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 				add_to_log( null, 'annotation', 'create', $logUrl, "$id" );
@@ -159,12 +160,12 @@ class MoodleAnnotationService extends AnnotationService
 		$record = $this->annotationToRecord( $annotation );
 		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 		add_to_log( null, 'annotation', 'update', $logUrl, "$id" );
-		return update_record( $this->tablePrefix.'annotation', $record );
+		return update_record( 'annotation', $record );
 	}
 	
 	function doDeleteAnnotation( $id )
 	{
-		delete_records( $this->tablePrefix.'annotation', 'id', $id );
+		delete_records( 'annotation', 'id', $id );
 		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 		add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
 	}
@@ -200,7 +201,9 @@ class MoodleAnnotationService extends AnnotationService
 		
 	function annotationToRecord( $annotation )
 	{
-		$record->id = $annotation->getAnnotationId( );
+		$id = $annotation->getAnnotationId( );
+		if ( $id )
+			$record->id = $id;
 		$record->userid = $annotation->getUserId( );
 		$record->access = $annotation->getAccess( );
 		$record->url = $annotation->getUrl( );
@@ -231,5 +234,8 @@ class MoodleAnnotationService extends AnnotationService
 		return $record;
 	}
 }
+
+$service = new MoodleAnnotationService( $CFG->wwwroot, isguest() ? null : $USER->username, $CFG->prefix );
+$service->dispatch( );
 
 ?>

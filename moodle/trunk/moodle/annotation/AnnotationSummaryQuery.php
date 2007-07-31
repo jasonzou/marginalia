@@ -140,8 +140,10 @@ class AnnotationSummaryQuery
 			$access_visible .= " OR a.userid='".addslashes($USER->username)."'"
 				. " OR a.access like '%author%' AND a.quote_author='".addslashes($USER->username)."'";
 			$handler->fetchMetadata( );
-			if ( $USER->teacher[ $handler->courseId ] )
-				$access_visible .= " OR a.access like '%teacher%'";
+			
+			// Don't know how this should work due to changes between Moodle 1.6 and Moodle 1.8:
+			//if ( $USER->teacher[ $handler->courseId ] )
+			//	$access_visible .= " OR a.access like '%teacher%'";
 		}
 		
 		// Filter annotations according to their owners
@@ -179,7 +181,11 @@ class AnnotationSummaryQuery
 		// Do handler-specific stuff
 
 		// These that follow are standard fields, for which no page type exceptions can apply
-		$q_std_select = "SELECT a.id id, a.url url, a.userid userid, a.range range, a.access access, a.created, a.modified"
+		$q_std_select = "SELECT a.id id, a.url url, a.userid userid, "
+		. "a.start_block, a.start_xpath, a.start_word, a.start_char, "
+		. "a.end_block, a.end_xpath, a.end_word, a.end_char, "
+		. "a.link link, a.link_title link_title, a.action action, "
+		. "a.access access, a.created, a.modified"
 		. ",\n concat(u.firstname, ' ', u.lastname) note_author"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) note_author_url"
 		. ",\n a.note note, a.quote, a.quote_title quote_title"
@@ -214,9 +220,6 @@ class AnnotationSummaryQuery
 			$q_std_where .= "\n   AND ($search_cond)";
 		}
 		
-		if ( ANNOTATION_FLAG_DELETES )
-			$q_std_where .= "\n AND (a.deleted IS NULL OR NOT(a.deleted=1))";
-			
 		// The handler must construct the query, which might be a single SELECT or a UNION of multiple SELECTs
 		$q = $handler->getSql( $q_std_select, $q_std_from, $q_std_where, $orderby );
 		
