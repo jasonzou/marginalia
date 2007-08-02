@@ -26,19 +26,7 @@
  * $Id$
  */
 
-ANNOTATION_KEYWORDS = true;	// If true, include the keywords feature
-ANNOTATION_ACCESS = true;		// If true, include the public/private feature
-ANNOTATION_EXTERNAL_LINKING = true;	// If true, link editor accepts any http/https URL
-ANNOTATION_ACTIONS = true;		// If true, switch on support for actions (insert, substitute, delete)
-
 ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
-
-// If this is true, uses paths like annotate/nnn
-// if false, use paths like annotation/annotate.php?id=nnn
-ANNOTATION_NICE_URLS = false;
-
-NICE_ANNOTATION_SERVICE_URL = '/annotate';
-UGLY_ANNOTATION_SERVICE_URL = '/annotate.php';
 
 function initLogging( )
 {
