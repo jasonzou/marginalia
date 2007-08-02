@@ -1,0 +1,28 @@
+<?xml version="1.0"?>
+<!--
+ This is based on the OJS locale format, but with OJS-specific information
+ stripped out.  Simple XSLT transformations will convert it into the correct
+ OJS version, and into Javascript for other versions of Marginalia.
+-->
+<locale name="en_US" full_name="U.S. English">
+	<!-- These are OJS-only, they shouldn't really be in the generic source -->
+	<message key="plugins.generic.marginalia.name">Marginalia Plugin</message>
+	<message key="plugins.generic.marginalia.description">This plugin adds the capability for readers to highlight and annotate passages in articles.</message>
+	<message key="plugins.generic.marginalia.descriptionDisabled">This plugin adds the capability for readers to highlight and annotate passages in articles. &lt;strong&gt;Marginalia is not currently installed; please install it in {$marginaliaPath}.&lt;/strong&gt;</message>
+	
+	<!-- Button titles -->
+	<message key="plugins.generic.marginalia.public_annotation">This annotation is public.</message>
+	<message key="plugins.generic.marginalia.private_annotation">This annotation is private.</message>	
+	<message key="plugins.generic.marginalia.delete_annotation_button">Delete this annotation.</message>
+	<message key="plugins.generic.marginalia.annotation_link_button">Link to another document.</message>
+	<message key="plugins.generic.marginalia.annotation_link_label">Select a document to link to.</message>
+	<message key="plugins.generic.marginalia.delete_annotation_link_button">Remove this link.</message>
+	
+	<!-- Errors -->
+	<message key="plugins.generic.marginalia.browser_support_of_W3C_range_required_for_annotation_creation">Your browser does not support the W3C range standard, so you cannot create annotations.</message>
+	<message key="plugins.generic.marginalia.select_text_to_annotate">You must select some text to annotate.</message>
+	<message key="plugins.generic.marginalia.invalid_selection">Selection range is not valid.</message>
+	<message key="plugins.generic.marginalia.corrupt_XML_from_service">An attempt to retrieve annotations from the server returned corrupt XML data.</message>
+	<message key="plugins.generic.marginalia.note_too_long">Please limit your margin note to 250 characters.</message>
+	<message key="plugins.generic.marginalia.quote_too_long">The passage you have attempted to highlight is too long.  It may not exceed 1000 characters.</message>
+</locale>

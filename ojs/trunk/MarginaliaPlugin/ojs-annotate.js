@@ -9,13 +9,21 @@ function ojsAnnotationInit( serviceRoot, currentUser )
 
 function ojsAnnotationOnLoad( serviceRoot, currentUser )
 {
-	var annotationService = new RestAnnotationService( serviceRoot );
-	var preferences = new Preferences( new RestPreferenceService( serviceRoot + '/preference', true ) );
+	var annotationService = new RestAnnotationService( serviceRoot + '/annotate', false );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords' );
 	keywordService.init( );
-	marginaliaInit( annotationService, currentUser, currentUser, null, preferences, keywordService );
-	window.marginalia.linkUi = new ClickToLinkUi( );
 
+	window.marginalia = new Marginalia( annotationService, currentUser, currentUser, {
+		preferences: new Preferences( new RestPreferenceService( serviceRoot + '/preference', true ) ),
+		keywordService: keywordService,
+		linkUi:  new ClickToLinkUi( true ),
+		baseUrl:  null,
+		showAccess:  true,
+		showBlockMarkers:  false,
+		showActions:  false,
+		onkeyCreate:  true
+	} );
+	
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
 	marginaliaDirect.init( );
 
@@ -85,7 +93,6 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 	//		addClass( fragment, 'link-target' );
 		}
 		window.marginalia.showAnnotations( url, null );
-		window.marginalia.showMarginalia( );
 	}
 }
 
@@ -117,18 +124,6 @@ function makeBlockElementsLinkable( content, path )
 	}
 }
 */
-
-function _skipSmartcopy( node )
-{
-	if ( ELEMENT_NODE == node.nodeType )
-		return domutil.hasClass( node, 'smart-copy' ) ? true : false;
-	return false;
-}
-
-function _skipContent( node )
-{
-	return _skipSmartcopy( node ) || _skipAnnotationLinks( node );
-}
 
 function getKeywordsPref( )
 {
