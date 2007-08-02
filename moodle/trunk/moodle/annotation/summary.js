@@ -29,55 +29,51 @@
 AN_SUN_SYMBOL = '\u25cb'; //'\u263c';
 AN_MOON_SYMBOL = '\u25c6'; //'\u2641';	
 
-function annotationInit( wwwroot, user, urlsExcludeHost )
+function AnnotationSummary( annotationService, username, urlsExcludeHost )
 {
-	window.annotationService = new AnnotationService( wwwroot, user );
-	window.annotationUrlsExcludeHost = urlsExcludeHost;
+	this.annotationService = annotationService;
+	this.username = username;
+	this.urlsExcludeHost = urlsExcludeHost;
 }
 
-function deleteAnnotation( id )
+AnnotationSummary.prototype.deleteAnnotation = function( id )
 {
 	var f = function( xmldoc ) {
 		window.location.reload( );
 	};
-	window.annotationService.deleteAnnotation( id, f );
+	this.annotationService.deleteAnnotation( id, f );
 }
 
-function shareAnnotation( button, id )
+AnnotationSummary.prototype.shareAnnotation = function( button, id )
 {
 	var annotation = new Object( );
 	annotation.id = id;
 	annotation.access = button.value;
-	window.annotationService.updateAnnotation( annotation, null );
+	this.annotationService.updateAnnotation( annotation, null );
 }
 
-function shareAnnotationPublicPrivate( button, id )
+AnnotationSummary.prototype.shareAnnotationPublicPrivate = function( button, id )
 {
 	var annotation = new Object( );
 	annotation.id = id;
-	var oldAccess = hasClass( button, 'access-public' ) ? 'public' : 'private';
+	var oldAccess = domutil.hasClass( button, 'access-public' ) ? 'public' : 'private';
 	annotation.access = ( 'public' == oldAccess ? 'private' : 'public' );
-	window.annotationService.updateAnnotation( annotation, null );
-	removeClass( button, 'access-' + oldAccess );
+	this.annotationService.updateAnnotation( annotation, null );
+	domutil.removeClass( button, 'access-' + oldAccess );
 	while ( button.firstChild )
 		button.removeChild( button.firstChild );
 	button.appendChild( document.createTextNode( 'public' == annotation.access ? AN_SUN_SYMBOL : AN_MOON_SYMBOL ) );
-	addClass( button, 'access-' + annotation.access );
+	domutil.addClass( button, 'access-' + annotation.access );
 }
 
-function summaryInit( username )
-{
-	window.username = username;
-}
-
-function onSearchAnnotationsChange( )
+AnnotationSummary.prototype.onSearchAnnotationsChange = function( )
 {
 	var searchElement  = document.getElementById( 'search-annotations' );
 	var accessElement = document.getElementById( 'access' );
 	var userElement = document.getElementById( 'user' );
 	if ( 'my annotations' == searchElement.value )
 	{
-		userElement.value = window.username;
+		userElement.value = this.username;
 		accessElement.value = '';
 	}
 	else

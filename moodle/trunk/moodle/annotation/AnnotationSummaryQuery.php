@@ -1,5 +1,9 @@
 <?php
 
+// When this is true, any access to annotations (including fetching the Atom feed) requires a valid user
+// When false, anyone on the Web can retrieve public annotations via an Atom feed
+define( 'ANNOTATION_REQUIRE_USER', false );
+
 /**
  * This isn't really the best use of a class, but I'm in a rush to fix a bug.
  * Objects of this class are (or should be considered) immutable.
@@ -100,7 +104,7 @@ class AnnotationSummaryQuery
 		else
 			$s = ( null != $this->searchOf ) ? 'annotation_desc_author' : 'annotation_desc';
 			
-		return get_string( $s, 'annotate', $a );
+		return get_string( $s, 'marginalia', $a );
 		
 		return $desc;
 	}
@@ -315,7 +319,7 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 		if ( False !== $row )
 			$this->title = $row->fullname;
 		else
-			$this->title = get_string( 'unknown course', 'annotate' );
+			$this->title = get_string( 'unknown course', 'marginalia' );
 		$this->parentUrl = null;
 		$this->parentTitle = null; 
 	}
@@ -374,7 +378,7 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 			return;
 		if ( null == $this->d )
 		{
-			$this->title = get_string( 'all_discussions', 'annotate' );
+			$this->title = get_string( 'all_discussions', 'marginalia' );
 			$this->parentUrl = null;
 			$this->parentTitle = null;
 			$this->courseId = null;
@@ -387,16 +391,16 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 			if ( False !== $row )
 			{
 				$a->name = $row->name;
-				$this->title = get_string( 'discussion_name', 'annotate', $a );
+				$this->title = get_string( 'discussion_name', 'marginalia', $a );
 				$this->courseId = (int) $row->course;
 			}
 			else
 			{
-				$this->title = get_string( 'unknown_discussion', 'annotate' );
+				$this->title = get_string( 'unknown_discussion', 'marginalia' );
 				$this->courseId = null;
 			}
 			$this->parentUrl = '/course/view.php?id='.$this->courseId;
-			$this->parentTitle = get_string( 'whole_course', 'annotate' ); 
+			$this->parentTitle = get_string( 'whole_course', 'marginalia' ); 
 		}
 	}
 	
@@ -457,7 +461,7 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 		$row = get_record_sql( $query );
 		if ( False === $row )
 		{
-			$this->title = get_string( 'unknown_post', 'annotate' );
+			$this->title = get_string( 'unknown_post', 'marginalia' );
 			$this->parentUrl = null;
 			$this->parentTitle = null;
 			$this->courseId = null;
@@ -465,10 +469,10 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 		else
 		{
 			$a->name = $row->pname;
-			$this->title = get_string( 'post_name', 'annotate', $a );
+			$this->title = get_string( 'post_name', 'marginalia', $a );
 			$this->parentUrl = $CFG->wwwroot.'/mod/forum/discuss.php?d='.$row->did;
 			$a->name = $row->dname;
-			$this->parentTitle = get_string( 'discussion_name', 'annotate', $a );
+			$this->parentTitle = get_string( 'discussion_name', 'marginalia', $a );
 			$this->courseId = (int) $row->course;
 		}
 	}

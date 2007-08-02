@@ -9,10 +9,6 @@ require_once( 'AnnotationSummaryQuery.php' );
 define( 'MAX_NOTE_LENGTH', 250 );
 define( 'MAX_QUOTE_LENGTH', 1000 );
 
-// When this is true, any access to annotations (including fetching the Atom feed) requires a valid user
-// When false, anyone on the Web can retrieve public annotations via an Atom feed
-define( 'ANNOTATION_REQUIRE_USER', false );
-
 define( 'ANNOTATE_SERVICE_PATH', '/annotate' );
 
 if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )

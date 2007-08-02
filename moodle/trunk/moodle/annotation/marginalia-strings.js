@@ -29,6 +29,11 @@ LocalizedAnnotationStrings = {
 	
 	'delete annotation link button' : 'Remove this link.',
 	
+
+	// Smartcopy
+	'smartcopy on' : 'Smartcopy is On.  Press Shift-Ctrl-S to switch it off.',
+	'smartcopy off' : 'Smartcopy is Off.  Press Shift-Ctrl-S to switch it on.',
+	
 	
 	
 	'browser support of W3C range required for annotation creation' : 'Your browser does not support the W3C range standard, so you cannot create annotations.',
