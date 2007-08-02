@@ -113,8 +113,7 @@ class MoodleAnnotationService extends AnnotationService
 		$resultSet = get_record_sql( $query );
 		if ( $resultSet && count( $resultSet ) != 0 )
 		{
-			$annotation = $this->recordToAnnotation( $resultSet[ 0 ] );
-			echo "Annotation: $annotation\n";
+			$annotation = $this->recordToAnnotation( $resultSet );
 			return $annotation;
 		}
 		else
@@ -159,17 +158,19 @@ class MoodleAnnotationService extends AnnotationService
 	
 	function doUpdateAnnotation( $annotation )
 	{
+		$urlQueryStr = '';
 		$record = $this->annotationToRecord( $annotation );
 		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
-		add_to_log( null, 'annotation', 'update', $logUrl, "$id" );
+		add_to_log( null, 'annotation', 'update', $logUrl, "{$annotation->id}" );
 		return update_record( 'annotation', $record );
 	}
 	
 	function doDeleteAnnotation( $id )
 	{
 		delete_records( 'annotation', 'id', $id );
-		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
+		$logUrl = "annotate.php?id=$id";
 		add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
+		return True;
 	}
 	
 	function recordToAnnotation( $r )
@@ -178,25 +179,40 @@ class MoodleAnnotationService extends AnnotationService
 		
 		$annotation->setAnnotationId( $r->id );
 		$annotation->setUserId( $r->userid );
-		$annotation->setAccess( $r->access );
-		$annotation->setUrl( $r->url );
-		$annotation->setNote( $r->note );
-		$annotation->setQuote( $r->quote );
-		$annotation->setQuoteTitle( $r->quote_title );
-		$annotation->setQuoteAuthor( $r->quote_author );
-		$annotation->setLink( $r->link );
-		$annotation->setLinkTitle( $r->link_title );
+		if ( $r->access )
+			$annotation->setAccess( $r->access );
+		if ( $r->url )
+			$annotation->setUrl( $r->url );
+		if ( $r->note )
+			$annotation->setNote( $r->note );
+		if ( $r->quote )
+			$annotation->setQuote( $r->quote );
+		if ( $r->quote_title )
+			$annotation->setQuoteTitle( $r->quote_title );
+		if ( $r->quote_author )
+			$annotation->setQuoteAuthor( $r->quote_author );
+		if ( $r->link )
+			$annotation->setLink( $r->link );
+		if ( $r->link_title )
+			$annotation->setLinkTitle( $r->link_title );
 		$annotation->setCreated( $r->created );
 		
-		$range = new SequenceRange( );
-		$range->setStart( new SequencePoint( $r->start_block, $r->start_word, $r->start_char ) );
-		$range->setEnd( new SequencePoint( $r->end_block, $r->end_word, $r->end_char ) );
-		$annotation->setSequenceRange( $range );
+		// TODO: Handle old range spec
+		if ( $r->start_block !== null )
+		{
+			$range = new SequenceRange( );
+			$range->setStart( new SequencePoint( $r->start_block, $r->start_word, $r->start_char ) );
+			$range->setEnd( new SequencePoint( $r->end_block, $r->end_word, $r->end_char ) );
+			$annotation->setSequenceRange( $range );
+		}
 		
-		$range = new XPathRange( );
-		$range->setStart( new XPathPoint( $r->start_xpath, $r->start_word, $r->start_char ) );
-		$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_word, $r->end_char ) );
-		$annotation->setXPathRange( $range );
+		if ( $r->start_xpath !== null )
+		{
+			$range = new XPathRange( );
+			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_word, $r->start_char ) );
+			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_word, $r->end_char ) );
+			$annotation->setXPathRange( $range );
+		}
 		
 		return $annotation;
 	}

@@ -10,6 +10,8 @@
 	require_once( "marginalia-php/MarginaliaHelper.php" );
 	require_once( "AnnotationSummaryQuery.php" );
 
+	global $CFG;
+	
    if ($CFG->forcelogin) {
         require_login();
     }
@@ -85,22 +87,27 @@
 			//echo "<h2>Query</h2><pre>".$query->sql( 'a.id' )."</pre>";
 			
 			// Show header
+			$sWwwroot = htmlspecialchars( $CFG->wwwroot );
 			$navtail = get_string( 'summary_title', 'marginalia' );
 			$navmiddle = "";
 			$meta
-				= "<script language='JavaScript' type='text/javascript' src='summary.js'></script>\n"
-				. "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
+				= "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='marginalia/prefs.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-prefs.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='marginalia/annotation.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
-				. "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/rest-prefs.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='$sWwwroot/annotation/rest-prefs.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='summary.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript'>\n"
-				. "var annotationService = new RestAnnotationService('".htmlspecialchars($CFG->wwwroot)."/annotation/annotate.php');\n"
+				. "var annotationService = new RestAnnotationService('$sWwwroot/annotation/annotate.php');\n"
 				. "window.annotationSummary = new AnnotationSummary(annotationService"
-					.", '".htmlspecialchars($CFG->wwwroot)."'"
+					.", '$sWwwroot'"
 					.", '".htmlspecialchars($USER->username)."');\n"
-				. "preferenceInit('".htmlspecialchars($CFG->wwwroot)."');\n"
+				. "window.preferences = new Preferences( new RestPreferenceService('$sWwwroot/annotation/user-preference.php' ) );\n"
 				. "</script>\n"
-				. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/summary-styles.php'/>\n";
+				. "<link rel='stylesheet' type='text/css' href='$sWwwroot/annotation/summary-styles.php'/>\n";
 	
 			
 			if (null != $course && $course->category)

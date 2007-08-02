@@ -11,6 +11,7 @@ require_once("../config.php");
 */
 ?>
 
+/* Edit | Delete | Reply links at bottom of post */
 .forumpostmessage .commands,
 .forumpostmessage .commands a {
 	text-align: right ;
@@ -30,8 +31,8 @@ require_once("../config.php");
 /* hack button to allow for annotation creation, a result of problems with Moz positioning */
 /* it has to be a button, otherwise clicking it loses the selection */
 td.control-margin {
-	width: 0; /* was xwidth #geof# */
-	height: auto;
+	width: 1;
+	xheight: auto;
 }
 
 td.control-margin div {
@@ -46,10 +47,7 @@ td.control-margin div {
 
 .self-annotated td.control-margin div {
 	display: block;
-	position: relative;
-	margin: 0 ;
-	padding: 0 ;
-	width: 100%;
+	width: 1em;
 	height: 100%;
 }
 
@@ -68,7 +66,6 @@ td.control-margin div {
 	margin: 0;
 	background: none;
 	cursor: pointer;
-	position: absolute;
 	display: block;
 	z-index: 1;
 }
@@ -125,29 +122,12 @@ td.control-margin div {
 	display: block;
 }
 
-/* show the mismatch element if annotation-range-mismatch is flagged */ 
-table.annotation-range-mismatch .range-mismatch {
-	display: block;
-	width: 1em;
-	margin: 1em auto;
-	text-align: center;
-	font-weight: bold;
-	color: white;
-	background: red;
-	border: white 2px solid;
-}
-
-
-/* was .annotations > div, but IE can't handle that */
-
 .notes div {
 	position: relative;
 	padding: 1px;
 }
 
 .notes ol {
-	list-style-type: none ;
-	width: 100%;
 	margin: 0;
 	padding: 0 ;
 	right: 0;
@@ -155,14 +135,7 @@ table.annotation-range-mismatch .range-mismatch {
 }
 
 .notes ol li {
-	font-size: 80%;
-	margin: 0 ;
-	margin-bottom: 1ex;
-	padding: 0;
-	min-height: 1.2em;
-	cursor: pointer ;
 	clear: both;
-	xborder: red 1px solid;
 }
 
 .notes ol li.active {
@@ -171,116 +144,21 @@ table.annotation-range-mismatch .range-mismatch {
 
 .notes ol li button {
 	background: none ;
-	border: none ;
-	float: right ;	
 	font-size: 12px ;
-	padding: 0;
 }
 
 .notes ol textarea {
 	vertical-align: top ;
-	/* background: #fdf377; */
-	background: white;
 	border: none;
 	font-family: inherit;
-	font-size: inherit;
 	width: 94%;
 }
 
-.notes ol li button:hover {
-	font-weight: bold ;
-	cursor: pointer ;
-}
-
-.notes ol li.dummy {
-	height: 1px;
-	min-height: 1px;
-	cursor: default;
-	background: none;
-	margin: 0;
-	padding: 0;
-	font-size: 1px;
-	line-height: 1px;
-}
-/*
-.forumpostmain {
-	margin-left: 35px ;
-	position:relative;
-}
-
-.forumpost .heading {
-	position: relative ;
-	padding: 3px ;
-	height: 2.2em ;
-}
-
-.forumpostheadertopic p {
-	margin: .5ex 0;
-}
-
-.forumpost .heading h1 {
-	margin: 0 ;
-	padding: 0 ;
-	font-size:  medium ;
-	font-weight: bold ;
-}
-
-.forumpost .heading h2 {
-	margin: 0 ;
-	padding: 0 ;
-	font-size:  small;
-}
-
-.forumpostmessage {
-	padding: 0 3px ;
-	margin-right: 20em;
-}
-
-.forumpost {
-	border:  none ;
-	width:  100%;	
-}
-
-.forumpost .forumpost {
-	width:  auto ;
-}
-
-.forumpost .forumpostpicture {
-	background-color:  <?PHP echo $THEME->cellcontent2 ?>;
-	width:  35px ;
-}
-
-.forumpost .forumpostheadertopic {
-	background-color:  <?PHP $THEME->cellheading2 ?>;
-	width:  100%;
-}
-
-.forumpost .forumpost .forumpostheader {
-	background-color:  <?PHP $THEME->cellheading ?>;
-	width: 100%;
-}
-*/
-
-.hentry em.annotation {
-	font-style: inherit;
-}
-
-/* colors for other users' annotations */
+/* colors for other users' annotations
 .hentry em.annotation { background-color: #77f3fd ; }
 .hentry .content em.annotation em.annotation { background: #70d4ec; }
 .hentry .content em.annotation em.annotation em.annotation { background: #66c6d8; }
-
-/* colors for current user's annotations */
-.self-annotated .hentry em.annotation { background-color: #fdf377 ; }
-.self-annotated .hentry .content em.annotation em.annotation { background: #ecd470; }
-.self-annotated .hentry .content em.annotation em.annotation em.annotation { background: #d8c666; }
-
-.hentry .notes li.hover,
-.hentry .content em.annotation.hover {
-	color: red;
-	/* outline: red 1px solid;  - not yet supported, and looks funny on margin notes in Safari */
-}
-
+*/
 
 button#hide-all-annotations,
 body.annotated button#show-all-annotations {
@@ -289,11 +167,6 @@ body.annotated button#show-all-annotations {
 
 body.annotated button#hide-all-annotations {
 	display: inline;
-}
-
-/* This is actually for smartcopy */
-.hentry .smart-copy {
-	display: none;
 }
 
 #smartcopy-status {

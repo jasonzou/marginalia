@@ -46,18 +46,21 @@ AnnotationSummary.prototype.deleteAnnotation = function( id )
 
 AnnotationSummary.prototype.shareAnnotation = function( button, id )
 {
-	var annotation = new Object( );
-	annotation.id = id;
-	annotation.access = button.value;
+	var annotation = new Annotation( );
+	annotation.setId( id );
+	annotation.resetChanges( );
+	annotation.setAccess( button.value );
 	this.annotationService.updateAnnotation( annotation, null );
 }
 
 AnnotationSummary.prototype.shareAnnotationPublicPrivate = function( button, id )
 {
-	var annotation = new Object( );
+	var annotation = new Annotation( );
+	annotation.setId( id );
+	annotation.resetChanges( );
 	annotation.id = id;
 	var oldAccess = domutil.hasClass( button, 'access-public' ) ? 'public' : 'private';
-	annotation.access = ( 'public' == oldAccess ? 'private' : 'public' );
+	annotation.setAccess( 'public' == oldAccess ? 'private' : 'public' );
 	this.annotationService.updateAnnotation( annotation, null );
 	domutil.removeClass( button, 'access-' + oldAccess );
 	while ( button.firstChild )
