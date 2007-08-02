@@ -4,11 +4,8 @@
  *
  * I created this because of the pathetic state of IE.  It's understandable that Microsoft
  * would prefer to hobble a technology like the Web which presents such a challenge
- * to their desktop monopoly, but that's no excuse.  As for the folks who use IE...
- * well, the said the better.
+ * to their desktop monopoly, but that's no excuse.
  */
-
-UGLY_ANNOTATION_SERVICE_URL = '/annotate.php';
 
 function DiscussMarginalia( )
 {
@@ -28,14 +25,21 @@ DiscussMarginalia.prototype.onload = function( )
 	var actualUrl = '' + window.location;
 	if ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
-		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation' );
+		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php' );
 		var preferences = new Preferences( new RestPreferenceService( this.moodleRoot + '/annotation/user-preference.php' ) );
 		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.txt' );
 		keywordService.init( );
-		marginaliaInit( annotationService, this.username, this.anuser, this.moodleRoot,
-			preferences, keywordService );
-		window.marginalia.linkUi = null;
-		window.marginalia.setFeature( AN_BLOCKMARKER_FEAT, false );
+		window.marginalia = new Marginalia( annotationService, this.username, this.anuser, {
+			preferences: preferences,
+			keywordService: keywordService,
+			linkUi:  null,
+			baseUrl:  this.moodleRoot,
+			showAccess:  true,
+			showBlockMarkers:  false,
+			showActions:  false,
+			onkeyCreate:  true,
+			skipContent: _skipSmartcopy
+		} );
 		
 		var url = this.url;
 		if ( this.showAnnotations )
@@ -90,16 +94,5 @@ function changeAnnotationUser( userControl, url )
 		marginalia.preferences.setPreference( 'show_annotations', 'true', null);
 		marginalia.preferences.setPreference( 'annotation_user', user, null );
 	}
-}
-
-function myCreateAnnotation( event, postId )
-{
-	event.stopPropagation( );
-	createAnnotation( postId, true );
-}
-
-function _skipContent( node )
-{
-	return _skipSmartcopy( node ) || _skipAnnotationLinks( node ) || _skipAnnotationActions( node );
 }
 
