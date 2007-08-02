@@ -27,11 +27,11 @@ DiscussMarginalia.prototype.onload = function( )
 	{
 		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php' );
 		var preferences = new Preferences( new RestPreferenceService( this.moodleRoot + '/annotation/user-preference.php' ) );
-		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.txt' );
-		keywordService.init( );
+		//var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.txt' );
+		//keywordService.init( );
 		window.marginalia = new Marginalia( annotationService, this.username, this.anuser, {
 			preferences: preferences,
-			keywordService: keywordService,
+			keywordService: null,
 			linkUi:  null,
 			baseUrl:  this.moodleRoot,
 			showAccess:  true,
@@ -61,20 +61,22 @@ DiscussMarginalia.prototype.onload = function( )
 
 
 /*
- * I think we all know what a pain IE is.  It doesn't correctly set the height of the
- * margin button, neither does it obey :hover on buttons.  So, if the browser
- * is IE it's necessary to fix the buttons.
+ * This fixes the height of create annotation buttons.
+ *
+ * I used to have to do this for IE, and complained bitterly.  Now I have to do it for Firefox
+ * and Safari too:  apparently you can't set a table cell child to be the full height of the cell.
+ * Probably this is CSS compliant.  Why can't they make sane standards?
+ *
+ * Note:  if the annotated content changes length (e.g. because of many inserted links or edit
+ * actions), the button won't resize to match.  Hmmm.
  */
 function fixControlMarginIE( )
 {
-	if ( 'exploder' == domutil.detectBrowser( ) )
+	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null );
+	for ( var i = 0;  i < controlMargins.length;  ++i )
 	{
-		var controlMargins = domutil.hildrenByTagClass( document.documentElement, 'td', 'control-margin', null );
-		for ( var i = 0;  i < controlMargins.length;  ++i )
-		{
-			var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );
-			button.style.height = '' + controlMargins[ i ].offsetHeight + 'px';
-		}
+		var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );
+		button.style.height = '' + controlMargins[ i ].offsetHeight + 'px';
 	}
 }
 

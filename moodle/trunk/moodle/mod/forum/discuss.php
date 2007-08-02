@@ -180,8 +180,12 @@
 	$smartcopyPref = get_user_preferences( 'smartcopy', null );
 	if ( null == $smartcopyPref )
 		set_user_preference( 'smartcopy', 'false' );
+	if ( null == get_user_preferences( 'annotations.note-edit-mode', null ) )
+		set_user_preference( 'annotations.note-edit-mode', 'freeform' );
+	
 
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
+	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/marginalia/marginalia.css'/>\n"
+		. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
 	$anScripts = listMarginaliaJavascript( );
 	for ( $i = 0;  $i < count( $anScripts );  ++$i )
 		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anScripts[$i]."'></script>\n";	
