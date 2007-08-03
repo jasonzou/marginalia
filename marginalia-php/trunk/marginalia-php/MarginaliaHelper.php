@@ -172,13 +172,16 @@ class MarginaliaHelper
 		return 0;
 	}
 	
-	function generateAnnotationFeed( &$annotations, $feedTagUri, $feedLastModified, $servicePath, $tagHost, $feedUrl )
+	function generateAnnotationFeed( &$annotations, $feedTagUri, $feedLastModified, $servicePath, $tagHost, $feedUrl, $baseUrl='' )
 	{
 		$NS_PTR = 'http://www.geof.net/code/annotation/';
 		$NS_ATOM = 'http://www.w3.org/2005/Atom';
 		
 		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.5'>\n";
+		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.5'";
+		if ( $baseUrl )
+			echo " xml:base='".htmlspecialchars($baseUrl)."'";
+		echo ">\n";
 		// This would be the link to the summary page:
 		//echo( " <link rel='alternate' type='text/html' href='" . htmlspecialchars( "$CFG->wwwroot$url/annotations" ) . "'/>\n" );
 		echo " <link rel='self' type='text/html' href=\"" . htmlspecialchars( $feedUrl ) . "\"/>\n";
@@ -308,6 +311,27 @@ class MarginaliaHelper
 	}
 
 	/**
+	 * Get the most recent date on which an annotation was modified
+	 * Used for feed last modified dates
+	 */
+	function getLastModified( $annotations, $installDate )
+	{
+		// Get the last modification time of the feed
+		$lastModified = $installDate;
+		if ( $annotations )
+		{
+			foreach ( $annotations as $annotation )
+			{
+				$modified = $annotation->getModified( );
+				if ( null != $modified && $modified > $lastModified )
+					$lastModified = $modified;
+			}
+		}
+		return $lastModified;
+	}
+	
+	
+	/**
 	 * Reduce the number of range infos as much as possible.
 	 * Subsequent infos with the same stand and end will be collapsed to a single info.
 	 * This is very effective for annotations that don't cross block boundaries, and should significantly
@@ -401,11 +425,16 @@ class MarginaliaHelper
 		$urlParts = parse_url( $url );
 		if ( False === $urlParts )
 			return false;
-		$scheme = $urlParts[ 'scheme' ];
-		if ( 'http' == $scheme || 'https' == $scheme || '' == $scheme )
-			return true;
+		if ( array_key_exists( 'scheme', $urlParts ) )
+		{
+			$scheme = $urlParts[ 'scheme' ];
+			if ( 'http' == $scheme || 'https' == $scheme || '' == $scheme )
+				return true;
+			else
+				return false;
+		}
 		else
-			return false;
+			return true;
 	}
 }
 

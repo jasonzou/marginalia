@@ -58,7 +58,7 @@ class AnnotationService
 	var $niceUrls;		// True or False
 	var $currentUserId;	// ID (username) of the current user, or null if none
 	
-	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $niceUrls=False )
+	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $baseUrl='', $niceUrls=False )
 	{
 		$this->host = $host;
 		$this->servicePath = $servicePath;
@@ -66,6 +66,7 @@ class AnnotationService
 		$this->errorSent = False;
 		$this->niceUrls = $niceUrls;
 		$this->currentUserId = $currentUserId;
+		$this->baseUrl = $baseUrl;
 	}
 	
 	// Factory method, may be overriden:
@@ -238,7 +239,7 @@ class AnnotationService
 				if ( $block )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'block=' . urlencode( $block->toString( ) );
 					
-				$this->getAtom( $annotations, $this->servicePath . $feedUrl );
+				$this->getAtom( $annotations, $this->servicePath . $feedUrl, $this->baseUrl );
 			}
 			elseif ( 'blocks' == $format )
 				$this->getBlocks( $annotations, $url );
@@ -270,7 +271,7 @@ class AnnotationService
 					$feedUrl .= '/' . urlencode( $id );
 				else
 					$feedUrl .= '?id=' . urlencode( $id );
-				$this->getAtom( $annotations, $feedUrl );
+				$this->getAtom( $annotations, $feedUrl, $this->baseUrl );
 			}
 			else
 				$this->httpError( 400, 'Bad Request', 'Format unknown or unsupported for individual annotations' );
@@ -343,38 +344,17 @@ class AnnotationService
 	}
 
 	/**
-	 * Get the most recent date on which an annotation was modified
-	 * Used for feed last modified dates
-	 */
-	function getLastModified( &$annotations )
-	{
-		// Get the last modification time of the feed
-		$lastModified = $this->installDate;
-		if ( $annotations )
-		{
-			foreach ( $annotations as $annotation )
-			{
-				$modified = $annotation->getModified( );
-				if ( null != $modified && $modified > $lastModified )
-					$lastModified = $modified;
-			}
-		}
-		return $lastModified;
-	}
-	
-	
-	/**
 	 * Emit an Atom document for a list of annotations
 	 * The annotations should already be sorted
 	 */
-	function getAtom( $annotations, $feedUrl )
+	function getAtom( $annotations, $feedUrl, $baseUrl )
 	{
-		$feedLastModified = AnnotationService::getLastModified( $annotations );
+		$feedLastModified = MarginaliaHelper::getLastModified( $annotations, $this->installDate );
 		$feedTagUri = "tag:" . $this->host . ',' . date( '2005-07-20', $this->installDate ) . ":annotation";
 		
 		header( 'Content-Type: application/xml' );
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
-		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $this->servicePath, $this->host, $feedUrl );
+		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $this->servicePath, $this->host, $feedUrl, $baseUrl );
 	}
 
 	

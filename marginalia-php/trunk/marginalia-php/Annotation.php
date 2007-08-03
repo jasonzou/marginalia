@@ -26,6 +26,9 @@
  * $Id$
  */
 
+require_once( 'SequenceRange.php' );
+require_once( 'XPathRange.php' );
+
 /**
  * Class representing an annotation
  * For an extra bit of safety, setter methods typecast some fields and check
