@@ -1,9 +1,5 @@
 <?php
-
-// When this is true, any access to annotations (including fetching the Atom feed) requires a valid user
-// When false, anyone on the Web can retrieve public annotations via an Atom feed
-define( 'ANNOTATION_REQUIRE_USER', false );
-
+	
 /**
  * This isn't really the best use of a class, but I'm in a rush to fix a bug.
  * Objects of this class are (or should be considered) immutable.
@@ -243,13 +239,21 @@ class AnnotationSummaryQuery
 	/** Generate a summary URL corresponding to this query */
 	function getSummaryUrl( )
 	{
-		return getAnnotationSummaryUrl( $this->url, $this->searchUser, $this->searchOf, $this->searchQuery );
+		global $CFG;
+		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($this->url);
+		if ( null != $this->searchQuery && '' != $this->searchQuery )
+			$s .= '&q='.urlencode($this->searchQuery);
+		if ( null != $this->searchUser && '' != $this->searchUser )
+			$s .= '&user='.urlencode($this->searchUser);
+		if ( null != $this->searchOf && '' != $this->searchOf )
+			$s .= '&search-of='.urlencode($this->searchOf);
+		return $s;
 	}
 	
 	/** Generate a feed URL corresponding to this query */
 	function getFeedUrl( $format )
 	{
-		return getAnnotationSummaryUrl( $this->url, $this->searchUser, $this->searchOf, $this->searchQuery, $format );
+		return $this->getSummaryUrl() . '&format=atom';
 	}
 }
 

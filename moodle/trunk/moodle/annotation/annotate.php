@@ -4,17 +4,13 @@ require_once( "../config.php" );
 require_once( 'marginalia-php/Annotation.php' );
 require_once( 'marginalia-php/AnnotationService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
+require_once( 'AnnotationGlobals.php' );
 require_once( 'AnnotationSummaryQuery.php' );
-
-define( 'MAX_NOTE_LENGTH', 250 );
-define( 'MAX_QUOTE_LENGTH', 1000 );
-
-define( 'ANNOTATE_SERVICE_PATH', '/annotate' );
 
 if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
    require_login();
 
-   
+ 
 class MoodleAnnotation extends Annotation
 {
 	function isActionValid( $action )
@@ -32,40 +28,18 @@ class MoodleAnnotation extends Annotation
 
 class MoodleAnnotationService extends AnnotationService
 {
-	function MoodleAnnotationService( $wwwroot, $username, $tablePrefix )
-	{
-		$this->tablePrefix = $tablePrefix;
-		$urlParts = parse_url( $wwwroot );
-		$host = $urlParts[ 'host' ];
-		$servicePath = $this->getMoodlePath( ) + ANNOTATE_SERVICE_PATH;
-		AnnotationService::AnnotationService( $host, $servicePath, Date( '2007-07-26' ), $username );
-	}
-	
-	/** Get the moodle path - that is, the path to moodle from the root of the server.  Typically this is 'moodle/'.
-	 * REQUEST_URI starts with this. */
-	function getMoodlePath( )
+	function MoodleAnnotationService( $username )
 	{
 		global $CFG;
-		
-		$urlParts = parse_url( $CFG->wwwroot );
-		return $urlParts[ 'path' ];
+		AnnotationService::AnnotationService( 
+			AnnotationGlobals::getHost(),
+			AnnotationGlobals::getServicePath(),
+			AnnotationGlobals::getInstallDate(),
+			$username,
+			$CFG->wwwroot );
+		$this->tablePrefix = $CFG->prefix;
 	}
 	
-	/**
-	 * Get the sever part of the moodle path.
-	 * This is the absolute path, with the getMoodlePath( ) portion chopped off.
-	 * Useful, because appending a REQUEST_URI to it produces an absolute URI. */
-	function getMoodleServer( )
-	{
-		global $CFG;
-		
-		$urlParts = parse_url( $CFG->wwwroot );
-		if ( $urlParts[ 'path' ] == '/' )
-			return $CFG->wwwroot;
-		else
-			return substr( $CFG->wwwroot, 0, strpos( $CFG->wwwroot, $urlParts[ 'path' ] ) );
-	}
-
 	function doListAnnotations( $url, $username, $block )
 	{
 		$query = new AnnotationSummaryQuery( $url, $username, null, null );
@@ -88,7 +62,7 @@ class MoodleAnnotationService extends AnnotationService
 			{
 				$i = 0;
 				foreach ( $annotationSet as $r )
-					$annotations[ $i++ ] = $this->recordToAnnotation( $r );
+					$annotations[ $i++ ] = AnnotationGlobals::recordToAnnotation( $r );
 			}
 			$format = $this->getQueryParam( 'format', 'atom' );
 			$logUrl = 'annotate.php?format='.$format.($username ? '&user='.$username : '').'&url='.$url;
@@ -113,7 +87,7 @@ class MoodleAnnotationService extends AnnotationService
 		$resultSet = get_record_sql( $query );
 		if ( $resultSet && count( $resultSet ) != 0 )
 		{
-			$annotation = $this->recordToAnnotation( $resultSet );
+			$annotation = AnnotationGlobals::recordToAnnotation( $resultSet );
 			return $annotation;
 		}
 		else
@@ -128,7 +102,7 @@ class MoodleAnnotationService extends AnnotationService
 			$this->httpError( 400, 'Bad Request', 'Quote too long' );
 		else
 		{
-			$record = $this->annotationToRecord( $annotation );
+			$record = AnnotationGlobals::annotationToRecord( $annotation );
 			
 			// Figure out the object type and ID from the url
 			// Doing this here avoids infecting the caller with application-specific mumbo-jumbo
@@ -148,6 +122,8 @@ class MoodleAnnotationService extends AnnotationService
 			
 			if ( $id )
 			{
+				// TODO: fill in queryStr for the log
+				$urlQueryStr = '';
 				$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 				add_to_log( null, 'annotation', 'create', $logUrl, "$id" );
 				return $id;
@@ -159,7 +135,7 @@ class MoodleAnnotationService extends AnnotationService
 	function doUpdateAnnotation( $annotation )
 	{
 		$urlQueryStr = '';
-		$record = $this->annotationToRecord( $annotation );
+		$record = AnnotationGlobals::annotationToRecord( $annotation );
 		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 		add_to_log( null, 'annotation', 'update', $logUrl, "{$annotation->id}" );
 		return update_record( 'annotation', $record );
@@ -172,88 +148,9 @@ class MoodleAnnotationService extends AnnotationService
 		add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
 		return True;
 	}
-	
-	function recordToAnnotation( $r )
-	{
-		$annotation = new Annotation( );
-		
-		$annotation->setAnnotationId( $r->id );
-		$annotation->setUserId( $r->userid );
-		if ( $r->access )
-			$annotation->setAccess( $r->access );
-		if ( $r->url )
-			$annotation->setUrl( $r->url );
-		if ( $r->note )
-			$annotation->setNote( $r->note );
-		if ( $r->quote )
-			$annotation->setQuote( $r->quote );
-		if ( $r->quote_title )
-			$annotation->setQuoteTitle( $r->quote_title );
-		if ( $r->quote_author )
-			$annotation->setQuoteAuthor( $r->quote_author );
-		if ( $r->link )
-			$annotation->setLink( $r->link );
-		if ( $r->link_title )
-			$annotation->setLinkTitle( $r->link_title );
-		$annotation->setCreated( $r->created );
-		
-		// TODO: Handle old range spec
-		if ( $r->start_block !== null )
-		{
-			$range = new SequenceRange( );
-			$range->setStart( new SequencePoint( $r->start_block, $r->start_word, $r->start_char ) );
-			$range->setEnd( new SequencePoint( $r->end_block, $r->end_word, $r->end_char ) );
-			$annotation->setSequenceRange( $range );
-		}
-		
-		if ( $r->start_xpath !== null )
-		{
-			$range = new XPathRange( );
-			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_word, $r->start_char ) );
-			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_word, $r->end_char ) );
-			$annotation->setXPathRange( $range );
-		}
-		
-		return $annotation;
-	}
-		
-	function annotationToRecord( $annotation )
-	{
-		$id = $annotation->getAnnotationId( );
-		if ( $id )
-			$record->id = $id;
-		$record->userid = $annotation->getUserId( );
-		$record->access = $annotation->getAccess( );
-		$record->url = $annotation->getUrl( );
-		$record->note = $annotation->getNote( );
-		$record->quote = $annotation->getQuote( );
-		$record->quote_title = $annotation->getQuoteTitle( );
-		$record->quote_author = $annotation->getQuoteAuthor( );
-		$record->link = $annotation->getLink( );
-		$record->link_title = $annotation->getLinkTitle( );
-		$record->created = date( 'Y-m-d H:m' );
-
-		$sequenceRange = $annotation->getSequenceRange( );
-		$sequenceStart = $sequenceRange->getStart( );
-		$sequenceEnd = $sequenceRange->getEnd( );
-		$xpathRange = $annotation->getXPathRange( );
-		$xpathStart = $xpathRange->getStart( );
-		$xpathEnd = $xpathRange->getEnd( );
-		
-		$record->start_block = $sequenceStart->getPaddedPathStr( );
-		$record->start_xpath = $xpathStart->getPathStr( );
-		$record->start_word = $xpathStart->getWords( );
-		$record->start_char = $xpathStart->getChars( );
-		
-		$record->end_block = $sequenceEnd->getPaddedPathStr( );
-		$record->end_xpath = $xpathEnd->getPathStr( );
-		$record->end_word = $xpathEnd->getWords( );
-		$record->end_char = $xpathEnd->getChars( );
-		return $record;
-	}
 }
 
-$service = new MoodleAnnotationService( $CFG->wwwroot, isguest() ? null : $USER->username, $CFG->prefix );
+$service = new MoodleAnnotationService( isguest() ? null : $USER->username );
 $service->dispatch( );
 
 ?>

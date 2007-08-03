@@ -6,62 +6,85 @@
 
  // Display a summary of all annotations for the current user
 
-    require_once( "../config.php" );
-	require_once( "marginalia-php/MarginaliaHelper.php" );
-	require_once( "AnnotationSummaryQuery.php" );
+require_once( "../config.php" );
+require_once( "marginalia-php/MarginaliaHelper.php" );
+require_once( 'marginalia-php/Annotation.php' );
+require_once( 'AnnotationGlobals.php' );
+require_once( "AnnotationSummaryQuery.php" );
 
-	global $CFG;
+global $CFG;
+
+if ($CFG->forcelogin) {
+	require_login();
+}
+
+/*
+// Should probably add logging later
+if ($cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
+	add_to_log($course->id, "forum", "view discussion", "discuss.php?$logparameters", "$discussion->id", $cm->id);
+} else {
+	add_to_log($course->id, "forum", "view discussion", "discuss.php?$logparameters", "$discussion->id");
+}
+
+// Should add preference saving if multiple display modes
+if ($mode) {
+	set_user_preference("forum_displaymode", $mode);
+}
+
+$displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
+*/
+
+$urlString = $_SERVER[ 'REQUEST_URI' ];
+
+if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )
+{
+	header( 'HTTP/1.1 405 Method Not Allowed' );
+	header( 'Allow: GET' );
+}
+else
+{
+	$errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
+	$summaryUrl = $_GET[ 'url' ];
+	$excludeFields = array_key_exists( 'exclude', $_GET ) ? $_GET[ 'exclude' ] : '';
+	$excludeFields = split( ' ', $excludeFields );
+	$possibleExcludeFields = array( 'quote', 'note', 'source', 'user', 'controls' );
+	$nCols = 5 - count( array_intersect( $excludeFields, $possibleExcludeFields) );
 	
-   if ($CFG->forcelogin) {
-        require_login();
-    }
+	$searchQuery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
+	$searchUser = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
+	$searchOf = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
 
-	/*
-	// Should probably add logging later
-    if ($cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-        add_to_log($course->id, "forum", "view discussion", "discuss.php?$logparameters", "$discussion->id", $cm->id);
-    } else {
-        add_to_log($course->id, "forum", "view discussion", "discuss.php?$logparameters", "$discussion->id");
-    }
-
-	// Should add preference saving if multiple display modes
-    if ($mode) {
-        set_user_preference("forum_displaymode", $mode);
-    }
-	
-    $displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
-	*/
-
-	$urlString = $_SERVER[ 'REQUEST_URI' ];
-	
-	if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )
+	$query = new AnnotationSummaryQuery( $summaryUrl, $searchUser, $searchOf, $searchQuery );
+	if ( $query->error )
 	{
-		header( 'HTTP/1.1 405 Method Not Allowed' );
-		header( 'Allow: GET' );
+		header( 'HTTP/1.1 400 Bad Request' );
+		echo '<h1>400 Bad Request</h1>'.htmlspecialchars($query->error);
+	}
+	elseif ( ! MarginaliaHelper::isUrlSafe( $summaryUrl ) )
+	{
+		header( 'HTTP/1.1 400 Bad Request' );
+		echo '<h1>400 Bad Request</h1>Bad url parameter';
 	}
 	else
 	{
-		$errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
-		$summaryUrl = $_GET[ 'url' ];
-		$excludeFields = array_key_exists( 'exclude', $_GET ) ? $_GET[ 'exclude' ] : '';
-		$excludeFields = split( ' ', $excludeFields );
-		$possibleExcludeFields = array( 'quote', 'note', 'source', 'user', 'controls' );
-		$nCols = 5 - count( array_intersect( $excludeFields, $possibleExcludeFields) );
-		
-		$searchQuery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
-		$searchUser = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
-		$searchOf = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
+		// Display individual annotations
+		// Dunno if the range sorting is working
+		$annotations = get_records_sql( $query->sql( 'section_type, section_name, quote_title, start_block, start_word, start_char, end_block, end_word, end_char' ) );
 
-		$query = new AnnotationSummaryQuery( $summaryUrl, $searchUser, $searchOf, $searchQuery );
-		if ( $query->error )
+		$format = array_key_exists( 'format', $_GET ) ? $_GET[ 'format' ] : 'html';
+		
+		if ( 'atom' == $format )
 		{
-			header( 'HTTP/1.1 400 Bad Request' );
-			echo '<h1>400 Bad Request</h1>'.htmlspecialchars($query->error);
-		}
-		elseif ( ! MarginaliaHelper::isUrlSafe( $summaryUrl ) )
-		{
-			header( 'HTTP/1.1 400 Bad Request' );
-			echo '<h1>400 Bad Request</h1>Bad url parameter';
+			$annotationObjs = array();
+			foreach ( $annotations as $annotationRec )
+				$annotationObjs[ ] = AnnotationGlobals::recordToAnnotation( $annotationRec );
+			MarginaliaHelper::generateAnnotationFeed( $annotationObjs,
+				AnnotationGlobals::getFeedTagUri(),
+				MarginaliaHelper::getLastModified( $annotationObjs, AnnotationGlobals::getInstallDate() ),
+				AnnotationGlobals::getServicePath(),
+				AnnotationGlobals::getHost(),
+				$query->getFeedUrl('atom'),
+				$CFG->wwwroot );
 		}
 		else
 		{
@@ -169,9 +192,6 @@
 			
 			echo "<p id='query'>".get_string( 'prompt_search_desc', 'marginalia' ).' '.htmlspecialchars($query->desc(null)).":</p>\n";
 			
-			// Display individual annotations
-			// Dunno if the range sorting is working
-			$annotations = get_records_sql( $query->sql( 'section_type, section_name, quote_title, start_block, start_word, start_char, end_block, end_word, end_char' ) );
 			$curSection = null;
 			$curSectionType = null;
 			$curUser = null;
@@ -282,51 +302,39 @@
 		//		echo "<p><a href='summary.php?course=$courseId'>Show all of my annotations for this course</a></p>\n";
 			
 			}
-		}
 		
-		//$moodlePath = getMoodlePath( );
+			//$moodlePath = getMoodlePath( );
+			
+			// Show link to parent search
+			if ( null != $query->parentSummaryTitle() )
+			{
+				$excludeFields = join( '+', $excludeFields );
+				$turl = $query->getSummaryUrl( $query->parentSummaryUrl(), $searchUser, $searchOf, $searchQuery );
 		
-		// Show link to parent search
-		if ( null != $query->parentSummaryTitle() )
-		{
-			$excludeFields = join( '+', $excludeFields );
-			$turl = getAnnotationSummaryUrl( $query->parentSummaryUrl(), $searchUser, $searchOf, $searchQuery );
+				echo "<p><a href='".htmlspecialchars("$turl&exclude=$excludeFields")."'>Show "
+					. htmlspecialchars($query->desc($query->parentSummaryTitle()))."</a></p>\n";
+			}
+			
+			// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
+			// if a login is required I won't include the feature.
+			if ( ! ANNOTATION_REQUIRE_USER )
+			{
+				$turl = $query->getFeedUrl( 'atom' );
+				echo "<p class='feed' title='".get_string( 'atom_feed', 'marginalia' )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', 'marginalia' )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
+					. '</a> '.get_string( 'atom_feed_desc', 'marginalia' )."</p>\n";
+			}
+			
+			echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', 'marginalia').'</span> '
+				.get_string( 'smartcopy_help', 'marginalia' )."</p>\n";
+			
+			print_footer($course);
 	
-			echo "<p><a href='".htmlspecialchars("$turl&exclude=$excludeFields")."'>Show "
-				. htmlspecialchars($query->desc($query->parentSummaryTitle()))."</a></p>\n";
+			$logUrl = $_SERVER[ 'REQUEST_URI' ];
+			$urlParts = parse_url( $logUrl );
+			$logUrl = array_key_exists( 'query', $urlParts ) ? $urlParts[ 'query' ] : null;
+			add_to_log( null, 'annotation', 'summary', 'summary.php'.($logUrl?'?'.$logUrl:''), $query->desc(null) );
 		}
-		
-		// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
-		// if a login is required I won't include the feature.
-		if ( ! ANNOTATION_REQUIRE_USER )
-		{
-			$turl = $query->getFeedUrl( 'atom' );
-			echo "<p class='feed' title='".get_string( 'atom_feed', 'marginalia' )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', 'marginalia' )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
-				. '</a> '.get_string( 'atom_feed_desc', 'marginalia' )."</p>\n";
-		}
-		
-		echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', 'marginalia').'</span> '
-			.get_string( 'smartcopy_help', 'marginalia' )."</p>\n";
-		
-		print_footer($course);
-
-		$logUrl = $_SERVER[ 'REQUEST_URI' ];
-		$urlParts = parse_url( $logUrl );
-		$logUrl = array_key_exists( 'query', $urlParts ) ? $urlParts[ 'query' ] : null;
-		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logUrl?'?'.$logUrl:''), $query->desc(null) );
 	}
-	
-function getAnnotationSummaryUrl( $url, $searchUser, $searchOf, $searchQuery )
-{
-	global $CFG;
-	$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($url);
-	if ( null != $searchQuery && '' != $searchQuery )
-		$s .= '&q='.urlencode($searchQuery);
-	if ( null != $searchUser && '' != $searchUser )
-		$s .= '&user='.urlencode($searchUser);
-	if ( null != $searchOf && '' != $searchOf )
-		$s .= '&search-of='.urlencode($searchOf);
-	return $s;
 }
 
 ?>
