@@ -7,14 +7,35 @@
  * to their desktop monopoly, but that's no excuse.
  */
 
-function DiscussMarginalia( )
+function DiscussMarginalia( url, moodleRoot, username, params )
 {
-	this.url = null;
-	this.moodleRoot = null;
-	this.username = null;
-	this.anuser = null;
+	this.url = url;
+	this.moodleRoot = moodleRoot;
+	this.username = username;
+	this.anuser = username;
 	this.showAnnotations = true;
 	this.enableSmartcopy = false;
+	this.splash = null;
+	
+	for ( var name in params )
+	{
+		var value = params[ name ]; 
+		switch ( name )
+		{
+			case 'anuser':
+				this.anuser = value;
+				break;
+			case 'showAnnotations':
+				this.showAnnotations = value;
+				break;
+			case 'enableSmartcopy':
+				this.enableSmartcopy = value;
+				break;
+			case 'splash':
+				this.splash = value;
+				break;
+		}
+	}
 }
 
 DiscussMarginalia.prototype.onload = function( )
@@ -45,19 +66,48 @@ DiscussMarginalia.prototype.onload = function( )
 		if ( this.showAnnotations )
 		{
 			window.marginalia.showAnnotations( url );
-			fixControlMarginIE();
+			this.fixControlMarginIE();
 		}
 		
 		smartcopyInit();
-		if ( self.enableSmartcopy )
+		if ( this.enableSmartcopy )
 			smartcopyOn( );
 		
 		var marginaliaDirect = new MarginaliaDirect( annotationService );
 		marginaliaDirect.init( );
 		initLogging();
+		
+		if ( this.splash )
+			this.showSplash( );
 	}
 }
 
+
+DiscussMarginalia.prototype.createAnnotation = function( event, postId )
+{
+	this.hideSplash( );
+	delete this.splash;
+	window.marginalia.preferences.setPreference( 'annotations.splash', 'false', null);
+	clickCreateAnnotation( event, postId );
+}
+
+DiscussMarginalia.prototype.showSplash = function( )
+{
+	var noteMargins = cssQuery( '.hentry .notes div' );
+	if ( noteMargins.length > 0 )
+	{
+		var margin = noteMargins[ 0 ];
+		margin.appendChild( domutil.element( 'p', {
+			className: 'splash',
+			content: this.splash } ) );
+	}
+}
+
+DiscussMarginalia.prototype.hideSplash = function( )
+{
+	var splash = cssQuery( '.hentry .notes div .splash' );
+	splash.parentNode.removeChild( splash );
+}
 
 
 /*
@@ -70,7 +120,7 @@ DiscussMarginalia.prototype.onload = function( )
  * Note:  if the annotated content changes length (e.g. because of many inserted links or edit
  * actions), the button won't resize to match.  Hmmm.
  */
-function fixControlMarginIE( )
+DiscussMarginalia.prototype.fixControlMarginIE = function( )
 {
 	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null );
 	for ( var i = 0;  i < controlMargins.length;  ++i )
@@ -81,20 +131,22 @@ function fixControlMarginIE( )
 }
 
 
-function changeAnnotationUser( userControl, url )
+DiscussMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 {
 	var marginalia = window.marginalia;
 	var user = userControl.value;
+	this.hideSplash( )
 	marginalia.hideAnnotations( );
 	if ( null == user || '' == user )
 		marginalia.preferences.setPreference( 'show_annotations', 'false', null);
 	else
 	{
-		// This is a hack - the showAllAnnotations call should accept the user name also
 		marginalia.username = user;
 		marginalia.showAnnotations( url );
 		marginalia.preferences.setPreference( 'show_annotations', 'true', null);
 		marginalia.preferences.setPreference( 'annotation_user', user, null );
+		if ( this.splash && marginalia.username == marginalia.anuser )
+			this.showSplash( );
 	}
 }
 
