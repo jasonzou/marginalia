@@ -116,9 +116,7 @@ class MoodleAnnotationService extends AnnotationService
 			}
 	
 			// must preprocess fields
-			echo "Insert record into {$this->tablePrefix}annotation\n";
 			$id = insert_record( 'annotation', $record, true );
-			echo "Record ID=$id\n";
 			
 			if ( $id )
 			{

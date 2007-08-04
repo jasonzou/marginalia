@@ -11,6 +11,18 @@ require_once("../config.php");
 */
 ?>
 
+table td#annotation-controls {
+	white-space:  nowrap;
+}
+
+#annotation-summary-link {
+	font-size: smaller;
+}
+
+.hentry .notes .splash {
+	font-size: smaller;
+}
+
 /* Edit | Delete | Reply links at bottom of post */
 .forumpostmessage .commands,
 .forumpostmessage .commands a {
