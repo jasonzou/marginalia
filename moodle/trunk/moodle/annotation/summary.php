@@ -111,7 +111,7 @@ else
 			
 			// Show header
 			$sWwwroot = htmlspecialchars( $CFG->wwwroot );
-			$navtail = get_string( 'summary_title', 'marginalia' );
+			$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
 			$navmiddle = "";
 			$meta
 				= "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
@@ -135,18 +135,18 @@ else
 			
 			if (null != $course && $course->category)
 			{
-				print_header("$course->shortname: ".get_string( 'summary_title', 'marginalia' ), "$course->fullname",
+				print_header("$course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ), "$course->fullname",
 					"<A HREF=$CFG->wwwroot/course/view.php?id=$course->id>$course->shortname</A> -> $navtail",
 					"", $meta, true, "", navmenu($course));
 			}
 			elseif ( null != $course )
 			{
-				print_header("$course->shortname: ".get_string( 'summary_title', 'marginalia' ), "$course->fullname",
+				print_header("$course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ), "$course->fullname",
 					"$navtail", "", $meta, true, "", navmenu($course));
 			}
 			else
 			{
-				print_header(get_string( 'summary_title', 'marginalia' ), null, "$navtail", "", $meta, true, "", null);
+				print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
 			}
 	
 			// print search header
@@ -156,28 +156,28 @@ else
 			//  * annotations of my work
 			echo "<form id='annotation-search' method='get' action='summary.php'>\n";
 			echo "<fieldset>\n";
-			echo "<label for='search-of'>".get_string( 'prompt_find', 'marginalia' )."</label>\n";
+			echo "<label for='search-of'>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
 			if ( isguest() )
 			{
 				echo "<input type='hidden' name='search_of' id='search_of' value='' />\n";
-				echo get_string( 'search_of_all', 'marginalia' ).' ';
+				echo get_string( 'search_of_all', ANNOTATION_STRINGS ).' ';
 			}
 			else
 			{
 				echo "<select name='search-of' id='search-of'>\n";
-				echo " <option value=''".(''==$searchOf?" selected='selected'":'').'>'.get_string( 'search_of_all', 'marginalia' )."</option>\n";
-				echo " <option value='".htmlspecialchars($USER->username)."'".($searchOf==$USER->username?" selected='selected'":'').'>'.get_string( 'search_of_self', 'marginalia')."</option>\n";
+				echo " <option value=''".(''==$searchOf?" selected='selected'":'').'>'.get_string( 'search_of_all', ANNOTATION_STRINGS )."</option>\n";
+				echo " <option value='".htmlspecialchars($USER->username)."'".($searchOf==$USER->username?" selected='selected'":'').'>'.get_string( 'search_of_self', ANNOTATION_STRINGS)."</option>\n";
 				echo "</select>\n";
 			}
-			echo "<label for='u'>".get_string( 'prompt_by', 'marginalia' )."</label>\n";
+			echo "<label for='u'>".get_string( 'prompt_by', ANNOTATION_STRINGS )."</label>\n";
 			echo "<select name='u' id='u'>\n";
-			echo " <option value='' ".(!$searchUser?"selected='selected'":'').'>'.get_string( 'search_by_all', 'marginalia' )."</option>\n";
+			echo " <option value='' ".(!$searchUser?"selected='selected'":'').'>'.get_string( 'search_by_all', ANNOTATION_STRINGS )."</option>\n";
 			if ( ! isguest() )
-				echo " <option value='".htmlspecialchars($USER->username)."' ".($searchUser==$USER->username?" selected='selected'":'').">".get_string( 'search_by_self', 'marginalia')."</option>\n";
-//			echo " <option value='*teachers'".('*teachers'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_teachers', 'marginalia' )."</option>\n";
-//			echo " <option value='*students'".('*students'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_students', 'marginalia' )."</option>\n";
+				echo " <option value='".htmlspecialchars($USER->username)."' ".($searchUser==$USER->username?" selected='selected'":'').">".get_string( 'search_by_self', ANNOTATION_STRINGS)."</option>\n";
+//			echo " <option value='*teachers'".('*teachers'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_teachers', ANNOTATION_STRINGS )."</option>\n";
+//			echo " <option value='*students'".('*students'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_students', ANNOTATION_STRINGS )."</option>\n";
 			echo "</select>\n";
-			echo "<label for='search-text'>".get_string( 'search_text', 'marginalia' )."</label>\n";
+			echo "<label for='search-text'>".get_string( 'search_text', ANNOTATION_STRINGS )."</label>\n";
 			echo "<input type='text' id='search-text' name='q' value='".htmlspecialchars($searchQuery)."'/>\n";
 			echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
 			echo "<input type='hidden' name='url' value='".htmlspecialchars($summaryUrl)."'/>\n";
@@ -187,10 +187,10 @@ else
 			// If this page is an error, explain what it's about
 			if ( 'range-mismatch' == $errorPage )
 			{
-				echo "<p class='error'><em class='range-error'>!</em>".get_string( 'summary_range_error', 'marginalia' )."</p>\n";
+				echo "<p class='error'><em class='range-error'>!</em>".get_string( 'summary_range_error', ANNOTATION_STRINGS )."</p>\n";
 			}
 			
-			echo "<p id='query'>".get_string( 'prompt_search_desc', 'marginalia' ).' '.htmlspecialchars($query->desc(null)).":</p>\n";
+			echo "<p id='query'>".get_string( 'prompt_search_desc', ANNOTATION_STRINGS ).' '.htmlspecialchars($query->desc(null)).":</p>\n";
 			
 			$curSection = null;
 			$curSectionType = null;
@@ -208,7 +208,7 @@ else
 						echo "<thead><tr><th colspan='$nCols'>";
 							$a->section_type = htmlspecialchars( $annotation->section_type );
 							echo '<h3>'.htmlspecialchars($annotation->section_type).'</h3>: '
-								. "<a href='".htmlspecialchars($annotation->section_url)."' title='".get_string( 'prompt_section', 'marginalia', $a )."'>" . htmlspecialchars( $annotation->section_name ) . "</a>";
+								. "<a href='".htmlspecialchars($annotation->section_url)."' title='".get_string( 'prompt_section', ANNOTATION_STRINGS, $a )."'>" . htmlspecialchars( $annotation->section_name ) . "</a>";
 						echo "</th></tr></thead><tbody>\n";
 						$curSection = $annotation->section_url;
 						$curSectionType = $annotation->section_type;
@@ -227,7 +227,7 @@ else
 							{
 								$a->row_type = htmlspecialchars( $annotation->row_type );
 								$a->author = htmlspecialchars( $annotation->quote_author );
-								echo "<a href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', 'marginalia', $a)."'>";
+								echo "<a href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 								echo htmlspecialchars( $annotation->quote_title ) . '</a>';
 							}
 							echo "</th>\n";
@@ -267,11 +267,11 @@ else
 							/* The following code supports additional access modes, but has been disabled
 							 * for now:
 							echo "<select onchange='shareAnnotation(this,$annotation->id)'>\n";
-							echo "<option value='private'".('private'==$annotation->access?"selected='selected'":'').'>'.get_string( 'private', 'marginalia' )."</option>\n";
-							echo "<option value='author'".('author'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author', 'marginalia' )."</option>\n";
-							echo "<option value='teacher'".('teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'teacher', 'marginalia' )."</option>\n";
-							echo "<option value='author teacher'".('author teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author+teacher', 'marginalia' )."</option>\n";
-							echo "<option value='public'".('public'==$annotation->access?"selected='selected'":'').'>'.get_string( 'public', 'marginalia' )."</option>\n";
+							echo "<option value='private'".('private'==$annotation->access?"selected='selected'":'').'>'.get_string( 'private', ANNOTATION_STRINGS )."</option>\n";
+							echo "<option value='author'".('author'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author', ANNOTATION_STRINGS )."</option>\n";
+							echo "<option value='teacher'".('teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'teacher', ANNOTATION_STRINGS )."</option>\n";
+							echo "<option value='author teacher'".('author teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author+teacher', ANNOTATION_STRINGS )."</option>\n";
+							echo "<option value='public'".('public'==$annotation->access?"selected='selected'":'').'>'.get_string( 'public', ANNOTATION_STRINGS )."</option>\n";
 							echo "</select>\n";
 							*/
 							echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>";
@@ -320,12 +320,12 @@ else
 			if ( ! ANNOTATION_REQUIRE_USER )
 			{
 				$turl = $query->getFeedUrl( 'atom' );
-				echo "<p class='feed' title='".get_string( 'atom_feed', 'marginalia' )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', 'marginalia' )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
-					. '</a> '.get_string( 'atom_feed_desc', 'marginalia' )."</p>\n";
+				echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
+					. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 			}
 			
-			echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', 'marginalia').'</span> '
-				.get_string( 'smartcopy_help', 'marginalia' )."</p>\n";
+			echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', ANNOTATION_STRINGS).'</span> '
+				.get_string( 'smartcopy_help', ANNOTATION_STRINGS )."</p>\n";
 			
 			print_footer($course);
 	

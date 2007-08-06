@@ -100,7 +100,7 @@ class AnnotationSummaryQuery
 		else
 			$s = ( null != $this->searchOf ) ? 'annotation_desc_author' : 'annotation_desc';
 			
-		return get_string( $s, 'marginalia', $a );
+		return get_string( $s, ANNOTATION_STRINGS, $a );
 		
 		return $desc;
 	}
@@ -153,13 +153,13 @@ class AnnotationSummaryQuery
 		{
 			$access_cond = " ($access_visible) AND a.userid in ("
 				. "SELECT stu.username FROM mdl_user stu "
-				. "INNER JOIN mdl_user_students sts ON stu.id=sts.userid "
+				. "INNER JOIN mdl_user_students AS sts ON stu.id=sts.userid "
 				. "WHERE sts.course=".$handler->courseId.")";
 		}
 		elseif ( '*teachers' == $this->searchUser )
 		{
 			$access_cond = " ($access_visible) AND a.userid in ("
-				. "SELECT teu.username FROM mdl_user teu "
+				. "SELECT teu.username FROM mdl_user AS teu "
 				. "INNER JOIN mdl_user_teachers tet ON teu.id=tet.userid "
 				. "WHERE tet.course=".$handler->courseId.")";
 		}
@@ -180,21 +180,26 @@ class AnnotationSummaryQuery
 		
 		// Do handler-specific stuff
 
+		// Check whether the range column exists (for backwards compatibility)
+		$range = '';
+		if ( ! column_type( $CFG->prefix.'annotation', 'range' ) )
+			$range = ', a.range AS range ';
+
 		// These that follow are standard fields, for which no page type exceptions can apply
-		$q_std_select = "SELECT a.id id, a.url url, a.userid userid, "
+		$q_std_select = "SELECT a.id AS id, a.url AS url, a.userid AS userid, "
 		. "a.start_block, a.start_xpath, a.start_word, a.start_char, "
 		. "a.end_block, a.end_xpath, a.end_word, a.end_char, "
-		. "a.link link, a.link_title link_title, a.action action, "
-		. "a.access access, a.created, a.modified"
-		. ",\n concat(u.firstname, ' ', u.lastname) note_author"
-		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) note_author_url"
-		. ",\n a.note note, a.quote, a.quote_title quote_title"
-		. ",\n concat(qu.firstname, ' ', qu.lastname) quote_author"
-		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) quote_author_url";
+		. "a.link AS link, a.link_title AS link_title, a.action AS action, "
+		. "a.access AS access, a.created, a.modified $range"
+		. ",\n concat(u.firstname, ' ', u.lastname) AS note_author"
+		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
+		. ",\n a.note note, a.quote, a.quote_title AS quote_title"
+		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author"
+		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) AS quote_author_url";
 		
 		// Standard tables apply to all (but note the outer join of user, which if gone
 		// should not steal the annotation from its owner):
-		$q_std_from = "\nFROM {$prefix}annotation a"
+		$q_std_from = "\nFROM {$prefix}annotation AS a"
 			. "\n INNER JOIN {$prefix}user u ON u.username=a.userid"
 			. "\n LEFT OUTER JOIN {$prefix}user qu on qu.username=a.quote_author";
 		
@@ -323,7 +328,7 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 		if ( False !== $row )
 			$this->title = $row->fullname;
 		else
-			$this->title = get_string( 'unknown course', 'marginalia' );
+			$this->title = get_string( 'unknown course', ANNOTATION_STRINGS );
 		$this->parentUrl = null;
 		$this->parentTitle = null; 
 	}
@@ -382,7 +387,7 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 			return;
 		if ( null == $this->d )
 		{
-			$this->title = get_string( 'all_discussions', 'marginalia' );
+			$this->title = get_string( 'all_discussions', ANNOTATION_STRINGS );
 			$this->parentUrl = null;
 			$this->parentTitle = null;
 			$this->courseId = null;
@@ -395,16 +400,16 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 			if ( False !== $row )
 			{
 				$a->name = $row->name;
-				$this->title = get_string( 'discussion_name', 'marginalia', $a );
+				$this->title = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
 				$this->courseId = (int) $row->course;
 			}
 			else
 			{
-				$this->title = get_string( 'unknown_discussion', 'marginalia' );
+				$this->title = get_string( 'unknown_discussion', ANNOTATION_STRINGS );
 				$this->courseId = null;
 			}
 			$this->parentUrl = '/course/view.php?id='.$this->courseId;
-			$this->parentTitle = get_string( 'whole_course', 'marginalia' ); 
+			$this->parentTitle = get_string( 'whole_course', ANNOTATION_STRINGS ); 
 		}
 	}
 	
@@ -459,13 +464,13 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 			return;
 		
 		$query = "SELECT p.subject pname, d.id did, d.name dname, d.course course"
-			. " FROM {$CFG->prefix}forum_posts p"
+			. " FROM {$CFG->prefix}forum_posts AS p"
 			. " JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
 			. " WHERE p.id=$p";
 		$row = get_record_sql( $query );
 		if ( False === $row )
 		{
-			$this->title = get_string( 'unknown_post', 'marginalia' );
+			$this->title = get_string( 'unknown_post', ANNOTATION_STRINGS );
 			$this->parentUrl = null;
 			$this->parentTitle = null;
 			$this->courseId = null;
@@ -473,10 +478,10 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 		else
 		{
 			$a->name = $row->pname;
-			$this->title = get_string( 'post_name', 'marginalia', $a );
+			$this->title = get_string( 'post_name', ANNOTATION_STRINGS, $a );
 			$this->parentUrl = $CFG->wwwroot.'/mod/forum/discuss.php?d='.$row->did;
 			$a->name = $row->dname;
-			$this->parentTitle = get_string( 'discussion_name', 'marginalia', $a );
+			$this->parentTitle = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
 			$this->courseId = (int) $row->course;
 		}
 	}

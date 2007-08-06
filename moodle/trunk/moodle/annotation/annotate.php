@@ -75,14 +75,19 @@ class MoodleAnnotationService extends AnnotationService
 	{
 		global $CFG;
 	
+		// Check whether the range column exists (for backwards compatibility)
+		$range = '';
+		if ( ! column_type( $this->tablePrefix.'annotation', 'range' ) )
+			$range = ', a.range AS range ';
+		
 		// Caller should ensure that id is numeric
 		$query = "SELECT a.id, a.userid, a.url,
 			  a.start_block, a.start_xpath, a.start_word, a.start_char,
 			  a.end_block, a.end_xpath, a.end_word, a.end_char,
 			  a.note, a.access, a.quote, a.quote_title, a.quote_author,
 			  a.link, a.link_title, a.action,
-			  a.created, a.modified
-			  FROM {$this->tablePrefix}annotation a
+			  a.created, a.modified $range
+			  FROM {$this->tablePrefix}annotation AS a
 			WHERE a.id = $id";
 		$resultSet = get_record_sql( $query );
 		if ( $resultSet && count( $resultSet ) != 0 )
