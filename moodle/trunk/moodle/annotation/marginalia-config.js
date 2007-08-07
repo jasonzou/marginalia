@@ -30,7 +30,7 @@ ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
 
 function initLogging( )
 {
-	var log = window.log = new ErrorLogger( true, true );
+	var log = window.log = new ErrorLogger( false, false );
 	
 	// Set these to true to view certain kinds of events
 	// Most of these are only useful for debugging specific areas of code.

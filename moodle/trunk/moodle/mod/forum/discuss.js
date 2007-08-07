@@ -1,10 +1,31 @@
 /*
+ * discuss.js
  * Annotation functions specific to discuss.php (the generic name is in case
  * non-annotation code ends up in here).
  *
- * I created this because of the pathetic state of IE.  It's understandable that Microsoft
- * would prefer to hobble a technology like the Web which presents such a challenge
- * to their desktop monopoly, but that's no excuse.
+ * Marginalia has been developed with funding and support from
+ * BC Campus, Simon Fraser University, and the Government of
+ * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
+ * units and individuals within those organizations.  Many 
+ * thanks to all of them.  See CREDITS.html for details.
+ * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
+ * http://www.geof.net/code/annotation
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * $Id$
  */
 
 function DiscussMarginalia( url, moodleRoot, username, params )
@@ -14,7 +35,7 @@ function DiscussMarginalia( url, moodleRoot, username, params )
 	this.username = username;
 	this.anuser = username;
 	this.showAnnotations = true;
-	this.enableSmartcopy = false;
+	this.enableSmartcopy = true;
 	this.splash = null;
 	
 	for ( var name in params )
@@ -69,9 +90,9 @@ DiscussMarginalia.prototype.onload = function( )
 			this.fixControlMarginIE();
 		}
 		
-		smartcopyInit();
+		smartcopyInit( preferences );
 		if ( this.enableSmartcopy )
-			smartcopyOn( );
+			smartcopy.smartcopyOn( );
 		
 		var marginaliaDirect = new MarginaliaDirect( annotationService );
 		marginaliaDirect.init( );
@@ -106,7 +127,8 @@ DiscussMarginalia.prototype.showSplash = function( )
 DiscussMarginalia.prototype.hideSplash = function( )
 {
 	var splash = cssQuery( '.hentry .notes div .splash' );
-	splash.parentNode.removeChild( splash );
+	if ( splash.length > 0 )
+		splash[ 0 ].parentNode.removeChild( splash[ 0 ] );
 }
 
 

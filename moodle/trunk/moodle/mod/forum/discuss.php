@@ -6,6 +6,7 @@
     require_once("../../config.php");
 	require_once("../../annotation/marginalia-php/embed.php");
 	require_once("../../annotation/AnnotationSummaryQuery.php");
+	require_once('../../annotation/AnnotationGlobals.php');
 //	require_once("../../annotation/marginalia-config.php");
 	
     
@@ -209,7 +210,7 @@
 		. '  , showAnnotations: '.('true'==$showAnnotationsPref?'true':'false')."\n"
 		. '  , anuser: \''.htmlspecialchars($annotationUser)."'\n";
 	if ( $showSplashPref == 'true' )
-		$meta .= '  , splash: \''.htmlspecialchars(get_string('splash','marginalia')).'\'';
+		$meta .= '  , splash: \''.htmlspecialchars(get_string('splash',ANNOTATION_STRINGS)).'\'';
 	$meta .= '  } );'."\n";
 	$meta .= "/* showSplashPref=$showSplashPref */\n";
 	$meta .= " discussMarginalia.onload();\n";
@@ -327,11 +328,11 @@
 	
 	echo "<select name='anuser' id='anuser' onchange='window.discussMarginalia.changeAnnotationUser(this,\"$refUrl\");'>\n";
 	echo " <option ".($showAnnotationsPref!='true'?"selected='selected' ":'')
-		."value=''>".get_string('hide_annotations','marginalia')."</option>\n";
+		."value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
 	if ( ! isguest() )
 	{
 		echo " <option ".($showAnnotationsPref=='true'&&$USER->username==$annotationUser?"selected='selected' ":'')
-			."value='".htmlspecialchars($USER->username)."'>".get_string('my_annotations','marginalia')."</option>\n";
+			."value='".htmlspecialchars($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
 	}
 	if ( $userList )
 	{
@@ -350,8 +351,8 @@
 	$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($USER->username)
 		."&url=".urlencode( "$CFG->wwwroot/mod/forum/discuss.php?d=$d" );
 	echo " <a id='annotation-summary-link' href='".htmlspecialchars($summaryUrl)."'"
-		. " title='".htmlspecialchars(get_string('summary_link_title','marginalia'))
-		."'>".htmlspecialchars(get_string('summary_link','marginalia'))."</a>\n";
+		. " title='".htmlspecialchars(get_string('summary_link_title',ANNOTATION_STRINGS))
+		."'>".htmlspecialchars(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
     echo "</td></tr></table>";
 
     if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
