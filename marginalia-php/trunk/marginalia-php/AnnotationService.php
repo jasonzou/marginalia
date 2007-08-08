@@ -1,8 +1,8 @@
 <?php
 
 /*
- * annotate.php
- * handles annotation http requests
+ * AnnotationService.php
+ * Virtual base class for handling annotation HTTP requests.
  *
  * Marginalia has been developed with funding and support from
  * BC Campus, Simon Fraser University, and the Government of
@@ -26,7 +26,7 @@
  * along with this program; if not, write to the Free Software
  * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
  *
- * $Id: annotate.php 78 2007-07-19 23:24:23Z geof.glass $
+ * $Id$
  */
 
 require_once( "SequenceRange.php" );
@@ -101,12 +101,14 @@ class AnnotationService
 		{
 			// Now for some joy.  PHP isn't clever enough to populate $_POST if the
 			// Content-Type is application/x-www-form-urlencoded - it only does
-			// that if the request method is POST.  Bleargh.  (Actually, to be fair
+			// that if the request method is POST.  It is, however, clever enough
+			// to insert its bloody !@#$! slashes.  Bleargh.  (Actually, to be fair
 			// the descriptions of PUT I have seen insist that it should accept a
 			// full resource representation, not changed fields as I'm doing here.
 			// In Atom, at least, that's to maintain database consistency.  I don't
 			// think it's an issue here, so I haven't gotten around to doing it.)
 			// Plus, how do I ensure the charset is respected correctly?  Hmph.
+			
 			
 			// Should fail if not Content-Type: application/x-www-form-urlencoded; charset: UTF-8
 			$fp = fopen( 'php://input', 'rb' );
@@ -114,6 +116,8 @@ class AnnotationService
 			while ( $data = fread( $fp, 1024 ) )
 				$urlencoded .= $data;
 			parse_str( $urlencoded, $params );
+			foreach ( array_keys( $params ) as $param )
+				$params[ $param ] = AnnotationService::unfix_quotes( $params[ $param ] );
 			return $params;
 		}
 		else

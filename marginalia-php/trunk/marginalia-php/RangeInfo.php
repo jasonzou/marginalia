@@ -62,12 +62,12 @@ class RangeInfo
 	{
 		$s .= "\t<range-info url=\"".htmlspecialchars($this->url)."\">\n";
 		
-		if ( $this->xpathRange )
-			$s .= "\t\t<range format=\"xpath\">".htmlspecialchars( $this->xpathRange->toString( ) )."</range>\n";
-
 		if ( $this->sequenceRange )
 			$s .= "\t\t<range format=\"sequence\">".htmlspecialchars( $this->sequenceRange->toString( ) )."</range>\n";
 		
+		if ( $this->xpathRange )
+			$s .= "\t\t<range format=\"xpath\">".htmlspecialchars( $this->xpathRange->toString( ) )."</range>\n";
+
 		$noteUsers = array();
 		$editUsers = array();
 		$allUsers = array();

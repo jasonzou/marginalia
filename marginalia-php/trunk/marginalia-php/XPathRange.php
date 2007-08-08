@@ -1,13 +1,15 @@
 <?
 /*
- * xpath-range.php
+ * XPathRange.php
  * representation of range in an HTML document as specified by two XPath expressions
  *
  * Marginalia has been developed with funding and support from
  * BC Campus, Simon Fraser University, and the Government of
- * Canada, and units and individuals within those organizations.
- * Many thanks to all of them.  See CREDITS.html for details.
- * Copyright (C) 2005-2007 Geoffrey Glass www.geof.net
+ * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
+ * units and individuals within those organizations.  Many 
+ * thanks to all of them.  See CREDITS.html for details.
+ * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
+ * http://www.geof.net/code/annotation
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
@@ -86,6 +88,8 @@ class XPathPoint
 		{
 			if ( XPathPoint::isXPathSafe( $matches[ 1 ] ) )
 				$this->path = $matches[ 1 ];
+//			else
+//				echo "Unsafe XPATH " + $matches[1] + "\n";
 			$this->words = (int) $matches[ 2 ];
 			$this->chars = (int) $matches[ 3 ];
 		}
@@ -139,11 +143,18 @@ class XPathPoint
 	 */
 	function isXPathSafe( $xpath )
 	{
+		if ( '' == $xpath )
+		{
+//			echo "Range is blank";
+			return true;
+		}
+		if ( preg_match( '/^.\/\/(.*)$/', $xpath, $matches ) )
+			$xpath = $matches[ 1 ];
 		$parts = split( '/', $xpath );
 		foreach ( $parts as $part )
 		{
 			$part = trim( $part );
-			if ( preg_match( '/^[a-zA-Z0-9_:-]+\s*(.*)$/', $part, $matches) )
+			if ( preg_match( '/^[a-zA-Z0-9_:\*-]+\s*(.*)$/', $part, $matches) )
 			{
 				$tail = trim( $matches[ 1 ] );
 				// Simple tag name, with or without axis and/or namespace
@@ -189,6 +200,7 @@ class XPathPoint
 				return false;
 			}
 		}
+//		echo "Range is safe";
 		return true;
 	}
 	

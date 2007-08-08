@@ -1,7 +1,7 @@
 <?php
 
 /*
- * AnnotationSummary.php
+ * AnnotationUserSummary.php
  * Summarizes annotations by user
  * Useful for providing a drop-down list of users who have created annotations
  *
