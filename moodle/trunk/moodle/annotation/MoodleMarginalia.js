@@ -1,6 +1,6 @@
 /*
- * discuss.js
- * Annotation functions specific to discuss.php (the generic name is in case
+ * MoodleMarginalia.js
+ * Annotation functions specific to moodle.php (the generic name is in case
  * non-annotation code ends up in here).
  *
  * Marginalia has been developed with funding and support from
@@ -28,7 +28,7 @@
  * $Id$
  */
 
-function DiscussMarginalia( url, moodleRoot, username, params )
+function MoodleMarginalia( url, moodleRoot, username, params )
 {
 	this.url = url;
 	this.moodleRoot = moodleRoot;
@@ -59,7 +59,7 @@ function DiscussMarginalia( url, moodleRoot, username, params )
 	}
 }
 
-DiscussMarginalia.prototype.onload = function( )
+MoodleMarginalia.prototype.onload = function( )
 {
 	// Check whether this page should have annotations enabled at all
 	// The check is here rather in the PHP;  that minimizes the number of patches
@@ -104,7 +104,7 @@ DiscussMarginalia.prototype.onload = function( )
 }
 
 
-DiscussMarginalia.prototype.createAnnotation = function( event, postId )
+MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 {
 	this.hideSplash( );
 	delete this.splash;
@@ -112,7 +112,7 @@ DiscussMarginalia.prototype.createAnnotation = function( event, postId )
 	clickCreateAnnotation( event, postId );
 }
 
-DiscussMarginalia.prototype.showSplash = function( )
+MoodleMarginalia.prototype.showSplash = function( )
 {
 	var noteMargins = cssQuery( '.hentry .notes div' );
 	if ( noteMargins.length > 0 )
@@ -124,7 +124,7 @@ DiscussMarginalia.prototype.showSplash = function( )
 	}
 }
 
-DiscussMarginalia.prototype.hideSplash = function( )
+MoodleMarginalia.prototype.hideSplash = function( )
 {
 	var splash = cssQuery( '.hentry .notes div .splash' );
 	if ( splash.length > 0 )
@@ -142,7 +142,7 @@ DiscussMarginalia.prototype.hideSplash = function( )
  * Note:  if the annotated content changes length (e.g. because of many inserted links or edit
  * actions), the button won't resize to match.  Hmmm.
  */
-DiscussMarginalia.prototype.fixControlMarginIE = function( )
+MoodleMarginalia.prototype.fixControlMarginIE = function( )
 {
 	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null );
 	for ( var i = 0;  i < controlMargins.length;  ++i )
@@ -153,7 +153,7 @@ DiscussMarginalia.prototype.fixControlMarginIE = function( )
 }
 
 
-DiscussMarginalia.prototype.changeAnnotationUser = function( userControl, url )
+MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 {
 	var marginalia = window.marginalia;
 	var user = userControl.value;

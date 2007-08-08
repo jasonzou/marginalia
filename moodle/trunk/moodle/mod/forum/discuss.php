@@ -7,6 +7,7 @@
 	require_once("../../annotation/marginalia-php/embed.php");
 	require_once("../../annotation/AnnotationSummaryQuery.php");
 	require_once('../../annotation/AnnotationGlobals.php');
+	require_once('../../annotation/lib.php');
 //	require_once("../../annotation/marginalia-config.php");
 	
     
@@ -152,71 +153,13 @@
 
     $searchform = forum_search_form($course);
 
-	// Get the users whose annotations are to be shown
-	$annotationUser = get_user_preferences( 'annotation_user', null );
-	if ( null == $annotationUser )
-	{
-		$annotationUser = isguest() ? null : $USER->username;
-		set_user_preference( 'annotation_user', $annotationUser );
-	}
-		
-//	$annotationUser = array_key_exists( 'anuser', $_GET ) ? $_GET[ 'anuser' ] : $USER->username;
-	
 	// Begin Annotation Code
 	// refUrl is the relative URL to this resource from the server root (i.e., it should start with '/')
-	// urlBase is the portion of the URL preceding refUrl (i.e, it should be of the form http://xxx );
-	//$rootpath = parse_url( $CFG->wwwroot );
-	//$rootpath = $rootpath[ 'path' ];
-	$urlBase = $CFG->wwwroot;
-	$x = strpos( $urlBase, '//' ) + 2;
-	$x = strpos( $urlBase, '/', $x );
-	$urlBase = substr( $urlBase, 0, $x );
+
 	$refUrl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
 	// Check whether the annotation show/hide preference is set;  if not, set it (need to do this because the AJAX
 	// service lacks permission to set unknown preferences)
-	$showAnnotationsPref = get_user_preferences( 'show_annotations', null );
-	if ( null == $showAnnotationsPref )
-		set_user_preference( 'show_annotations', 'false' );
-	// Check whether the smartcopy on/off preference is set;  if not, set it (see above)
-	$smartcopyPref = get_user_preferences( 'smartcopy', null );
-	if ( null == $smartcopyPref )
-		set_user_preference( 'smartcopy', 'false' );
-	$showSplashPref = get_user_preferences( 'annotations.splash', null );
-	if ( null == $showSplashPref )
-	{
-		set_user_preference( 'annotations.splash', 'true' );
-		$showSplashPref = true;
-	}
-	if ( null == get_user_preferences( 'annotations.note-edit-mode', null ) )
-		set_user_preference( 'annotations.note-edit-mode', 'freeform' );
-	
-
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/marginalia/marginalia.css'/>\n"
-		. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
-	$anScripts = listMarginaliaJavascript( );
-	for ( $i = 0;  $i < count( $anScripts );  ++$i )
-		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anScripts[$i]."'></script>\n";	
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/smartcopy.js'></script>\n";	
-	$meta .= "<script language='JavaScript' type='text/javascript' src='discuss.js'></script>\n";
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-config.js'></script>\n";
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-strings.js'></script>\n";
-	$meta .= "<script language='JavaScript' type='text/javascript'>\n";
-	$meta .= "function myOnload() {\n";
-	$meta .= " var moodleRoot = '".htmlspecialchars($CFG->wwwroot)."';\n";
-	$meta .= " var url = '".htmlspecialchars($refUrl)."';\n";
-	$meta .= ' var username = \''.htmlspecialchars($USER->username)."';\n";
-	$meta .= ' discussMarginalia = new DiscussMarginalia( url, moodleRoot, username, {'."\n"
-		. '  enableSmartcopy: '.('true'==$smartcopyPref?'true':'false')."\n"
-		. '  , showAnnotations: '.('true'==$showAnnotationsPref?'true':'false')."\n"
-		. '  , anuser: \''.htmlspecialchars($annotationUser)."'\n";
-	if ( $showSplashPref == 'true' )
-		$meta .= '  , splash: \''.htmlspecialchars(get_string('splash',ANNOTATION_STRINGS)).'\'';
-	$meta .= '  } );'."\n";
-	$meta .= "/* showSplashPref=$showSplashPref */\n";
-	$meta .= " discussMarginalia.onload();\n";
-	$meta .= "}\n";
-	$meta .= "addEvent(window,'load',myOnload);\n";
-	$meta .= "</script>\n";
+	$meta = marginaliaHeaderHtml( $refUrl, true );
 
 	// I'm perverting the meta argument here, but there's no way provided to do this otherwise that I 
 	// can see #GEOF#
@@ -312,49 +255,14 @@
             }
         }
     }
+	
+	// Annotation controls (help, user dropdown, link to summary page)
 	echo "</td>\n<td id='annotation-controls'>";
-	// Show/Hide Annotations buttons
-	//echo "<button id='show-all-annotations' onclick='showAllAnnotations(\"$refUrl#*\");window.preferenceService.setPreference(\"show_annotations\",\"true\",null);'>Show Annotations</button>\n";
-	//echo "<button id='hide-all-annotations' onclick='hideAllAnnotations(\"$refUrl#*\");window.preferenceService.setPreference(\"show_annotations\",\"false\",null);'>Hide Annotations</button>\n";
-	
-	// Annotation Help
-	$helpTitle = 'Help with Annotations';
-    $linkobject = '<span class="helplink"><img class="iconhelp" alt="'.$helpTitle.'" src="'.$CFG->pixpath .'/help.gif" /></span>';
-    echo link_to_popup_window ('http://localhost/moodle/help.php?module=forum&amp;file=annotate.html&amp;forcelang=', 'popup',
-                                     $linkobject, 400, 500, $helpTitle, 'none', true);
-
-	$summaryQuery = new AnnotationSummaryQuery( $refUrl, null, null, null );
-	$userList = get_records_sql( $summaryQuery->listUsersSql( ) );
-	
-	echo "<select name='anuser' id='anuser' onchange='window.discussMarginalia.changeAnnotationUser(this,\"$refUrl\");'>\n";
-	echo " <option ".($showAnnotationsPref!='true'?"selected='selected' ":'')
-		."value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
-	if ( ! isguest() )
-	{
-		echo " <option ".($showAnnotationsPref=='true'&&$USER->username==$annotationUser?"selected='selected' ":'')
-			."value='".htmlspecialchars($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
-	}
-	if ( $userList )
-	{
-		foreach ( $userList as $user )
-		{
-			if ( $user->username != $USER->username )
-			{
-				echo " <option ".($user->username==$annotationUser?"selected='selected' ":'')
-					."value='".htmlspecialchars($user->username)."'>".htmlspecialchars($user->firstname.' '.$user->lastname)."</option>\n";
-			}
-		}
-	}
-	echo "</select>\n";
-	
-	// Show the annotation summary button
-	$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($USER->username)
-		."&url=".urlencode( "$CFG->wwwroot/mod/forum/discuss.php?d=$d" );
-	echo " <a id='annotation-summary-link' href='".htmlspecialchars($summaryUrl)."'"
-		. " title='".htmlspecialchars(get_string('summary_link_title',ANNOTATION_STRINGS))
-		."'>".htmlspecialchars(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
+	showMarginaliaHelp( 'forum' );
+	showMarginaliaUserDropdown( $refUrl, true );
+	showMarginaliaSummaryLink( $refUrl, $USER->username );
     echo "</td></tr></table>";
-
+	
     if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
         $a->blockafter = $forum->blockafter;
         $a->blockperiod = get_string('secondstotime'.$forum->blockperiod);
