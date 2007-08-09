@@ -1,6 +1,7 @@
 <?php // $Id$
 
 $string['splash'] = 'This is the annotation margin.  Click the ? next to \\"My Annotations\\" at the top right of your screen to find out more, or select \\"Hide Annotations\\" in the drop down list to hide this tip.';
+$string['create_button'] = 'Click here or type Enter to create a new annotation for selected text.';
 $string['summary_link'] = 'Summary';
 $string['summary_link_title'] = 'Go to your annotation summary';
 $string['my_annotations'] = 'My Annotations';
