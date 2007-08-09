@@ -28,35 +28,19 @@
  * $Id$
  */
 
-function MoodleMarginalia( url, moodleRoot, username, params )
+function MoodleMarginalia( url, moodleRoot, username, prefs, params )
 {
 	this.url = url;
 	this.moodleRoot = moodleRoot;
 	this.username = username;
-	this.anuser = username;
-	this.showAnnotations = true;
-	this.enableSmartcopy = true;
-	this.splash = null;
-	
-	for ( var name in params )
-	{
-		var value = params[ name ]; 
-		switch ( name )
-		{
-			case 'anuser':
-				this.anuser = value;
-				break;
-			case 'showAnnotations':
-				this.showAnnotations = value;
-				break;
-			case 'enableSmartcopy':
-				this.enableSmartcopy = value;
-				break;
-			case 'splash':
-				this.splash = value;
-				break;
-		}
-	}
+	this.preferences = new Preferences( 
+		new RestPreferenceService( this.moodleRoot + '/annotation/user-preference.php' ),
+		prefs );
+	this.anuser = prefs[ AN_USER_PREF ];
+	this.showAnnotations = prefs[ AN_SHOWANNOTATIONS_PREF ];
+	this.showAnnotations = this.showAnnotations == 'true';
+	this.enableSmartcopy = prefs[ SMARTCOPY_PREF ] == 'true';
+	this.splash = prefs[ AN_SPLASH_PREF ] == 'true' ? params[ 'splash' ] : null;
 }
 
 MoodleMarginalia.prototype.onload = function( )
@@ -68,11 +52,8 @@ MoodleMarginalia.prototype.onload = function( )
 	if ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
 		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php' );
-		var preferences = new Preferences( new RestPreferenceService( this.moodleRoot + '/annotation/user-preference.php' ) );
-		//var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.txt' );
-		//keywordService.init( );
 		window.marginalia = new Marginalia( annotationService, this.username, this.anuser, {
-			preferences: preferences,
+			preferences: this.preferences,
 			keywordService: null,
 			linkUi:  null,
 			baseUrl:  this.moodleRoot,
@@ -90,7 +71,7 @@ MoodleMarginalia.prototype.onload = function( )
 			this.fixControlMarginIE();
 		}
 		
-		smartcopyInit( preferences );
+		smartcopyInit( this.preferences );
 		if ( this.enableSmartcopy )
 			smartcopy.smartcopyOn( );
 		
@@ -108,7 +89,7 @@ MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 {
 	this.hideSplash( );
 	delete this.splash;
-	window.marginalia.preferences.setPreference( 'annotations.splash', 'false', null);
+	window.marginalia.preferences.setPreference( AN_SPLASH_PREF, 'false', null);
 	clickCreateAnnotation( event, postId );
 }
 
@@ -160,13 +141,13 @@ MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 	this.hideSplash( )
 	marginalia.hideAnnotations( );
 	if ( null == user || '' == user )
-		marginalia.preferences.setPreference( 'show_annotations', 'false', null);
+		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'false', null);
 	else
 	{
 		marginalia.username = user;
 		marginalia.showAnnotations( url );
-		marginalia.preferences.setPreference( 'show_annotations', 'true', null);
-		marginalia.preferences.setPreference( 'annotation_user', user, null );
+		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'true', null);
+		marginalia.preferences.setPreference( AN_USER_PREF, user, null );
 		if ( this.splash && marginalia.username == marginalia.anuser )
 			this.showSplash( );
 	}
