@@ -1,0 +1,11 @@
+/*
+ * $Id$
+ */
+
+#log li
+{
+	margin: 1em 0;
+	padding: 0;
+	list-style-type: none;
+	color: red;
+}
