@@ -2,6 +2,7 @@
 
     require_once('../config.php');
     require_once($CFG->libdir.'/adminlib.php');
+	require_once($CFG->dirroot.'/annotation/lib.php');
 
     $delete       = optional_param('delete', 0, PARAM_INT);
     $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   //md5 confirmation hash
