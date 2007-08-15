@@ -11,6 +11,13 @@ define( 'ANNOTATE_SERVICE_PATH', '/annotate' );
 
 define( 'ANNOTATION_STRINGS', 'annotation' );
 
+define( 'AN_USER_PREF', 'annotations.user' );
+define( 'AN_SHOWANNOTATIONS_PREF', 'annotations.show' );
+define( 'AN_NOTEEDITMODE_PREF', 'annotations.note-edit-mode' );
+define( 'AN_SPLASH_PREF', 'annotations.splash' );
+define( 'SMARTCOPY_PREF', 'smartcopy' );
+
+
 class AnnotationGlobals
 {
 	function getHost( )
