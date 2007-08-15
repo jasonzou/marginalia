@@ -298,8 +298,14 @@ class AnnotationService
 			$id = $this->doCreateAnnotation( $annotation );
 			if ( $id != 0 )
 			{
+				$feedUrl = $this->servicePath;
+				if ( $this->niceUrls )
+					$feedUrl .= '/' . urlencode( $id );
+				else
+					$feedUrl .= '?id=' . urlencode( $id );
 				header( 'HTTP/1.1 201 Created' );
 				header( "Location: $this->servicePath/$id" );
+				$this->getAtom( $annotation, $feedUrl, $this->baseUrl );
 			}
 			else
 				$this->httpError( 500, 'Internal Service Error', 'Create failed' );	
@@ -356,7 +362,7 @@ class AnnotationService
 		$feedLastModified = MarginaliaHelper::getLastModified( $annotations, $this->installDate );
 		$feedTagUri = "tag:" . $this->host . ',' . date( '2005-07-20', $this->installDate ) . ":annotation";
 		
-		header( 'Content-Type: application/xml' );
+		header( 'Content-Type: application/atom+xml' );
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
 		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $this->servicePath, $this->host, $feedUrl, $baseUrl );
 	}
