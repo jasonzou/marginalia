@@ -1,4 +1,4 @@
-<?PHP
+<?php
 
  // summary.php
  // Part of Marginalia annotation for Moodle

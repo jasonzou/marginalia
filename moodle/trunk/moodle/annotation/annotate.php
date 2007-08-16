@@ -151,6 +151,12 @@ class MoodleAnnotationService extends AnnotationService
 		add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
 		return True;
 	}
+
+	// For some unfathomable reason, Moodle forces magicquotes *on* instead of *off*.  Fun.
+	function unfix_quotes( $value )
+	{
+		return stripslashes( $value );
+	}
 }
 
 $service = new MoodleAnnotationService( isguest() ? null : $USER->username );

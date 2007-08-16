@@ -1,4 +1,4 @@
-<?PHP
+<?php
 header( 'Content-type: text/css' );
 /*
 if (!isset($themename)) {
