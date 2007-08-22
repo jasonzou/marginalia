@@ -1,0 +1,97 @@
+<html>
+<head>
+	<title>Marginalia for OJS Installation</title>
+	<style type="text/css">
+		ol li {
+			margin: 1em 0 ;
+		}
+	</style>
+</head>
+<body>
+<h1>Marginalia for OJS Installation</h1>
+
+<p>The installation requires the following:</p>
+
+<ul>
+	<li>PHP 4.3 or later</li>
+	<li>OJS as of mid-September 2006 (a small fix was implemented to one of the
+	page templates at this point)</li>
+	<li>MySQL 4.1 or later (though a colleague has had success with MySQL 3; 
+	I haven't tested with earlier versions or with Postgres)</li>
+</ul>
+
+<p>The install procedure doesn't change any existing files or database data,
+but if you're paranoid like me, you might want to back up your OJS installation
+before performing the install just to be sure.</p>
+
+<p>Marginalia for OJS is a plugin.  Installing it is fairly straightforward.
+First, copy the contents of the <kbd>ojs</kbd> directory in the installation
+into your OJS directory.  Then you will need to log in to OJS as an administrator 
+and switch on the plugin before it will work.  Note that only logged-in users 
+can annotate articles in OJS.</p>
+
+<p>Finally, you must create and populate the database tables required by Marginalia.  
+The easiest way to do this is using OJS's built-in update procedure.  You must
+enable the plugin first (as just described), or this step will not work.  From 
+within your OJS install directory, run the following command:</p>
+
+<pre><code>php tools/upgrade.php upgrade</code></pre>
+
+<p>Alternatively, you can create the tables manually using the <kbd>tables.sql</kbd>
+and <kbd>keywords.sql</kbd> scripts from the <kbd>util</kbd> directory of the 
+Marginalia nistall.</p>
+
+<p>That's all there is to it.  If you run into any difficulties, let me know.</p>
+
+<h2>Installation Problems</h2>
+
+<p>If you have problems, it is probably because of a misconfiguration.  First, make sure
+that you always connect to OJS using the canonical URL (see config.inc.php in your
+OJS installation);  otherwise annotations may not
+always appear.  If you are using a different url (e.g. <kbd>localhost</kbd>
+instead of a numerical IP address), annotation will not work.</p>
+
+<p>If your URL matches your configuration, I recommend installing and running the Firebug
+extension for Firefox.  Among other things, it tracks AJAX requests from a web page to
+the server.  The first thing to look for (other than any explicit errors reported by
+Firebug) is the URL of the GET request sent to annotation/annotate.php with the parameter
+"format=atom" when a page with annotations is first loaded.  Trying loading this URL
+on its own in a browser window:  it should return an Atom feed containing the annotations
+for that page.</p>
+
+<p>If there
+is a problem connecting to the service, you will see an error.  A 404 error indicates
+that Apache could not find the annotation service because of a misconfiguration.  One
+possible cause is problems with mod_rewrite (see step 4 above).  Any
+other error code usually means that the service is available, but something else is
+wrong.  If there is a bug in the application, that could show up as an error code other 
+than 404.</p>
+
+<h2>Known Issues</h2>
+
+<ul>
+<li>This version has not yet been tested and tweaked for Internet Explorer.  It may
+work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
+always run a little better on Firefox (e.g. there are user interface niceties on
+Firefox that are absent on IE).</li>
+<li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
+any defence because I believe a) the risk is vanishingly small and b) the consequences
+of such an attack would be minor.  Basically, it is possible for a programmer to create 
+a web page which - if you visited it while logged in to Moodle - could (in theory 
+anyway) quietly create or delete your annotations.  Why anyone would want to do this
+(it would take a bit of effert), I have no idea (this kind of attack is far more
+dangerous for financial transactions online).  I'm just mentioning it in case you
+feel differently.  If I am dreadfully wrong in my assessment, please drop me an email and
+explain.</li>
+</ul>
+
+<h2>Uninstalling Annotation</h2>
+
+<p>To uninstall annotation, simply delete the install directories:
+<kbd>lib/marginalia</kbd> and <kbd>plugins/generic/MarginaliaPlugin</kbd>.  You
+should also drop the database tables:  <kbd>annotations</kbd>, <kbd>preferences</kbd>,
+and <kbd>keywords</kbd>.</p>
+
+</body>
+</html>
+

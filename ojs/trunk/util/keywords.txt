@@ -1,0 +1,26 @@
+Pre-requisite:Must be known before to ensure understanding or use of
+Summary:summarizes
+Background:Provides background for
+Explanation:Explains 
+Illustration:Provides a graphical representation of
+Update:Updates or makes more current
+Example:Provides an example of
+Procedure:Provides the procedure for an action
+Application:Contains a theory that is applied in
+Purpose:Describes the purpose of 
+Evidence:Provides evidence for
+Correction:Corrects errors in
+Argument:Contains the premises of an argument whose conclusions are in
+Usage:Indicates where, when, or how to invoke an action stated in
+Condition:A condition that insures the truth of
+Warning:Warning of undesirable consequences
+Solution:Contains a solution to a problem posed in
+Definition:Defines or otherwise restricts meaning of
+Comment:Gives additional information about
+Citation:Identifies as the source of concepts and ideas
+Content:Name what is contained
+Alternate view:Contains an alternative view to that expressed in
+Future:Provides an alter to forthcoming work in
+Genrealization:Makes a generalization about
+Causation:Describes the cause of
+Comparison:Is compared to
