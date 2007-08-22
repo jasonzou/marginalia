@@ -1,6 +1,6 @@
 <?php
 
-require_once( 'AnnotationGlobals.php' );
+require_once( $CFG->dirroot.'/annotation/AnnotationGlobals.php' );
 
 /**
  * Get an annotations preference value;  if the preference doesn't exist, create it

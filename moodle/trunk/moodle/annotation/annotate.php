@@ -77,7 +77,7 @@ class MoodleAnnotationService extends AnnotationService
 	
 		// Check whether the range column exists (for backwards compatibility)
 		$range = '';
-		if ( ! column_type( $this->tablePrefix.'annotation', 'range' ) )
+		if ( column_type( $this->tablePrefix.'annotation', 'range' ) )
 			$range = ', a.range AS range ';
 		
 		// Caller should ensure that id is numeric

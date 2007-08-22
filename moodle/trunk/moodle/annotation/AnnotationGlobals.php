@@ -29,7 +29,9 @@ class AnnotationGlobals
 	
 	function getServicePath( )
 	{
-		return AnnotationGlobals::getMoodlePath( ) + ANNOTATE_SERVICE_PATH;
+		global $CFG;
+		return $CFG->wwwroot . ANNOTATE_SERVICE_PATH;
+//		return AnnotationGlobals::getMoodlePath( ) . ANNOTATE_SERVICE_PATH;
 	}
 	
 	/** Get the moodle path - that is, the path to moodle from the root of the server.  Typically this is 'moodle/'.
@@ -57,12 +59,13 @@ class AnnotationGlobals
 
 	function getInstallDate( )
 	{
-		return date( '2005-07-20' );
+		// Hardcoded because I'm not aware of Moodle recording an install date anywhere
+		return strtotime( '2005-07-20' );
 	}
 	
 	function getFeedTagUri( )
 	{
-		return "tag:" . AnnotationGlobals::getHost() . ',' . date( '2005-07-20', AnnotationGlobals::getInstallDate() ) . ":annotation";
+		return "tag:" . AnnotationGlobals::getHost() . ',' . date( 'Y-m-d', AnnotationGlobals::getInstallDate() ) . ":annotation";
 	}
 	
 	function recordToAnnotation( $r )
@@ -88,6 +91,7 @@ class AnnotationGlobals
 		if ( $r->link_title )
 			$annotation->setLinkTitle( $r->link_title );
 		$annotation->setCreated( $r->created );
+		$annotation->setModified( $r->modified );
 		
 		if ( $r->start_block !== null )
 		{
@@ -129,7 +133,7 @@ class AnnotationGlobals
 		$record->quote_author = addslashes( $annotation->getQuoteAuthor( ) );
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
-		$record->created = date( 'Y-m-d H:m' );
+		$record->created = $annotation->getCreated( );
 
 		$sequenceRange = $annotation->getSequenceRange( );
 		$sequenceStart = $sequenceRange->getStart( );

@@ -9,11 +9,15 @@
 	switch ( $_SERVER[ 'REQUEST_METHOD' ] )
 	{
 		case 'GET':
+			$value = get_user_preferences( $prefName, null );
 			header( 'Content-type: application/xml' );
 			// should be utf-8
 			echo "<?xml version='1.0'?>\n";
 			echo "<preferences>\n";
-			echo " <setting url='$url' name='" . htmlspecialchars( $prefName ) . "'>" . htmlspecialchars( get_user_preferences( $prefName, '' ) ) . "</setting>\n";
+			if ( null !== $value )
+				echo " <setting url='$url' name='" . htmlspecialchars( $prefName ) . "'>" . htmlspecialchars( $value ) . "</setting>\n";
+			else
+				echo " <setting url='$url' name='" . htmlspecialchars( $prefName ) . "'/>\n";
 			echo "</preferences>";
 			break;
 		
@@ -28,6 +32,7 @@
 				set_user_preference( $prefName, $value);
 				header( 'HTTP/1.1 204 Preference Set' );
 				$prefs = get_user_preferences( $prefName, null );
+//				echo htmlspecialchars( $prefName ) . '=' . htmlspecialchars( $value );
 			}
 			break;
 		

@@ -182,7 +182,7 @@ class AnnotationSummaryQuery
 
 		// Check whether the range column exists (for backwards compatibility)
 		$range = '';
-		if ( ! column_type( $CFG->prefix.'annotation', 'range' ) )
+		if ( column_type( $CFG->prefix.'annotation', 'range' ) )
 			$range = ', a.range AS range ';
 
 		// These that follow are standard fields, for which no page type exceptions can apply
