@@ -86,7 +86,7 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 		var fragment = getNodeByFragmentPath( '' + window.location );
 		if ( fragment )
 		{
-			scrollWindowToNode( fragment );
+			domutil.scrollWindowToNode( fragment );
 			domutil.addClass( fragment, AN_FLASH_CLASS );
 			fragment.flashcount = 4;
 			setTimeout( _flashLinkTarget, 240 );
@@ -101,6 +101,23 @@ function ojsCreateAnnotation( event )
 	event.stopPropagation( );
 	createAnnotation( 'main', true );
 }
+
+function getNodeByFragmentPath( url )
+{
+	var postInfo = new PostPageInfo( document );
+	var posts = postInfo.getAllPosts( );
+	if ( 0 == posts.length )
+		return;
+	var post = posts[ 0 ];
+	
+	var content = post.getContentElement( );
+	if ( -1 == url.indexOf( '#' ) )
+		return null;
+	var path = url.substring( url.indexOf( '#' ) + 1 );
+	var node = domutil.blockPathToNode( content, path );
+	return node;
+}
+
 
 /* Slow, but might be useful on IE
 function makeBlockElementsLinkable( content, path )
