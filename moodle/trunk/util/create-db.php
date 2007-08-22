@@ -24,7 +24,7 @@ $sMySQLCommand = "create table {$CFG->prefix}annotation ("
 	.', access varchar(32) null'
 	.', url varchar(255) not null'
 	.', start_block varchar(255) not null'
-	.', start_xpath varchar(255) not null,'
+	.', start_xpath varchar(255) not null'
 	.', start_word int not null'
 	.', start_char int not null'
 	.', end_block varchar(255) not null'

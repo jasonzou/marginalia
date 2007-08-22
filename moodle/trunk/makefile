@@ -41,7 +41,8 @@ README_FILES = \
 
 DOC_FILES = \
  docs/CREDITS.html \
- docs/README.html
+ docs/README.html \
+ docs/INSTALL.html
 
 UTIL_FILES = \
  util/create-db.php \
@@ -50,7 +51,7 @@ UTIL_FILES = \
 release:  zipdir docs
 	cd $(OUTDIR); tar czf $(OUTNAME).tgz $(OUTNAME)
 
-zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES)
+zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES)
 	mkdir -p $(ZIPDIR)/util
 	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/moodle/annotation/marginalia/3rd-party
