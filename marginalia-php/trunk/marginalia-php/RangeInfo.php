@@ -60,7 +60,7 @@ class RangeInfo
 	
 	function toXml( )
 	{
-		$s .= "\t<range-info url=\"".htmlspecialchars($this->url)."\">\n";
+		$s = "\t<range-info url=\"".htmlspecialchars($this->url)."\">\n";
 		
 		if ( $this->sequenceRange )
 			$s .= "\t\t<range format=\"sequence\">".htmlspecialchars( $this->sequenceRange->toString( ) )."</range>\n";

@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * XPathRange.php
  * representation of range in an HTML document as specified by two XPath expressions

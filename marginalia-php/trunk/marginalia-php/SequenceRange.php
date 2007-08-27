@@ -1,4 +1,4 @@
-<?
+<?php
 /*
  * sequence-range.php
  * representations for points in an HTML document and for ranges (defined by of points)
@@ -101,7 +101,7 @@ class SequenceRange
 	function compare( $range2 )
 	{
 		$r = $this->start->compare( $range2->start );
-		if ( 0 !== r )
+		if ( 0 !== $r )
 			return $r;
 		return $this->end->compare( $range2->end );
 	}

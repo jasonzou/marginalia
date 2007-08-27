@@ -84,7 +84,7 @@ class AnnotationService
 	// OJS needs to replace this with its own version:
 	function getQueryParam( $name, $default )
 	{
-		return array_key_exists( $name, $_GET ) ? AnnotationService::unfix_quotes( $_GET[ $name ] ) : $default;
+		return array_key_exists( $name, $_GET ) ? $this->unfix_quotes( $_GET[ $name ] ) : $default;
 	}
 	
 	function listBodyParams( )
@@ -94,7 +94,7 @@ class AnnotationService
 		{
 			$params = array();
 			foreach ( array_keys( $_POST ) as $param )
-				$params[ $param ] = AnnotationService::unfix_quotes( $_POST[ $param ] );
+				$params[ $param ] = $this->unfix_quotes( $_POST[ $param ] );
 			return $params;
 		}
 		elseif ( 'PUT' == $method )
@@ -116,8 +116,9 @@ class AnnotationService
 			while ( $data = fread( $fp, 1024 ) )
 				$urlencoded .= $data;
 			parse_str( $urlencoded, $params );
+			// magic_quotes_gpc - the GPC stands for GET POST COOKIE, so should not affect PUT
 			foreach ( array_keys( $params ) as $param )
-				$params[ $param ] = AnnotationService::unfix_quotes( $params[ $param ] );
+				$params[ $param ] = $params[ $param ];
 			return $params;
 		}
 		else
@@ -295,6 +296,7 @@ class AnnotationService
 		else
 		{
 			$annotation->setUserId( $this->currentUserId );
+			$annotation->setCreated( date( 'Y-m-d H:m' ) );
 			$id = $this->doCreateAnnotation( $annotation );
 			if ( $id != 0 )
 			{
@@ -305,7 +307,7 @@ class AnnotationService
 					$feedUrl .= '?id=' . urlencode( $id );
 				header( 'HTTP/1.1 201 Created' );
 				header( "Location: $this->servicePath/$id" );
-				$this->getAtom( $annotation, $feedUrl, $this->baseUrl );
+				$this->getAtom( array( $annotation ), $feedUrl, $this->baseUrl );
 			}
 			else
 				$this->httpError( 500, 'Internal Service Error', 'Create failed' );	
@@ -360,7 +362,7 @@ class AnnotationService
 	function getAtom( $annotations, $feedUrl, $baseUrl )
 	{
 		$feedLastModified = MarginaliaHelper::getLastModified( $annotations, $this->installDate );
-		$feedTagUri = "tag:" . $this->host . ',' . date( '2005-07-20', $this->installDate ) . ":annotation";
+		$feedTagUri = "tag:" . $this->host . ',' . date( 'Y-m-d', $this->installDate ) . ":annotation";
 		
 		header( 'Content-Type: application/atom+xml' );
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
@@ -401,7 +403,7 @@ class AnnotationService
 	// Yeah, gotta love the mess that is PHP
 	function unfix_quotes( $value )
 	{
-		return get_magic_quotes_gpc( ) != 1 ? $value : stripslashes( $value );
+		return get_magic_quotes_gpc( ) ? stripslashes( $value ) : $value;
 	}
 	
 	// It sure doesn't hurt to make sure that numbers are really numbers.

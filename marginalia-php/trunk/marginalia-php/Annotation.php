@@ -161,13 +161,13 @@ class Annotation
 	{ return $this->linkTitle; }
 	
 	function setCreated( $created )
-	{ $this->created = strtotime( $created ); }
+	{  $this->created = is_string( $created ) ? strtotime( $created ) : $created;  }
 	
 	function getCreated( )
 	{ return $this->created; }
 	
 	function setModified( $modified )
-	{ $this->modified = strtotime( $modified ); }
+	{ $this->modified = is_string( $modified ) ? strtotime( $modified ) : $modified; }
 	
 	function getModified( )
 	{ return $this->modified; }

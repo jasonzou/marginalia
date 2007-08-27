@@ -206,7 +206,7 @@ class MarginaliaHelper
 	 * Logically this is part of the Annotation class, but different applications implement
 	 * that differently (OJS in particular), so it's here, but called through Annotation->toAtom().
 	 */
-	function annotationToAtom( &$annotation, $tagHost, $servicePath )
+	function annotationToAtom( &$annotation, $tagHost, $servicePath, $strippedRoot='' )
 	{
 		$NS_XHTML = 'http://www.w3.org/1999/xhtml';
 	
