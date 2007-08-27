@@ -56,8 +56,8 @@ function myOnLoad( )
 		skipContent: _skipSmartcopy
 	} );
 	
-	smartcopyInit( );
-	smartcopyOn( );
+//	smartcopyInit( );
+//	smartcopyOn( );
 	
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
 	marginaliaDirect.init( );

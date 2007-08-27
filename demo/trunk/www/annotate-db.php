@@ -37,6 +37,7 @@ class AnnotationDB
 {
 	function open( $dbhost, $dbuser, $password, $dbname )
 	{
+		global $CFG;
 		// I'm connecting directly to mysql for simplicity here.  Don't forget to set password correctly in mysql:
 		// SET PASSWORD FOR 'some_user'@'some_host' = OLD_PASSWORD('newpwd');
 		mysql_connect( $dbhost, $dbuser, $password );
@@ -48,6 +49,7 @@ class AnnotationDB
 		
 	function release( )
 	{
+		global $CFG;
 		$CFG->dbopen -= 1;
 		if ( 0 == $CFG->dbopen )
 			mysql_close( );
@@ -230,7 +232,7 @@ class AnnotationDB
 	{
 		// determine the filter for the select statement
 		$sUrl = addslashes( $url );
-		$cond .= strchr( $sUrl, '*' ) === false ? "where url='$sUrl' " : "where url like '" . str_replace( '*', '%', $sUrl ) . "'";
+		$cond = strchr( $sUrl, '*' ) === false ? "where url='$sUrl' " : "where url like '" . str_replace( '*', '%', $sUrl ) . "'";
 		if ( $userid != null )
 		{
 			$sUser = addslashes( $userid );

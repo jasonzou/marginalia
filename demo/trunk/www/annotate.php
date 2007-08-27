@@ -74,7 +74,7 @@ class DemoAnnotationService extends AnnotationService
 		return $this->db->getAnnotation( $id );
 	}
 	
-	function doCreateAnnotation( $annotation )
+	function doCreateAnnotation( &$annotation )
 	{
 		return $this->db->createAnnotation( $annotation );
 	}
@@ -86,7 +86,8 @@ class DemoAnnotationService extends AnnotationService
 	
 	function doDeleteAnnotation( $id )
 	{
-		return $this->db->deleteAnnotation( $id );
+		$this->db->deleteAnnotation( $id );
+		return True;
 	}
 }
 
