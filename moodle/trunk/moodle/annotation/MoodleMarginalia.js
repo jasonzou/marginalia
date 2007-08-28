@@ -45,6 +45,8 @@ function MoodleMarginalia( url, moodleRoot, username, prefs, params )
 
 MoodleMarginalia.prototype.onload = function( )
 {
+	initLogging();
+
 	// Check whether this page should have annotations enabled at all
 	// The check is here rather in the PHP;  that minimizes the number of patches
 	// that need to be applied to existing Moodle code.
@@ -77,12 +79,11 @@ MoodleMarginalia.prototype.onload = function( )
 		
 		var marginaliaDirect = new MarginaliaDirect( annotationService );
 		marginaliaDirect.init( );
-		initLogging();
 		
 		if ( this.splash )
 			this.showSplash( );
 	}
-}
+};
 
 
 MoodleMarginalia.prototype.createAnnotation = function( event, postId )
@@ -91,7 +92,7 @@ MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 	delete this.splash;
 	window.marginalia.preferences.setPreference( AN_SPLASH_PREF, 'false', null);
 	clickCreateAnnotation( event, postId );
-}
+};
 
 MoodleMarginalia.prototype.showSplash = function( )
 {
@@ -103,14 +104,14 @@ MoodleMarginalia.prototype.showSplash = function( )
 			className: 'splash',
 			content: this.splash } ) );
 	}
-}
+};
 
 MoodleMarginalia.prototype.hideSplash = function( )
 {
 	var splash = cssQuery( '.hentry .notes div .splash' );
 	if ( splash.length > 0 )
 		splash[ 0 ].parentNode.removeChild( splash[ 0 ] );
-}
+};
 
 
 /*
@@ -131,7 +132,7 @@ MoodleMarginalia.prototype.fixControlMarginIE = function( )
 		var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );
 		button.style.height = '' + controlMargins[ i ].offsetHeight + 'px';
 	}
-}
+};
 
 
 MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
@@ -151,5 +152,5 @@ MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 		if ( this.splash && marginalia.username == marginalia.anuser )
 			this.showSplash( );
 	}
-}
+};
 
