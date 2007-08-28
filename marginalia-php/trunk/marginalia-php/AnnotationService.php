@@ -364,7 +364,7 @@ class AnnotationService
 		$feedLastModified = MarginaliaHelper::getLastModified( $annotations, $this->installDate );
 		$feedTagUri = "tag:" . $this->host . ',' . date( 'Y-m-d', $this->installDate ) . ":annotation";
 		
-		header( 'Content-Type: application/atom+xml' );
+		header( 'Content-Type: application/xml' );
 		echo( '<?xml version="1.0" encoding="utf-8"?>' . "\n" );
 		echo MarginaliaHelper::generateAnnotationFeed( $annotations, $feedTagUri, $feedLastModified, $this->servicePath, $this->host, $feedUrl, $baseUrl );
 	}
