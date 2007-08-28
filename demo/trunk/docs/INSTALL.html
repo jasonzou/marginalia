@@ -19,26 +19,19 @@
 	<li>The <a href="http://www.geof.net/code/annotation">Marginalia</a> library.</li>
 </ul>
 
-<h2>Create Directory Structure</h2>
+<h2>Directory Structure</h2>
 
-<p>Download the Marginalia library.  Take the <code>marginalia</code> directory
-from the library and place it as a subdirectory of <code>www</code> in this
-demo application.</p>
-
-<p>Download the Marginalia PHP support library.  Take the <code>marginalia-php</code>
-subdirectory (containing php files) and place it as a subdirectory of
-<code>www</code> in this demo application.</p>
-
-<p>Place the <code>www</code> directory on your web server, and rename it appropriately
-(e.g. if you want to access it as <code>http://localhost/annotation-demo</code>, rename it
-to <code>annotation-demo</code>).</p>
+<p>If you're doing Marginalia development, you need to understand the directory
+structure.  You may also wish to set up the demo with the most recent version of
+the code from Subversion.  This demo is actually composed of three projects from
+Subversion:  demo, marginalia-lib, and marginalia-php.</p>
 
 <p>Your directory structure should look like this:</p>
 
 <pre>
 www/
   ...
-  index.html
+  index.php
   ...
   marginalia/
     ...
@@ -50,6 +43,11 @@ www/
 	...
 </pre>
 
+<p>The top level (<code>index.php</code>) is from the demo project.  The
+<code>marginalia</code> subdirectory is from marginalia-lib and contains
+the Javascript front-end user interface, while the <code>marginalia-php</code> 
+subdirectory contains PHP back-end code shared with other Marginalia
+integrations (e.g. Moodle and OJS).</p>
 
 <h2>Option 1:  Use a Static XML Back-End</h2>
 
@@ -90,10 +88,6 @@ scripts in the <code>db</code> directory.</p>
 
 <h3>Update Configuration Files</h3>
 
-<p>In <code>index.js</code>, update the value of <code>serviceRoot</code>
-to point to the root of the application on your system.  This must be the
-URL you use in your browser to access Marginalia.</p>
-
 <p>Rename <code>sample-config.php</code> to <code>config.php</code> and edit
 it to include the correct database connection information.  You must
 also update the <code>$CFG->host</code> and <code>$CFG->wwwapp</code> values.
@@ -104,12 +98,9 @@ follows:</p>
 <pre>
 <code>
 $CFG->host = 'localhost';
-$CFG->wwwapp = 'annotation-demo/';
+$CFG->wwwapp = 'annotation-demo';
 </code>
 </pre>
-
-<p>Note the trailing slash on the value for <code>$CFG->wwwapp</code.</p>
-
 
 <h2>Installation Problems</h2>
 

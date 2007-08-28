@@ -22,15 +22,3 @@ create table annotations (
 	quote_author varchar(255) null
 );
 
-create table preferences (
-  user bigint primary key,
-  name varchar(255),
-  value varchar(255)
-);
-
-create table keywords (
-  name varchar(255) primary key,
-  description varchar(255)
-);
-
-
