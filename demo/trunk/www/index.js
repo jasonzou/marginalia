@@ -38,9 +38,8 @@
 	If you don't call smartcopyInit() and smartCopyOn(), smartcopy will not be enabled.
 */
 
-function myOnLoad( )
+function demoOnLoad( serviceRoot, queryUrl )
 {
-	var serviceRoot = 'http://192.168.1.139/~geof/marginalia/demo/www';
 	var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', false );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords.txt');
 	keywordService.init( );
@@ -61,8 +60,6 @@ function myOnLoad( )
 	
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
 	marginaliaDirect.init( );
-	var url = "http://www.geof.net/code/annotation/demo/#*";
-	initLogging();
-	window.marginalia.showAnnotations( url );
+	window.marginalia.showAnnotations( queryUrl );
 }
 

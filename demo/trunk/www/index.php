@@ -63,7 +63,26 @@
 	<link rel="stylesheet" type="text/css" href="index.css"/>
 	
 	<!-- Custom Javascript to set up Marginalia.  See here for essential code: -->
-	<script type="text/javascript" src="index.js"/>
+	<script type="text/javascript" src="index.js"></script>
+	<script type="text/javascript">
+		function myOnLoad( )
+		{
+			// Comment this out if you don't want the debug tab/window poppping up:
+			initLogging();
+			// Change the first parameter below to match the location of the demo
+			// on your server.  Don't change the second parameter unless you also
+			// update the bookmark links in the HTML (a rel="bookmark").  Ideally,
+			// it (and they) should match the URL of this page.
+			<?php
+			require_once 'config.php';
+			global $CFG;
+			?>
+			demoOnLoad(
+				'<?php echo htmlspecialchars($CFG->wwwroot);?>',
+				'<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#*'
+			);
+		}
+	</script>
 </head>
 <!-- showAllAnnotations must be called to display all annotations on the page.  They can be 
 hidden again with a call to hideAllAnnotations.  You may want to create a button or other
@@ -137,7 +156,7 @@ the entrylink class). -->
 				For security reasons, only http and https protocols are permitted.  The 
 				fragment identifier (#m1) is used here because there is more than one 
 				annotatable region on this page (also the case in Moodle). -->
-				<a rel="bookmark" href="http://www.geof.net/code/annotation/demo/#m1">#</a>
+				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m1">#</a>
 				<!-- The published field is used by smartcopy, but isn't necessary for annotation.
 				Note the title attribute and its date format. -->
 				Last Updated <abbr class="published" title="2005-07-21T19:00-08:00">21 July 2005</abbr>
@@ -256,7 +275,7 @@ the entrylink class). -->
 			</div>
 			
 			<p class="metadata">
-				<a rel="bookmark" href="http://www.geof.net/code/annotation/demo/#m2">#</a>
+				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m2">#</a>
 				Last Updated <abbr class="published" title="2005-07-21T19:00-08:00">21 July 2005</abbr>
 				by <span class="author">Geof Glass</span>
 			</p>
@@ -279,7 +298,7 @@ the entrylink class). -->
 			</div>
 			
 			<p class="metadata">
-				<a rel="bookmark" href="http://www.geof.net/code/annotation/demo/#m3">#</a>
+				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m3">#</a>
 				Last Updated <abbr class="published" title="2005-08-24T11:50-08:00">24 August 2005</abbr>
 				by <span class="author">Geof Glass</span>
 			</p>
