@@ -27,7 +27,8 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
 	marginaliaDirect.init( );
 
-	initLogging();
+// Uncomment this line to turn in-browser logging on:
+//	initLogging();
 
 	var mainNode = document.getElementById( "main" );
 	var contentNode = document.getElementById( "content" );

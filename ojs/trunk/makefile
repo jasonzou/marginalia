@@ -10,7 +10,7 @@ include ../marginalia-php/marginalia-php.mk
 DATE = $(shell date +'%Y%m%d')
 
 OUTDIR = releases
-OUTNAME = marginalia-moodle-$(DATE)
+OUTNAME = marginalia-ojs-$(DATE)
 ZIPDIR = $(OUTDIR)/$(OUTNAME)
 
 OJS_DIR = .

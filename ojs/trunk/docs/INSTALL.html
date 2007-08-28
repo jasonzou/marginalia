@@ -31,15 +31,20 @@ and switch on the plugin before it will work.  Note that only logged-in users
 can annotate articles in OJS.</p>
 
 <p>Finally, you must create and populate the database tables required by Marginalia.  
-The easiest way to do this is using OJS's built-in update procedure.  You must
-enable the plugin first (as just described), or this step will not work.  From 
-within your OJS install directory, run the following command:</p>
+The easiest way to do this is using OJS's built-in update 
+procedure.  You must enable the plugin first (as just described), or this step will 
+not work.  I also recommend backing up your OJS database first just to be safe.
+Then, from within your OJS install directory, run the following command:</p>
 
 <pre><code>php tools/upgrade.php upgrade</code></pre>
 
 <p>Alternatively, you can create the tables manually using the <kbd>tables.sql</kbd>
 and <kbd>keywords.sql</kbd> scripts from the <kbd>util</kbd> directory of the 
-Marginalia nistall.</p>
+Marginalia install.</p>
+
+<p>If you are upgrading an existing system with Marginalia already running, the
+upgrade.php script should work.  (I tried it and reported an error from the
+OJS code, but the annotation table was nonetheless successfully updated.)</p>
 
 <p>That's all there is to it.  If you run into any difficulties, let me know.</p>
 
