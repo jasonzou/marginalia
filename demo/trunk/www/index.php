@@ -48,7 +48,6 @@
 	
 	<!-- These are implementations of how to fetch annotations, set preferences, and
 	of localized strings.  They will likely be different on every system. -->
-	<script type="text/javascript" src="marginalia-config.js"></script>
 	<script type="text/javascript" src="marginalia-strings.js"></script>
 	<script type="text/javascript" src="static-annotate.js"></script>
 	<script type="text/javascript" src="static-prefs.js"></script>

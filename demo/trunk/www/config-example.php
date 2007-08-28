@@ -1,6 +1,4 @@
 <?php
-// Copy this file to config.php and update with the correct values
-// for your database and server
 
 // $Id$
 
@@ -18,13 +16,20 @@ $CFG->dbannotation = 'annotations';
 $CFG->dbopen = 0;
 
 // Installation URL
-$CFG->host = 'www.geof.net';
+$CFG->host = 'localhost';
 $CFG->wwwapp = '/~geof/marginalia/demo/www';
 $CFG->wwwserver = 'http://' . $CFG->host . '/';
 $CFG->wwwroot = 'http://' . $CFG->host . $CFG->wwwapp;
 
-// Path to annotation service
-$CFG->annotate_servicePath = $CFG->wwwapp . 'annotate';
+// The server-side scripts (annotate.php etc.) are assumed to live here:
+$CFG->serviceURL = $CFG->wwwroot;
+
+// This should be the URL to index.php - though for most operations it
+// doesn't have to be (if it isn't, links in the Atom feed will be wrong):
+$CFG->annotatedUrl = $CFG->wwwroot;
+
+// Path to annotation service;  used in Atom feed
+$CFG->annotate_servicePath = $CFG->wwwapp . '/annotate.php';
 
 // Date of application installation
 // Used for tag URIs in the Atom feed.  Don't change this unless you want to 
