@@ -22,12 +22,34 @@
 <h2>Create Directory Structure</h2>
 
 <p>Download the Marginalia library.  Take the <code>marginalia</code> directory
-from teh library and place it as a subdirectory of <code>www</code> in this
+from the library and place it as a subdirectory of <code>www</code> in this
 demo application.</p>
+
+<p>Download the Marginalia PHP support library.  Take the <code>marginalia-php</code>
+subdirectory (containing php files) and place it as a subdirectory of
+<code>www</code> in this demo application.</p>
 
 <p>Place the <code>www</code> directory on your web server, and rename it appropriately
 (e.g. if you want to access it as <code>http://localhost/annotation-demo</code>, rename it
 to <code>annotation-demo</code>).</p>
+
+<p>Your directory structure should look like this:</p>
+
+<pre>
+www/
+  ...
+  index.html
+  ...
+  marginalia/
+    ...
+    marginalia.js
+    ...
+  marginalia-php/
+    ...
+	AnnotationService.php
+	...
+</pre>
+
 
 <h2>Option 1:  Use a Static XML Back-End</h2>
 
@@ -68,6 +90,10 @@ scripts in the <code>db</code> directory.</p>
 
 <h3>Update Configuration Files</h3>
 
+<p>In <code>index.js</code>, update the value of <code>serviceRoot</code>
+to point to the root of the application on your system.  This must be the
+URL you use in your browser to access Marginalia.</p>
+
 <p>Rename <code>sample-config.php</code> to <code>config.php</code> and edit
 it to include the correct database connection information.  You must
 also update the <code>$CFG->host</code> and <code>$CFG->wwwapp</code> values.
@@ -84,56 +110,22 @@ $CFG->wwwapp = 'annotation-demo/';
 
 <p>Note the trailing slash on the value for <code>$CFG->wwwapp</code.</p>
 
-<p>You probably will not need to modify config.js unless you are debugging.</p>
 
+<h2>Installation Problems</h2>
 
-<h1>Debugging</h1>
+<p>If you have problems (e.g. you can create annotations but they disappear when you
+reload the page), it is probably because of a misconfiguration.  First, make sure
+that the URL through which you are accessing the application matches the one in
+<kbd>config.php</kbd>.  If you are using a different url (e.g. <kbd>localhost</kbd>
+instead of a numerical IP address), annotation will not work.</p>
 
-<p>If you have problems, it is probably because of a misconfiguration.  First, make sure
-that you always connect to the demo application using the host name and path
-specified in <code>config.php</code></p>
-
-<p>If your URL matches your configuration, you can try the tracing facilities built in to
-the application.  To use these, you must first turn on the tracing facility for the dump()
-function in Firefox, as follows (thanks to 
-<a href="http://ulaluma.com/pyx/archives/2004/05/debugging_javas.html">pyx</a> for the 
-instructions):</p>
-
-<pre>
-Fire up Mozilla and type 'about:config' in the url bar.
-Right click and choose 'New->Boolean'
-Type 'browser.dom.window.dump.enabled'
-Type 'true'
-</pre>
-
-<p>Then, you must access the site via Firefox run from the
-command line (i.e. a Unix or Mac OS X terminal window or a Windows command window).  Ensure 
-that the following lines are present at the top of <kbd>annotation/config.js</kbd>:</p>
-
-<pre>
-<code>
-TRACING_ON = true;
-LOGGING_ON = true;
-setTrace( 'annotation-service', true );
-</code>
-</pre>
-
-<p>There are other setTrace options, but they are for debugging specific algorithms
-in the application and are probably unrelated to your problem.  They will also produce
-a huge amount of output and slow the application down ('annotation-service' is usually
-on because it doesn't produce much output).</p>
-
-<p>If logging to the console doesn't work, try setting INWINDOW_LOG to true;  this will
-clutter your application, but give you logging information within the browser window
-itself.</p>
-
-<p>Once logging is switched on, connections to the annotation web service will be traced.
-These connections correspond to four operations:  listAnnotations, createAnnotation,
-updateAnnotation, and deleteAnnotation.  Of these, the most useful to examine is
-listAnnotations, because you can run it directly from your browser window.  The tracing
-includes the URLs and the HTTP status code if there is an error.  Visit the
-listAnnotations URL in your browser.  If it is working, you will see an Atom XML
-document containing a list of annotations (or very little if you have none).</p>
+<p>If your URL matches your configuration, I recommend installing and running the Firebug
+extension for Firefox.  Among other things, it tracks AJAX requests from a web page to
+the server.  The first thing to look for (other than any explicit errors reported by
+Firebug) is the URL of the GET request sent to annotation/annotate.php with the parameter
+"format=atom" when a page with annotations is first loaded.  Trying loading this URL
+on its own in a browser window:  it should return an Atom feed containing the annotations
+for that page.</p>
 
 <p>If there
 is a problem connecting to the service, you will see an error.  A 404 error indicates
@@ -142,6 +134,25 @@ possible cause is problems with mod_rewrite (see step 4 above).  Any
 other error code usually means that the service is available, but something else is
 wrong.  If there is a bug in the application, that could show up as an error code other 
 than 404.</p>
+
+<h2>Known Issues</h2>
+
+<ul>
+<li>This version has not yet been tested and tweaked for Internet Explorer.  It may
+work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
+always run a little better on Firefox (e.g. there are user interface niceties on
+Firefox that are absent on IE).</li>
+<li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
+any defence because I believe a) the risk is vanishingly small and b) the consequences
+of such an attack would be minor.  Basically, it is possible for a programmer to create 
+a web page which - if you visited it while logged in to Moodle - could (in theory 
+anyway) quietly create or delete your annotations.  Why anyone would want to do this
+(it would take a bit of effert), I have no idea (this kind of attack is far more
+dangerous for financial transactions online).  I'm just mentioning it in case you
+feel differently.  If I am dreadfully wrong in my assessment, please drop me an email and
+explain.</li>
+</ul>
+
 
 </body>
 </html>
