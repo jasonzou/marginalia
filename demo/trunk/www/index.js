@@ -40,7 +40,7 @@
 
 function myOnLoad( )
 {
-	var serviceRoot = 'http://localhost/~geof/marginalia/demo/www';
+	var serviceRoot = 'http://192.168.1.139/~geof/marginalia/demo/www';
 	var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', false );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords.txt');
 	keywordService.init( );
