@@ -71,13 +71,13 @@ None of the <code>.php</code> files will be used.</p>
 <h2>Option 2: Configure a Database Back-End</h2>
 
 <p>If you want to be able to save annotations in the database, you must configure
-the dynamic version of the annotation service.  Make sure the
-<code>StaticAnnotationService</code> is commented out in <code>index.html</code>:</p>
+the dynamic version of the annotation service.  Make sure <code>index.js</code> is
+instantiating <code>RestAnnotationService</code>, not <code>StaticAnnotationService</code>,
+which should look like this:
 
 <pre>
 <code>
-		var annotationService = new RestAnnotationService( serviceRoot );
-		// var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
+		var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', false );
 </code>
 </pre>
 
