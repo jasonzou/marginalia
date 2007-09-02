@@ -280,7 +280,7 @@ the entrylink class). -->
 			</p>
 			
 			<div class="notes">
-				<button class="createAnnotation" onclick="myCreateAnnotation(event,'m2')" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m2')" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
@@ -303,7 +303,7 @@ the entrylink class). -->
 			</p>
 			
 			<div class="notes">
-				<button class="createAnnotation" onclick="myCreateAnnotation(event,'m3')" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m3')" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
