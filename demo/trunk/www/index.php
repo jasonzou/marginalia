@@ -99,6 +99,7 @@ the entrylink class). -->
 		<label for="u">Logged in as <?php echo htmlspecialchars($userid)?>.  Change to </label>
 		<select name="u" id="u">
 			<option value="anonymous"  <?php if ($userid=='anonymous') echo 'selected="selected"';?>>anonymous</option>
+			<option value="ashok" <?php if ($userid=='ashok') echo 'selected="selected"';?>>ashok</option>
 			<option value="flavio" <?php if ($userid=='flavio') echo 'selected="selected"';?>>flavio</option>
 			<option value="geof" <?php if ($userid=='geof') echo 'selected="selected"';?>>geof</option>
 			<option value="jean" <?php if ($userid=='jean') echo 'selected="selected"';?>>jean</option>
