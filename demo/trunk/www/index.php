@@ -75,8 +75,10 @@
 			<?php
 			require_once 'config.php';
 			global $CFG;
+			$userid = array_key_exists( "u", $_GET ) ? $_GET[ "u" ] : 'anonymous';
 			?>
 			demoOnLoad(
+				'<?php echo htmlspecialchars($userid);?>',
 				'<?php echo htmlspecialchars($CFG->wwwroot);?>',
 				'<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#*'
 			);
@@ -92,6 +94,18 @@ the back-end implementation;  most applications with only one region of content 
 probably have no use for it.  The wildcard matches against the URL for each entry (look for
 the entrylink class). -->
 <body onload='myOnLoad()'>
+
+	<form method="get">
+		<label for="u">Logged in as <?php echo htmlspecialchars($userid)?>.  Change to </label>
+		<select name="u" id="u">
+			<option value="anonymous"  <?php if ($userid=='anonymous') echo 'selected="selected"';?>>anonymous</option>
+			<option value="flavio" <?php if ($userid=='flavio') echo 'selected="selected"';?>>flavio</option>
+			<option value="geof" <?php if ($userid=='geof') echo 'selected="selected"';?>>geof</option>
+			<option value="jean" <?php if ($userid=='jean') echo 'selected="selected"';?>>jean</option>
+			<option value="millie" <?php if ($userid=='millie') echo 'selected="selected"';?>>millie</option>
+		</select>
+		<input type="submit" value="Log in"/>
+	</form>
 
 	<!-- I'm using the article list for styling in the DOM.  There's no need for it, and
 	no reason your list of entries should be an ol, or that your entries should be li

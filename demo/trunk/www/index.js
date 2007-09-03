@@ -41,20 +41,22 @@
 // Needed when creating annotations:
 ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
 
-function demoOnLoad( serviceRoot, queryUrl )
+function demoOnLoad( userid, serviceRoot, queryUrl )
 {
+	userid = userid ? userid : 'anonymous';
 	var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', false );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords.txt');
 	keywordService.init( );
-	window.marginalia = new Marginalia( annotationService, 'anonymous', 'anonymous', {
+	window.marginalia = new Marginalia( annotationService, userid, userid, {
 		preferences: new Preferences( new StaticPreferenceService( ) ),
-		keywordService: new RestKeywordService( serviceRoot + '/keywords.txt' ),
+//		keywordService: new RestKeywordService( serviceRoot + '/keywords.txt' ),
 		linkUi:  new ClickToLinkUi( true ),
 		baseUrl:  null,
 		showAccess:  true,
 		showBlockMarkers:  true,
 		showActions:  true,
 		onkeyCreate:  true,
+		warnDelete: true,
 		skipContent: _skipSmartcopy
 	} );
 	
@@ -63,12 +65,13 @@ function demoOnLoad( serviceRoot, queryUrl )
 	
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
 	marginaliaDirect.init( );
+	window.marginaliaQueryUrl = queryUrl;
 	window.marginalia.showAnnotations( queryUrl );
 }
 
 function initLogging( )
 {
-	var log = window.log = new ErrorLogger( true, true );
+	var log = window.log = new ErrorLogger( false, true );
 
 	// Set these to true to view certain kinds of events
 	// Most of these are only useful for debugging specific areas of code.

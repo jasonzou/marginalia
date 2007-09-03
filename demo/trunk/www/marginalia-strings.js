@@ -48,6 +48,8 @@ LocalizedAnnotationStrings = {
 	'quote not found' : 'The highlighted passage could not be found',
 	
 	'create overlapping edits' : 'You may not create overlapping edits',
+	
+	'warn delete' : 'Delete this annotation?',
 
 	'lang' : 'en'
 };

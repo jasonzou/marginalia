@@ -3,6 +3,9 @@
 /*
  * annotate-db.php
  *
+ * THIS IS A DEMO.  It lacks important security checks for a running application - in
+ * particular, it trusts the userid passed in from the request.
+ *
  * Marginalia has been developed with funding and support from
  * BC Campus, Simon Fraser University, and the Government of
  * Canada, and units and individuals within those organizations.
@@ -57,7 +60,7 @@ class AnnotationDB
 
 	function createAnnotation( &$annotation )
 	{
-		global $CFG, $USER;
+		global $CFG;
 
 		$link = $annotation->getLink( );
 		$sequenceRange = $annotation->getSequenceRange( );
@@ -67,7 +70,7 @@ class AnnotationDB
 		$xpathStart = $xpathRange->getStart( );
 		$xpathEnd = $xpathRange->getEnd( );
 
-		$sUser			= addslashes( $USER->username );
+		$sUser			= addslashes( $annotation->getUserId( ) );
 		$sUrl			= addslashes( $annotation->getUrl( ) );
 		$sNote			= addslashes( $annotation->getNote( ) );
 		$sAccess		= addslashes( $annotation->getAccess( ) );
@@ -99,13 +102,12 @@ class AnnotationDB
 	
 	function deleteAnnotation( $id )
 	{
-		global $CFG, $USER;
+		global $CFG;
 		
-		$sUser = addslashes( $USER->username );
 		$sId = (int) $id;
 		// In a running application, all queries should be parameterized for security,
 		// not concatenated together as I am doing here.
-		$query = "delete from $CFG->dbannotation where id=$sId and userid='$sUser'";
+		$query = "delete from $CFG->dbannotation where id=$sId";
 		
 		mysql_query( $query );
 		$r = mysql_affected_rows( ) == 1 ? true : false;
@@ -114,7 +116,7 @@ class AnnotationDB
 	
 	function updateAnnotation( &$annotation )
 	{
-		global $CFG, $USER;
+		global $CFG;
 		
 		$sId = (int) $annotation->getAnnotationId( );
 		

@@ -76,6 +76,8 @@ class DemoAnnotationService extends AnnotationService
 	
 	function doCreateAnnotation( &$annotation )
 	{
+		// This is a hack to allow testing of multiuser features:
+		$annotation->setUserId( array_key_exists( 'userid', $_POST ) ? $_POST[ 'userid' ] : 'anonymous' );
 		return $this->db->createAnnotation( $annotation );
 	}
 	
