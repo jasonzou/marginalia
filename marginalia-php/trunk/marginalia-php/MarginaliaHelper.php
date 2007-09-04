@@ -59,7 +59,7 @@ class MarginaliaHelper
 		if ( array_key_exists( 'userid', $params ) )
 		{
 			$userid = $params[ 'userid' ];
-			$this->setUserId( $userid );
+			$annotation->setUserId( $userid );
 		}
 
 		// Sequence Range
@@ -192,10 +192,13 @@ class MarginaliaHelper
 		echo " <title>Annotations</title>";
 		echo " <id>$feedTagUri</id>\n";
 		
-		for ( $i = 0;  $i < count( $annotations );  ++$i )
+		if ( $annotations )
 		{
-			$annotation =& $annotations[ $i ];
-			echo $annotation->toAtom( $tagHost, $servicePath );
+			for ( $i = 0;  $i < count( $annotations );  ++$i )
+			{
+				$annotation =& $annotations[ $i ];
+				echo $annotation->toAtom( $tagHost, $servicePath );
+			}
 		}
 		echo "</feed>\n";
 	}
