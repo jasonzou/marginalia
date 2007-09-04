@@ -323,6 +323,12 @@ ol#articles {
 	background: #66f;
 }
 
+#range-caret {
+	width: 1px;
+	margin-right: -1px;
+	background: red;
+}
+
 .hentry .smart-copy {
 	display: none;
 }

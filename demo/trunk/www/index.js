@@ -57,7 +57,8 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 		showActions:  true,
 		onkeyCreate:  true,
 		warnDelete: true,
-		skipContent: _skipSmartcopy
+//		skipContent: _skipSmartcopy,
+		showCaret: true
 	} );
 	
 //	smartcopyInit( );
@@ -79,7 +80,7 @@ function initLogging( )
 	log.setTrace( 'annotation-service', true );	// XMLHttp calls to the annotation service
 	log.setTrace( 'word-range', false );			// Word Range calculations (e.g. converting from Text Range)
 	log.setTrace( 'xpath-range', false );			// Trace XPath ranges
-	log.setTrace( 'find-quote', true );			// Check if quote matches current state of document
+	log.setTrace( 'find-quote', false );			// Check if quote matches current state of document
 	log.setTrace( 'node-walk', false );			// Used for going through nodes in document order
 	log.setTrace( 'show-highlight', false );		// Text highlighting calculations
 	log.setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
