@@ -123,13 +123,13 @@ class Annotation extends DataObject
 	{  return $this->getData( 'created' );  }
 	
 	function setCreated( $created )
-	{  $this->setData( 'created', $created );  }
+	{  $this->setData( 'created', is_string( $created ) ? strtotime( $created ) : $created );  }
 	
 	function getModified( )
 	{  return $this->getData( 'modified' );  }
 	
 	function setModified( $modified )
-	{  $this->setData( 'modified', $modified );  }
+	{  $this->setData( 'modified', is_string( $modified ) ? strtotime( $modified ) : $modified );  }
 
 	/**
 	 * Check whether an action value is valid
