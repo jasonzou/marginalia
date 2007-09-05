@@ -240,6 +240,9 @@ class AnnotationDB
 			$sUser = addslashes( $userid );
 			$cond .= " and userid='$sUser'";
 		}
+		else
+			$cond .= " and access='public'";
+		
 		if ( $block != null )
 		{
 			$sBlockStr = addslashes( $block->getPaddedPathStr( ) );
@@ -316,10 +319,13 @@ class AnnotationDB
 		}
 		else
 		{
-			$sequenceRange = new SequenceRange(
-				new SequencePoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-				new SequencePoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
-			$annotation->setSequenceRange( $sequenceRange );
+			if ( $row[ 'start_block' ] && $row[ 'end_block' ] )
+			{
+				$sequenceRange = new SequenceRange(
+					new SequencePoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+					new SequencePoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+				$annotation->setSequenceRange( $sequenceRange );
+			}
 			if ( $row[ 'start_xpath' ] != null )
 			{
 				$xpathRange = new XPathRange(

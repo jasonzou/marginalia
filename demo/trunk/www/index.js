@@ -49,14 +49,14 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 	keywordService.init( );
 	window.marginalia = new Marginalia( annotationService, userid, userid, {
 		preferences: new Preferences( new StaticPreferenceService( ) ),
-//		keywordService: new RestKeywordService( serviceRoot + '/keywords.txt' ),
+		keywordService: keywordService,
 		linkUi:  new ClickToLinkUi( true ),
 		baseUrl:  null,
 		showAccess:  true,
 		showBlockMarkers:  true,
 		showActions:  true,
 		onkeyCreate:  true,
-		warnDelete: true,
+		warnDelete: false,
 //		skipContent: _skipSmartcopy,
 		showCaret: true
 	} );
