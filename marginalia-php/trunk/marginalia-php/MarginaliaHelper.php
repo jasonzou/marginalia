@@ -240,16 +240,19 @@ class MarginaliaHelper
 		else
 			$summary = $sQuote;
 		
-		$sequenceRange = $annotation->getSequenceRange( );
-		$sSequenceRange = htmlspecialchars( $sequenceRange->toString() );
-		$xpathRange = $annotation->getXPathRange( );
 		
 		$s = " <entry>\n";
+
 		// Emit range in two formats:  sequence for sorting, xpath for authority and speed
-		$s .= "  <ptr:range format='sequence'>$sSequenceRange</ptr:range>\n";
-		// Make 100% certain that the XPath expression contains no unsafe calls (e.g. to document())
+		$sequenceRange = $annotation->getSequenceRange( );
+		if ( $sequenceRange )
+			$s .= "  <ptr:range format='sequence'>".htmlspecialchars($sequenceRange->toString())."</ptr:range>\n";
+
+			// Make 100% certain that the XPath expression contains no unsafe calls (e.g. to document())
+		$xpathRange = $annotation->getXPathRange( );
 		if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 			$s .= "  <ptr:range format='xpath'>".htmlspecialchars($xpathRange->toString())."</ptr:range>\n";
+		
 		$s .= "  <ptr:access>$sAccess</ptr:access>\n"
 			. "  <ptr:action>$sAction</ptr:action>\n"
 			. "  <title>$title</title>\n";
@@ -355,7 +358,8 @@ class MarginaliaHelper
 			$nextInfo =& $infos[ $i + 1 ];
 			
 			// If ranges are the same, collapse the blocks
-			if ( $info->sequenceRange->equals( $nextInfo->sequenceRange ) )
+			if ( $info->sequenceRange && $nextInfo->sequenceRange
+				&& $info->sequenceRange->equals( $nextInfo->sequenceRange ) )
 			{
 				// Patch up xpaths if possible
 				if ( ! $info->xpathRange->start && $nextInfo->xpathRange->start )
