@@ -187,7 +187,7 @@ the entrylink class). -->
 				annotations.  All other annotation controls are automatically added by the Javascript, 
 				but this one is under the control of the application (you could call this function 
 				from a pop-up menu, a button at the top of the page, whatever you want). -->
-				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m1',SelectActionNoteEditor)" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m1',new SelectActionNoteEditor())" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
@@ -295,7 +295,7 @@ the entrylink class). -->
 			</p>
 			
 			<div class="notes">
-				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m2')" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m2',new SelectActionNoteEditor())" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
@@ -318,7 +318,7 @@ the entrylink class). -->
 			</p>
 			
 			<div class="notes">
-				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m3')" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m3',new SelectActionNoteEditor())" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
