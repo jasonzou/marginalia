@@ -29,6 +29,16 @@ LocalizedAnnotationStrings = {
 	
 	'delete annotation link button' : 'Remove this link.',
 	
+	'action annotate button' : 'Annotate...',
+	
+	'action insert before button' : 'Insert before...',
+	
+	'action insert after button' : 'Insert after...',
+	
+	'action replace button' : 'Replace...',
+	
+	'action delete button' : 'Delete...',
+	
 	
 	
 	'browser support of W3C range required for annotation creation' : 'Your browser does not support the W3C range standard, so you cannot create annotations.',
@@ -50,6 +60,8 @@ LocalizedAnnotationStrings = {
 	'create overlapping edits' : 'You may not create overlapping edits',
 	
 	'warn delete' : 'Delete this annotation?',
+	
+	'blank quote and note' : 'You must enter some note text',
 
 	'lang' : 'en'
 };
