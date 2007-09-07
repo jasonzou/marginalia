@@ -216,21 +216,6 @@ ol#articles {
 	border: #ddd 1px solid;
 }
 */
-.hentry .notes li button {
-	border: none;
-	font-size: inherit;
-	padding: 0;
-	margin: 0;
-	width: 1.5em;
-	vertical-align: top;
-	cursor: pointer;
-	z-index: 1000;
-}
-
-.hentry .notes li button:hover {
-	font-weight: bold;
-	border: #ddd 1px outset;
-}
 
 .hentry .notes li textarea {
 	font-size: inherit;
@@ -253,9 +238,11 @@ ol#articles {
 	right: 100%;
 }
 
+/* Box a note while editing:
 .hentry .notes .editing-note {
 	border: black 1px solid;
 }
+*/
 
 .hentry .notes .editing-link label {
 	position: absolute;

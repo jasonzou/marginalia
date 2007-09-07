@@ -58,7 +58,7 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 		onkeyCreate:  true,
 		warnDelete: false,
 //		skipContent: _skipSmartcopy,
-		showCaret: true
+		showCaret: false
 	} );
 	
 //	smartcopyInit( );
