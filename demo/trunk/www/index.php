@@ -15,6 +15,7 @@
 	<!-- These all need to be included.  The order
 	for inclusion matters for some of them. -->
 	<script type="text/javascript" src="marginalia/3rd-party.js"></script>
+	<script type="text/javascript" src="marginalia/3rd-party/shortcut.js"></script>
 	<script type="text/javascript" src="marginalia/3rd-party/cssQuery.js"></script>
 	<script type="text/javascript" src="marginalia/3rd-party/cssQuery-level2.js"></script>
 	<script type="text/javascript" src="marginalia/3rd-party/cssQuery-standard.js"></script>
@@ -38,6 +39,7 @@
 	<script type="text/javascript" src="marginalia/link-ui.js"></script>
 	<script type="text/javascript" src="marginalia/link-ui-simple.js"></script>
 
+	<script type="text/javascript" src="marginalia/track-changes.js"></script>
 	<script type="text/javascript" src="marginalia/smartcopy.js"></script>
 	<script type="text/javascript" src="marginalia/RangeInfo.js"></script>
 	<script type="text/javascript" src="marginalia/rest-annotate.js"></script>

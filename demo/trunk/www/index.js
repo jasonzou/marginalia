@@ -58,7 +58,8 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 		onkeyCreate:  true,
 		warnDelete: false,
 //		skipContent: _skipSmartcopy,
-		showCaret: false
+		showCaret: false,
+		userInRequest: true
 	} );
 	
 //	smartcopyInit( );
@@ -69,6 +70,7 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 	window.marginaliaQueryUrl = queryUrl;
 	window.marginalia.showAnnotations( queryUrl );
 }
+
 
 function initLogging( )
 {
