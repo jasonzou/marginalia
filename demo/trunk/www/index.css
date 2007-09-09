@@ -157,15 +157,42 @@ ol#articles {
 	font-size: 80%;	
 	margin: 0 ;
 	margin-bottom: 1ex;
-	padding: 0;
+	padding: .25ex .5ex;
 	min-height: 1.2em;
-	width: 100%;
+	width: 90%;
 	cursor: pointer;
+	border: black 1px solid;
+}
+
+.hentry .notes li.dummy,
+.hentry .notes li li {
+	border: none;
+}
+
+.hentry .notes li.hover {
+	border: red 1px solid;
+}
+
+.hentry .notes li.hover p,
+.hentry .notes li.hover .note-type {
+	color: black;
+}
+
+.hentry .notes li .note-type {
+	font-weight: bold;
+	float: left;
+	display: block;
+}
+
+.hentry .notes li p {
+	clear: both;
+	margin: 0;
 }
 
 .hentry .notes li.other-user {
 	color: #555;
 }
+
 
 .hentry .notes li.quote-error p:before {
 	content: '!';

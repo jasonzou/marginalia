@@ -30,6 +30,7 @@
 	<script type="text/javascript" src="marginalia/annotation.js"></script>
 	<script type="text/javascript" src="marginalia/post-micro.js"></script>
 	<script type="text/javascript" src="marginalia/linkable.js"></script>
+	<script type="text/javascript" src="marginalia/link-ui-simple.js"></script>
 	<script type="text/javascript" src="marginalia/link-ui-clicktolink.js"></script>
 	
 	<script type="text/javascript" src="marginalia/marginalia.js"></script>
