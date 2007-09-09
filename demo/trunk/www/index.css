@@ -161,7 +161,7 @@ ol#articles {
 	min-height: 1.2em;
 	width: 90%;
 	cursor: pointer;
-	border: black 1px solid;
+	border: #bbb 2px solid;
 }
 
 .hentry .notes li.dummy,
@@ -170,7 +170,7 @@ ol#articles {
 }
 
 .hentry .notes li.hover {
-	border: red 1px solid;
+	border-color: red;
 }
 
 .hentry .notes li.hover p,

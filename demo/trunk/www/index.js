@@ -168,9 +168,12 @@ bungeni = {
 		noteElement.appendChild( noteText );
 		
 		// Return behavior mappings
-		marginalia.bindNoteBehaviors( annotation, noteElement, [
-			[ 'p', { click: 'edit' } ]
-		] );
+		if ( params.isCurrentUser )
+		{
+			marginalia.bindNoteBehaviors( annotation, noteElement, [
+				[ 'p', { click: 'edit' } ]
+			] );
+		}
 	}
 }
 	

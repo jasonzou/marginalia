@@ -43,7 +43,7 @@ class DemoAnnotationService extends AnnotationService
 	{
 		global $CFG;
 	
-		$curuser = array_key_exists( 'user', $_GET ) ? $_GET[ 'user' ] : 'anonymous';		
+		$curuser = array_key_exists( 'curuser', $_GET ) ? $_GET[ 'curuser' ] : 'anonymous';		
 
 		AnnotationService::AnnotationService( $CFG->host, $CFG->annotate_servicePath, $CFG->installDate, $curuser );
 	}
