@@ -60,10 +60,10 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 //		skipContent: _skipSmartcopy,
 		showCaret: false,
 		userInRequest: true,
-		getEditor: function() { return new BungeniNoteEditor(); },
 		displayNote: bungeni.displayNote,
 		editors: {
-			freeform: BungeniNoteEditor
+			'default':  Marginalia.newEditorFunc( BungeniNoteEditor ),
+			freeform:  Marginalia.newEditorFunc( BungeniNoteEditor )
 		}
 	} );
 	
