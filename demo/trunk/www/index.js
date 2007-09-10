@@ -220,7 +220,7 @@ BungeniNoteEditor.prototype.show = function( )
 
 function initLogging( )
 {
-	var log = window.log = new ErrorLogger( true, true );
+	var log = window.log = new ErrorLogger( false, true );
 
 	// Set these to true to view certain kinds of events
 	// Most of these are only useful for debugging specific areas of code.
