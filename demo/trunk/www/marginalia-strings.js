@@ -37,7 +37,15 @@ LocalizedAnnotationStrings = {
 	
 	'action replace button' : 'Replace...',
 	
-	'action delete button' : 'Delete...',
+	'action delete button' : 'Delete',
+	
+	'note note label': 'Comment:',
+	
+	'note insert label': 'Insert:',
+	
+	'note replace label': 'Replace:',
+	
+	'note delete label': 'Delete',
 	
 	
 	

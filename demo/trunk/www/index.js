@@ -67,6 +67,7 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 		}
 	} );
 	
+	trackchanges.addEditShortcuts( );
 //	smartcopyInit( );
 //	smartcopyOn( );
 	
@@ -78,26 +79,30 @@ function demoOnLoad( userid, serviceRoot, queryUrl )
 
 
 bungeni = {
-	standardNoteDisplay: function( marginalia, annotation, noteElement, params )
+	editType:  function( annotation, isEditing )
 	{
-		var s;
 		if ( annotation.getAction() == 'edit' )
 		{
-			if ( annotation.getNote() )
+			if ( isEditing || annotation.getNote() )
 			{
 				if ( annotation.getQuote() )
-					s = 'Replace';
+					return getLocalized( 'note replace label' );
 				else
-					s = 'Insert';
+					return getLocalized( 'note insert label' );
 			}
 			else
-				s = 'Delete';
+				return getLocalized( 'note delete label' );
 		}
 		else
-			s = 'Comment';
+			return getLocalized( 'note note label' );	
+	},
+	
+	standardNoteDisplay: function( marginalia, annotation, noteElement, params, isEditing )
+	{
+
 		noteElement.appendChild( domutil.element( 'span', {
 			className: 'note-type',
-			content: s
+			content: bungeni.editType( annotation, isEditing )
 		} ) );
 		
 		if ( params.isCurrentUser )
@@ -142,7 +147,7 @@ bungeni = {
 	
 	displayNote: function( marginalia, annotation, noteElement, params )
 	{
-		bungeni.standardNoteDisplay( marginalia, annotation, noteElement, params );
+		bungeni.standardNoteDisplay( marginalia, annotation, noteElement, params, false );
 		
 		// add the text content
 		var noteText = document.createElement( 'p' );
@@ -183,6 +188,7 @@ function BungeniNoteEditor( )
 	this.editNode = null;
 }
 
+BungeniNoteEditor.prototype.bind = FreeformNoteEditor.prototype.bind;
 BungeniNoteEditor.prototype.clear = FreeformNoteEditor.prototype.clear;
 BungeniNoteEditor.prototype.save = FreeformNoteEditor.prototype.save;
 BungeniNoteEditor.prototype.focus = FreeformNoteEditor.prototype.focus;
@@ -197,7 +203,7 @@ BungeniNoteEditor.prototype.show = function( )
 	bungeni.standardNoteDisplay( marginalia, annotation, noteElement, {
 		isCurrentUser: true,
 		linkingEnabled: true,
-	} );
+	}, true );
 	
 	// Create the edit box
 	this.editNode = document.createElement( "textarea" );
@@ -214,7 +220,7 @@ BungeniNoteEditor.prototype.show = function( )
 
 function initLogging( )
 {
-	var log = window.log = new ErrorLogger( false, true );
+	var log = window.log = new ErrorLogger( true, true );
 
 	// Set these to true to view certain kinds of events
 	// Most of these are only useful for debugging specific areas of code.
