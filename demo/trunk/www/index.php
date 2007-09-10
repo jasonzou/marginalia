@@ -54,6 +54,7 @@
 	<script type="text/javascript" src="marginalia-strings.js"></script>
 	<script type="text/javascript" src="static-annotate.js"></script>
 	<script type="text/javascript" src="static-prefs.js"></script>
+	<script type="text/javascript" src="bungeni-annotate.js"></script>
 	
 	<!-- This stylesheet includes styling for the annotation margin.  The code makes heavy
 	uses of CSS, so a stylesheet provides extensive controls over the look and feel of
@@ -80,11 +81,10 @@
 			global $CFG;
 			$userid = array_key_exists( "u", $_GET ) ? $_GET[ "u" ] : 'anonymous';
 			?>
-			demoOnLoad(
-				'<?php echo htmlspecialchars($userid);?>',
-				'<?php echo htmlspecialchars($CFG->wwwroot);?>',
-				'<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#*'
-			);
+			var userid = '<?php echo htmlspecialchars($userid);?>';
+			var serviceRoot = '<?php echo htmlspecialchars($CFG->wwwroot);?>';
+			var url = '<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#*';
+			demoOnLoad( userid, url, serviceRoot );
 		}
 	</script>
 </head>
