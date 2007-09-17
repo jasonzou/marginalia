@@ -278,6 +278,7 @@ class MarginaliaHelper
 			. "  </contributor>\n";
 	
 		// Content area
+/*		This ends up making the client display ... for the note, which is confusing and wrong.
 		if ( $sLink )
 		{
 			if ( $sNote )
@@ -285,7 +286,7 @@ class MarginaliaHelper
 			else
 				$sNote = "<a href=\"$sLink\">...</a>";
 		}
-		
+*/		
 		$sQuote = "<q>$sQuote</q>";
 		if ( 'edit' == $annotation->getAction() )
 		{
