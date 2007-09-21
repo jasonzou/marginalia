@@ -29,6 +29,8 @@ LocalizedAnnotationStrings = {
 	
 	'delete annotation link button' : 'Remove this link.',
 	
+	
+	
 	'action annotate button' : 'Annotate...',
 	
 	'action insert before button' : 'Insert before...',
@@ -38,14 +40,6 @@ LocalizedAnnotationStrings = {
 	'action replace button' : 'Replace...',
 	
 	'action delete button' : 'Delete',
-	
-	'note note label': 'Comment:',
-	
-	'note insert label': 'Insert:',
-	
-	'note replace label': 'Replace:',
-	
-	'note delete label': 'Delete',
 	
 	
 	
@@ -65,11 +59,32 @@ LocalizedAnnotationStrings = {
 	
 	'quote not found' : 'The highlighted passage could not be found',
 	
-	'create overlapping edits' : 'You may not create overlapping edits',
+	'create overlapping edits' : 'You may not create overlapping edits.',
+	
+	'blank quote and note' : 'You must enter some note text',
+	
+	
 	
 	'warn delete' : 'Delete this annotation?',
 	
-	'blank quote and note' : 'You must enter some note text',
+		
+	
+	'name' : 'Marginalia Plugin',
+	
+	'description' : 'This plugin adds the capability for readers to highlight and annotate passages in articles.',
+	
+	'descriptionDisabled' : 'This plugin adds the capability for readers to highlight and annotate passages in articles. <strong>Marginalia is not currently installed; please install it in {$marginaliaPath}.</strong>',
+	
+
+	
+	'note note label' : 'Comment:',
+	
+	'note insert label' : 'Insert:',
+	
+	'note replace label' : 'Replace:',
+	
+	'note delete label' : 'Delete',
+	
 
 	'lang' : 'en'
 };

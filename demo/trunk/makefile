@@ -4,6 +4,9 @@
 
 MARGINALIA_PHP_DIR = $(shell pwd)/../marginalia-php/marginalia-php
 MARGINALIA_LIB_DIR = $(shell pwd)/../marginalia-lib/marginalia
+MARGINALIA_UTIL_DIR =  $(shell pwd)/../marginalia-lib/util
+MARGINALIA_LOCALE_DIR = $(shell pwd)/../marginalia-lib/locale
+
 include ../marginalia-lib/marginalia-lib.mk
 include ../marginalia-php/marginalia-php.mk
 
@@ -58,6 +61,9 @@ zipdir: $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_DEMO_FILES) $(MA
 	cp $(DOC_FILES) $(ZIPDIR)/doc/
 	cp $(README_FILES) $(ZIPDIR)
 
+$(MARGINALIA_DEMO_DIR)/marginalia-strings.js: $(MARGINALIA_LOCALE_DIR)/en_US.xml
+	xsltproc --param output bungeni $(MARGINALIA_UTIL_DIR)/locale2js.xsl $< >$@
+	
 %.txt: docs/%.html
 	html2txt $< >$@
 	

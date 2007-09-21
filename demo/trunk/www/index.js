@@ -49,7 +49,7 @@ function demoOnLoad( userid, queryUrl, serviceRoot )
 	var preferences = new Preferences( new StaticPreferenceService( ) );
 	window.marginalia = new Marginalia( annotationService, userid, userid, {
 		preferences: preferences,
-//		keywordService: keywordService,
+		keywordService: keywordService,
 		baseUrl:  null,
 		showAccess:  true,
 		showBlockMarkers:  true,
@@ -59,12 +59,12 @@ function demoOnLoad( userid, queryUrl, serviceRoot )
 //		skipContent: _skipSmartcopy,
 		showCaret: false,
 		userInRequest: true,
-		displayNote: bungeni.displayNote,
+/*		displayNote: bungeni.displayNote,
 		editors: {
 			'default':  Marginalia.newEditorFunc( BungeniNoteEditor ),
 			freeform:  Marginalia.newEditorFunc( BungeniNoteEditor )
 		}
-	} );
+*/	} );
 	
 	trackchanges.addEditShortcuts( );
 //	smartcopyInit( );

@@ -11,6 +11,8 @@
 	
 <xsl:output method="text"/>
 
+<xsl:param name="output"/>
+
 <xsl:template match="/">
 <xsl:text>
 /*
@@ -36,7 +38,7 @@ LocalizedAnnotationStrings = {
 </xsl:template>
 
 <xsl:template match="message"
-	><xsl:if test="not( @output )"
+	><xsl:if test="not( @output ) or contains( @output, $output )"
 	>'<xsl:value-of select="@key"/>' : '<xsl:value-of select="."/>',
 	</xsl:if
 ></xsl:template>
