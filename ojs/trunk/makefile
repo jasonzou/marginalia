@@ -4,6 +4,9 @@
 
 MARGINALIA_PHP_DIR = $(shell pwd)/../marginalia-php/marginalia-php
 MARGINALIA_LIB_DIR = $(shell pwd)/../marginalia-lib/marginalia
+MARGINALIA_UTIL_DIR =  $(shell pwd)/../marginalia-lib/util
+MARGINALIA_LOCALE_DIR = $(shell pwd)/../marginalia-lib/locale
+
 include ../marginalia-lib/marginalia-lib.mk
 include ../marginalia-php/marginalia-php.mk
 
@@ -72,6 +75,12 @@ zipdir: $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_OJS_FILES) $(MAR
 %.txt: docs/%.html
 	html2txt $< >$@
 	
+$(MARGINALIA_OJS_DIR)/MarginaliaStrings.inc.php: $(MARGINALIA_LOCALE_DIR)/en_US.xml
+	xsltproc util/locale2ojsjs.xsl $< >$@
+
+$(MARGINALIA_OJS_DIR)/locale/en_US/locale.xml: $(MARGINALIA_LOCALE_DIR)/en_US.xml
+	xsltproc util/locale2ojs.xsl $< >$@
+
 clean-zip:
 	rm -r $(ZIPDIR)
 

@@ -31,12 +31,20 @@ and switch on the plugin before it will work.  Note that only logged-in users
 can annotate articles in OJS.</p>
 
 <p>Finally, you must create and populate the database tables required by Marginalia.  
-The easiest way to do this is using OJS's built-in update 
-procedure.  You must enable the plugin first (as just described), or this step will 
-not work.  I also recommend backing up your OJS database first just to be safe.
-Then, from within your OJS install directory, run the following command:</p>
+The easiest way to do this is using OJS's built-in update procedure, as follows:</p>
+
+<ol>
+<li>Back up your OJS database in case something goes wrong.</li>
+<li>Enable the Marginalia plugin (as described above) if you have not already done so.</li>
+<li>Create the <kbd>schema.xml</kbd> file in the <kbd>MarginaliaPlugin</kbd>
+directory.  If you are creating a new installation, copy <kbd>schema-range.xml</kbd>.  If 
+you are upgrading an version of Marginalia from summer 2007 or earlier, copy 
+<kbd>schema-block.xml</kbd> instead.</li>
+<li>From within your OJS install directory, run the following command:
 
 <pre><code>php tools/upgrade.php upgrade</code></pre>
+</li>
+</ol>
 
 <p>Alternatively, you can create the tables manually using the <kbd>tables.sql</kbd>
 and <kbd>keywords.sql</kbd> scripts from the <kbd>util</kbd> directory of the 
@@ -80,14 +88,15 @@ work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginali
 always run a little better on Firefox (e.g. there are user interface niceties on
 Firefox that are absent on IE).</li>
 <li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
-any defence because I believe a) the risk is vanishingly small and b) the consequences
-of such an attack would be minor.  Basically, it is possible for a programmer to create 
-a web page which - if you visited it while logged in to Moodle - could (in theory 
-anyway) quietly create or delete your annotations.  Why anyone would want to do this
-(it would take a bit of effert), I have no idea (this kind of attack is far more
-dangerous for financial transactions online).  I'm just mentioning it in case you
-feel differently.  If I am dreadfully wrong in my assessment, please drop me an email and
-explain.</li>
+any defence because I believe a) the risk is vanishingly small, b) the consequences
+of such an attack would be minor, and c) I am not aware of an foolproof defence for
+an application like Marginalia.  Basically, it is possible for a programmer to create 
+a web page which - if you visited it while logged in to OJS - could (in theory 
+anyway) quietly create or delete your annotations (though they could not view your
+private annotations).  Why anyone would want to go to the effort to do this I have no 
+idea (this kind of attack is far more dangerous for financial transactions online).  I'm 
+just mentioning it in case you feel differently.  If I am dreadfully wrong in my 
+assessment, please drop me an email and explain.</li>
 </ul>
 
 <h2>Uninstalling Annotation</h2>

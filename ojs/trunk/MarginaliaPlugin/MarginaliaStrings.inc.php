@@ -27,14 +27,6 @@ echo "\treturn LocalizedAnnotationStrings[ s ];\n}\n\n";
 echo "LocalizedAnnotationStrings = {\n";
 
 	
-	echo "'name' : '".Locale::translate('plugins.generic.marginalia.name')."',\n";
-	
-	echo "'description' : '".Locale::translate('plugins.generic.marginalia.description')."',\n";
-	
-	echo "'descriptionDisabled' : '".Locale::translate('plugins.generic.marginalia.descriptionDisabled')."',\n";
-	
-	
-	
 	echo "'public annotation' : '".Locale::translate('plugins.generic.marginalia.public_annotation')."',\n";
 	
 	echo "'private annotation' : '".Locale::translate('plugins.generic.marginalia.private_annotation')."',\n";
@@ -49,6 +41,18 @@ echo "LocalizedAnnotationStrings = {\n";
 	
 	
 	
+	echo "'action annotate button' : '".Locale::translate('plugins.generic.marginalia.action_annotate_button')."',\n";
+	
+	echo "'action insert before button' : '".Locale::translate('plugins.generic.marginalia.action_insert_before_button')."',\n";
+	
+	echo "'action insert after button' : '".Locale::translate('plugins.generic.marginalia.action_insert_after_button')."',\n";
+	
+	echo "'action replace button' : '".Locale::translate('plugins.generic.marginalia.action_replace_button')."',\n";
+	
+	echo "'action delete button' : '".Locale::translate('plugins.generic.marginalia.action_delete_button')."',\n";
+	
+	
+	
 	echo "'browser support of W3C range required for annotation creation' : '".Locale::translate('plugins.generic.marginalia.browser_support_of_W3C_range_required_for_annotation_creation')."',\n";
 	
 	echo "'select text to annotate' : '".Locale::translate('plugins.generic.marginalia.select_text_to_annotate')."',\n";
@@ -60,6 +64,29 @@ echo "LocalizedAnnotationStrings = {\n";
 	echo "'note too long' : '".Locale::translate('plugins.generic.marginalia.note_too_long')."',\n";
 	
 	echo "'quote too long' : '".Locale::translate('plugins.generic.marginalia.quote_too_long')."',\n";
+	
+	echo "'zero length quote' : '".Locale::translate('plugins.generic.marginalia.zero_length_quote')."',\n";
+	
+	echo "'quote not found' : '".Locale::translate('plugins.generic.marginalia.quote_not_found')."',\n";
+	
+	echo "'create overlapping edits' : '".Locale::translate('plugins.generic.marginalia.create_overlapping_edits')."',\n";
+	
+	echo "'blank quote and note' : '".Locale::translate('plugins.generic.marginalia.blank_quote_and_note')."',\n";
+	
+	
+	
+	echo "'warn delete' : '".Locale::translate('plugins.generic.marginalia.warn_delete')."',\n";
+	
+		
+	
+	
+	
+	
+
+	
+	
+	
+	
 	
 
 echo "\t'lang' : 'en'\n";
