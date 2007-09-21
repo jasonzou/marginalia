@@ -27,6 +27,8 @@ define( 'NS_XHTML', 'http://www.w3.org/1999/xhtml' );
 // False makes for easier debugging, however.
 define( 'MARGINALIA_COMPILED_JS', False );
 
+require_once( 'marginalia-php/embed.php' );
+
 
 class MarginaliaPlugin extends GenericPlugin
 {
@@ -122,7 +124,8 @@ class MarginaliaPlugin extends GenericPlugin
 			
 			$head_html =
 				"<link rel='stylesheet' type='text/css' href='".$baseUrl.'/'.PLUGIN_PATH.'/'."marginalia.css'/>\n"
-				."<script type='text/javascript' src='".$serviceUrl."/stringsjs'></script>\n";
+				."<link rel='stylesheet' type='text/css' href='".$baseUrl.'/'.MARGINALIA_PATH.'/'."marginalia.css'/>\n"
+				."<script type='text/javascript' src='".$serviceUrl."/strings.js'></script>\n";
 
 			if ( MARGINALIA_COMPILED_JS )
 			{
@@ -132,35 +135,10 @@ class MarginaliaPlugin extends GenericPlugin
 			}
 			else
 			{
-				$head_html .= 
-					"<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/log.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.PLUGIN_PATH."/marginalia-config.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/html-model.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/3rd-party.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/3rd-party/cssQuery.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/3rd-party/cssQuery-level2.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/3rd-party/cssQuery-standard.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/domutil.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/ranges.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/SequenceRange.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/XPathRange.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/RangeInfo.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/post-micro.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/rest-annotate.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/rest-keywords.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/prefs.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/rest-prefs.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/annotation.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/marginalia.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/note-ui.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/blockmarker-ui.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/highlight-ui.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/link-ui.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/link-ui-simple.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/link-ui-clicktolink.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/linkable.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH."/marginalia-direct.js'></script>\n"
-					."<script type='text/javascript' src='".$baseUrl.'/'.PLUGIN_PATH."/ojs-annotate.js'></script>\n";
+				$marginaliaFiles = listMarginaliaJavascript( );
+				foreach ( $marginaliaFiles as $name )
+					$head_html .= "<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH.'/'.htmlspecialchars($name)."'></script>\n";
+				$head_html .= "<script type='text/javascript' src='".$baseUrl.'/'.PLUGIN_PATH."/ojs-annotate.js'></script>\n";
 			}
 			$head_html .=
 				"<script language='javascript' type='text/javascript'>\n"

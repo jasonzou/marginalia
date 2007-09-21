@@ -1,4 +1,5 @@
 
+ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
 AN_PERBLOCKANNOTATIONS_CLASS = 'per-block-annotations';
 
 function ojsAnnotationInit( serviceRoot, currentUser )
@@ -16,12 +17,14 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 	window.marginalia = new Marginalia( annotationService, currentUser, currentUser, {
 		preferences: new Preferences( new RestPreferenceService( serviceRoot + '/preference', true ) ),
 		keywordService: keywordService,
-		linkUi:  new ClickToLinkUi( true ),
 		baseUrl:  null,
 		showAccess:  true,
 		showBlockMarkers:  false,
 		showActions:  false,
-		onkeyCreate:  true
+		onkeyCreate:  true,
+		editors: {
+			link:  Marginalia.newEditorFunc( ClickToLinkUi )
+		}
 	} );
 	
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
