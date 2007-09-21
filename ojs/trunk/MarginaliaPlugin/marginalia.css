@@ -1,24 +1,79 @@
 /* General layout */
 
-#debug {
-	margin-left: 12em;
-}
-
 #column-wrapper {
-	position: relative;
+	padding-left: 2em;
+	padding-right: 10em;
+	overflow: hidden;
 }
 
 #content {
-	width: 68%;
+	position: relative;
+	float: left;
+	width: 100%;
 }
+
+#column-wrapper .markers {
+	position: relative;
+	float: left;
+	width: 2em;
+	right: 2em;
+	margin-left: -2em%;
+	padding-bottom: 20010px;  /* X + padding-bottom */
+	margin-bottom: -20000px;  /* X */
+}
+
+#column-wrapper .notes {
+	position: relative;
+	float: left;
+	padding-left: .25em;
+	width: 9.75em;
+	margin-right: -10em;
+	padding-bottom: 20010px;  /* X + padding-bottom */
+	margin-bottom: -20000px;  /* X */
+}
+
+
+/* Markers */
+.hentry .markers .marker {
+	position: absolute;
+	right: .35em;
+}
+
+.hentry .markers .marker:hover {
+	background-image:  url( 'marker-tail.png' );
+	background-repeat:  repeat-y;
+	background-position:  top right;
+}
+
+.hentry .markers .annotation-user-count {
+	cursor: pointer;
+	display:  block;
+	width: 1.5em;
+	text-align: center;
+	padding: .25ex .25ex;
+	background: #bbb;
+	font-family: sans-serif;
+	font-weight: bold;
+	color: white;
+}
+
+.hentry .markers .marker.fetched .annotation-user-count {
+	background: transparent;
+	color: #bbb;
+}
+
+.hentry .markers .marker:hover .annotation-user-count {
+	background: #66f;
+}
+
 
 
 /* Annotation styles */
-.hentry {
+/*.hentry {
 	position: relative;
 	padding: 0 ;
 	margin: 2em 0 ;
-}
+}*/
 
 .hentry .entry-content em.annotation {
 	background: #ffe880;
@@ -48,13 +103,13 @@
 
 .hentry .notes {
 	background: inherit;
-	position: absolute;
+/*	position: absolute;
 	height: 100%;
 	width: 30%;
 	top: 0;
 	right: 0 ;
 	margin: 0;
-	padding: 0;
+	padding: 0; */
 }
 
 .hentry .button-wrapper {
@@ -210,6 +265,10 @@
 .hentry .notes li.hover,
 .hentry .entry-content em.annotation.hover {
 	color: red;
+}
+
+.hentry em.annotation.editing-note {
+	outline: red 1px solid;
 }
 
 #content.make-link-target p:hover,

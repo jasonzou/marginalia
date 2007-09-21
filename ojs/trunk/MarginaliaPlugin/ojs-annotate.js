@@ -19,7 +19,7 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 		keywordService: keywordService,
 		baseUrl:  null,
 		showAccess:  true,
-		showBlockMarkers:  false,
+		showBlockMarkers:  true,
 		showActions:  false,
 		onkeyCreate:  true,
 		editors: {
@@ -59,9 +59,14 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 	
 		// Create a wrapper around the article content so we can create two columns -
 		// one for the content, one for margin notes
+		// I know tables are not approved of for layout, but I need the columns to
+		// resize correctly.
 		var wrapper = mainNode.appendChild( domutil.element( 'div', {
 			id: 'column-wrapper',
-			content: contentNode.parentNode.removeChild( contentNode )
+			content: [
+				domutil.element( 'div', { className: 'markers' } ),
+				contentNode.parentNode.removeChild( contentNode )
+			]
 		} ) );
 		
 		// Create the margin notes area
