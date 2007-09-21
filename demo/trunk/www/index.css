@@ -246,8 +246,12 @@ ol#articles {
 .hentry .notes li.hover,
 .hentry .entry-content em.annotation.hover {
 	color: red;
-/*	outline: red 1px solid; */
 }
+
+.hentry .entry-content em.annotation.editing-note {
+	outline: red 2px solid;
+}
+
 
 .hentry .notes li button.expand-edit {
 	position: absolute;

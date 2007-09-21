@@ -59,12 +59,12 @@ function demoOnLoad( userid, queryUrl, serviceRoot )
 //		skipContent: _skipSmartcopy,
 		showCaret: false,
 		userInRequest: true,
-/*		displayNote: bungeni.displayNote,
+		displayNote: bungeni.displayNote,
 		editors: {
 			'default':  Marginalia.newEditorFunc( BungeniNoteEditor ),
 			freeform:  Marginalia.newEditorFunc( BungeniNoteEditor )
 		}
-*/	} );
+	} );
 	
 	trackchanges.addEditShortcuts( );
 //	smartcopyInit( );
