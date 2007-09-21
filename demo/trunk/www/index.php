@@ -14,39 +14,16 @@
 	<title>Annotation Example</title>
 	<!-- These all need to be included.  The order
 	for inclusion matters for some of them. -->
-	<script type="text/javascript" src="marginalia/3rd-party.js"></script>
-	<script type="text/javascript" src="marginalia/3rd-party/shortcut.js"></script>
-	<script type="text/javascript" src="marginalia/3rd-party/cssQuery.js"></script>
-	<script type="text/javascript" src="marginalia/3rd-party/cssQuery-level2.js"></script>
-	<script type="text/javascript" src="marginalia/3rd-party/cssQuery-standard.js"></script>
-
-	<script type="text/javascript" src="marginalia/log.js"></script>
-	<script type="text/javascript" src="marginalia/domutil.js"></script>
-	<script type="text/javascript" src="marginalia/prefs.js"></script>
-	<script type="text/javascript" src="marginalia/html-model.js"></script>
-	<script type="text/javascript" src="marginalia/ranges.js"></script>
-	<script type="text/javascript" src="marginalia/SequenceRange.js"></script>
-	<script type="text/javascript" src="marginalia/XPathRange.js"></script>
-	<script type="text/javascript" src="marginalia/annotation.js"></script>
-	<script type="text/javascript" src="marginalia/post-micro.js"></script>
-	<script type="text/javascript" src="marginalia/linkable.js"></script>
-	<script type="text/javascript" src="marginalia/link-ui-simple.js"></script>
-	<script type="text/javascript" src="marginalia/link-ui-clicktolink.js"></script>
+	<?php
+		require_once( 'marginalia-php/embed.php' );
+		
+		$marginaliaFiles = listMarginaliaJavascript( );
+		foreach ( $marginaliaFiles as $name )
+			echo "<script type='text/javascript' src='marginalia/".htmlspecialchars($name)."'></script>\n";
+	?>
 	
-	<script type="text/javascript" src="marginalia/marginalia.js"></script>
-	<script type="text/javascript" src="marginalia/blockmarker-ui.js"></script>
-	<script type="text/javascript" src="marginalia/highlight-ui.js"></script>
-	<script type="text/javascript" src="marginalia/note-ui.js"></script>
-	<script type="text/javascript" src="marginalia/link-ui.js"></script>
-	<script type="text/javascript" src="marginalia/link-ui-simple.js"></script>
-
 	<script type="text/javascript" src="marginalia/track-changes.js"></script>
 	<script type="text/javascript" src="marginalia/smartcopy.js"></script>
-	<script type="text/javascript" src="marginalia/RangeInfo.js"></script>
-	<script type="text/javascript" src="marginalia/rest-annotate.js"></script>
-	<script type="text/javascript" src="marginalia/rest-prefs.js"></script>
-	<script type="text/javascript" src="marginalia/rest-keywords.js"></script>
-	<script type="text/javascript" src="marginalia/marginalia-direct.js"></script>
 	<link rel="stylesheet" type="text/css" href="marginalia/marginalia-direct.css"/>
 	
 	<!-- These are implementations of how to fetch annotations, set preferences, and
