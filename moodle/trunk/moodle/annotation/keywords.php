@@ -33,6 +33,7 @@ require_once( "../config.php" );
 require_once( 'marginalia-php/Keyword.php' );
 require_once( 'marginalia-php/KeywordService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
+require_once( 'config.php' );
 require_once( 'KeywordsDB.php' );
 require_once( 'AnnotationGlobals.php' );
 
@@ -96,7 +97,15 @@ class MoodleKeywordService extends KeywordService
 	}
 }
 
-$service = new MoodleKeywordService( isguest() ? null : $USER->username );
-$service->dispatch( );
+if ( AN_EDITABLEKEYWORDS )
+{
+	$service = new MoodleKeywordService( isguest() ? null : $USER->username );
+	$service->dispatch( );
+}
+else
+{
+	header( 'HTTP/1.1 501 Not Implemented' );
+	echo "This Moodle installation does not support keywords";
+}
 
 ?>

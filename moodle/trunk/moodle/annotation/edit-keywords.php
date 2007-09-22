@@ -9,6 +9,7 @@
 require_once( "../config.php" );
 require_once( "marginalia-php/MarginaliaHelper.php" );
 require_once( 'marginalia-php/Keyword.php' );
+require_once( 'config.php' );
 require_once( 'AnnotationGlobals.php' );
 require_once( 'KeywordsDB.php' );
 
@@ -40,6 +41,11 @@ if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )
 {
 	header( 'HTTP/1.1 405 Method Not Allowed' );
 	header( 'Allow: GET' );
+}
+elseif ( ! AN_EDITABLEKEYWORDS )
+{
+	header( 'HTTP/1.1 501 Not Implemented' );
+	echo "This Moodle installation does not support keywords";
 }
 else
 {

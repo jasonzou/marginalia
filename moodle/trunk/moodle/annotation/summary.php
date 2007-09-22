@@ -9,6 +9,7 @@
 require_once( "../config.php" );
 require_once( "marginalia-php/MarginaliaHelper.php" );
 require_once( 'marginalia-php/Annotation.php' );
+require_once( 'config.php' );
 require_once( 'AnnotationGlobals.php' );
 require_once( "AnnotationSummaryQuery.php" );
 
@@ -149,6 +150,8 @@ else
 				print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
 			}
 	
+			echo "<p><a href='edit-keywords.php'>Edit Keywords</a></p>";
+			
 			// print search header
 			//  * my annotations
 			//  * shared annotations
