@@ -45,7 +45,7 @@ class MoodleAnnotationService extends AnnotationService
 		$query = new AnnotationSummaryQuery( $url, $username, null, null );
 		if ( $query->error )
 		{
-			$this->httpError( 400, 'Bad Request', 'Bad URL' );
+			$this->httpError( 400, 'Bad Request', 'Bad URL 1' );
 			return null;
 		}
 		elseif ( isguest() && ANNOTATION_REQUIRE_USER )

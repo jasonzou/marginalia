@@ -1,0 +1,11 @@
+#keywords td {
+	padding: .5ex 1ex;
+}
+#keywords .name input {
+	width: 16em;
+}
+
+#keywords .description input {
+	width: 24em;
+}
+

@@ -8,6 +8,7 @@ define( 'MAX_NOTE_LENGTH', 250 );
 define( 'MAX_QUOTE_LENGTH', 1000 );
 
 define( 'ANNOTATE_SERVICE_PATH', '/annotate' );
+define( 'KEYWORD_SERVICE_PATH', '/keywords' );
 
 define( 'ANNOTATION_STRINGS', 'annotation' );
 
@@ -32,6 +33,12 @@ class AnnotationGlobals
 		global $CFG;
 		return $CFG->wwwroot . ANNOTATE_SERVICE_PATH;
 //		return AnnotationGlobals::getMoodlePath( ) . ANNOTATE_SERVICE_PATH;
+	}
+	
+	FUNCTION getKeywordServicePath( )
+	{
+		global $CFG;
+		return $CFG->wwwroot . KEYWORD_SERVICE_PATH;
 	}
 	
 	/** Get the moodle path - that is, the path to moodle from the root of the server.  Typically this is 'moodle/'.
@@ -152,6 +159,22 @@ class AnnotationGlobals
 		$record->end_word = $xpathEnd->getWords( );
 		$record->end_char = $xpathEnd->getChars( );
 		return $record;
+	}
+
+	function recordToKeyword( $r )
+	{
+		$keyword = new MarginaliaKeyword( );
+		$keyword->name = $r->name;
+		$keyword->description = $r->description;
+		return $keyword;
+	}
+	
+	function keywordToRecord( $keyword )
+	{
+		global $USER;
+		$record->userid = $USER->id;
+		$record->name = $keyword->name;
+		$record->description = $keyword->description;
 	}
 }
 ?>

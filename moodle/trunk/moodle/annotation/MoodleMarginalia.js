@@ -45,7 +45,7 @@ function MoodleMarginalia( url, moodleRoot, username, prefs, params )
 
 MoodleMarginalia.prototype.onload = function( )
 {
-	initLogging();
+//	initLogging();
 
 	// Check whether this page should have annotations enabled at all
 	// The check is here rather in the PHP;  that minimizes the number of patches
@@ -54,16 +54,20 @@ MoodleMarginalia.prototype.onload = function( )
 	if ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
 		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php' );
+		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
+		keywordService.init( );
 		window.marginalia = new Marginalia( annotationService, this.username, this.anuser, {
 			preferences: this.preferences,
-			keywordService: null,
-			linkUi:  null,
+			keywordService: keywordService,
 			baseUrl:  this.moodleRoot,
 			showAccess:  true,
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
-			skipContent: _skipSmartcopy
+			skipContent: _skipSmartcopy,
+			editors: {
+				link: null
+			}
 		} );
 		
 		var url = this.url;
