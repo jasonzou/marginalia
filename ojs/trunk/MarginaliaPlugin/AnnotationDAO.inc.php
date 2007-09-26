@@ -283,8 +283,16 @@ class AnnotationDAO extends DAO
 	{
 		$annotations = array();
 		$currentUser = Request::getUser();
-		$queryParams = array( $url );
-		$query = "SELECT * FROM annotations WHERE url=?";
+		$query = 'SELECT * FROM ANNOTATIONS WHERE ';
+		$queryParams = array();
+		
+		if ( $url )
+		{
+			array_push( $queryParams, $url );
+			$query .= "url=?";
+		}
+		else
+			$query .= '1=1';
 		
 		// Only fetch annotations visible to the current user
 		if ( $username )
