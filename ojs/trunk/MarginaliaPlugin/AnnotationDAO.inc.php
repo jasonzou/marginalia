@@ -279,7 +279,7 @@ class AnnotationDAO extends DAO
 	 * @param $block string
 	 * @return array Annotations
 	 */
-	function &getVisibleAnnotationsByUrlUserBlock( $url, $username, $block )
+	function &getVisibleAnnotationsByUrlUserBlock( $url, $username, $block, $all )
 	{
 		$annotations = array();
 		$currentUser = Request::getUser();
@@ -289,13 +289,13 @@ class AnnotationDAO extends DAO
 		// Only fetch annotations visible to the current user
 		if ( $username )
 		{
-			if ( $currentUser && $currentUser->getUsername() == $username )
+			if ( $currentUser && ( $currentUser->getUsername() == $username || $all ) )
 				$query .= " AND userid=?";
 			elseif ( $username )
 				$query .= " AND access='public' AND userid=?";
 			array_push( $queryParams, $username );
 		}
-		else
+		elseif ( ! $all )
 			$query .= " AND access='public'";
 			
 		if ( $block )

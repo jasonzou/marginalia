@@ -164,14 +164,12 @@ class OjsAnnotationService extends AnnotationService
 	function endRequest( )
 	{ ; }
 		
-	function doListAnnotations( $url, $username, $block )
+	function doListAnnotations( $url, $username, $block, $all )
 	{
-		// Fetch all visible annotations.  Requires block parameter.
-//		if ( null != $block )
-		return $this->annotationDao->getVisibleAnnotationsByUrlUserBlock( $url, $username, $block );
-		// Fetch annotations for a particular user (or all users).
-//		else
-//			return $this->annotationDao->getVisibleAnnotationsByUrlUser( $url, $block, $username );
+		// Only the site admin can fetch a list of all annotations (including private
+		// annotations of other users)
+		$all = $all && Validation::isSiteAdmin();
+		return $this->annotationDao->getVisibleAnnotationsByUrlUserBlock( $url, $username, $block, $all );
 	}
 	
 	function doGetAnnotation( $id )

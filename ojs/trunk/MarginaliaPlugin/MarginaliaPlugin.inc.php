@@ -125,6 +125,7 @@ class MarginaliaPlugin extends GenericPlugin
 			$head_html =
 				"<link rel='stylesheet' type='text/css' href='".$baseUrl.'/'.PLUGIN_PATH.'/'."marginalia.css'/>\n"
 				."<link rel='stylesheet' type='text/css' href='".$baseUrl.'/'.MARGINALIA_PATH.'/'."marginalia.css'/>\n"
+				."<link rel='stylesheet' type='text/css' href='".$baseUrl.'/'.MARGINALIA_PATH.'/'."marginalia-direct.css'/>\n"
 				."<script type='text/javascript' src='".$serviceUrl."/strings.js'></script>\n";
 
 			if ( MARGINALIA_COMPILED_JS )
