@@ -30,6 +30,7 @@ MARGINALIA_OJS_FILES = \
  $(MARGINALIA_OJS_DIR)/MarginaliaHandler.inc.php \
  $(MARGINALIA_OJS_DIR)/MarginaliaPlugin.inc.php \
  $(MARGINALIA_OJS_DIR)/MarginaliaStrings.inc.php \
+ $(MARGINALIA_OJS_DIR)/marker-tail.png \
  $(MARGINALIA_OJS_DIR)/ojs-annotate.js \
  $(MARGINALIA_OJS_DIR)/Preference.inc.php \
  $(MARGINALIA_OJS_DIR)/PreferenceDAO.inc.php \
