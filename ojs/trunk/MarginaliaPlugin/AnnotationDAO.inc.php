@@ -283,7 +283,7 @@ class AnnotationDAO extends DAO
 	{
 		$annotations = array();
 		$currentUser = Request::getUser();
-		$query = 'SELECT * FROM ANNOTATIONS WHERE ';
+		$query = 'SELECT * FROM annotations WHERE ';
 		$queryParams = array();
 		
 		if ( $url )

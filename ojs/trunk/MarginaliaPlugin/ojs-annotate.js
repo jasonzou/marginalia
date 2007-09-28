@@ -101,7 +101,8 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 			setTimeout( _flashLinkTarget, 240 );
 	//		addClass( fragment, 'link-target' );
 		}
-		window.marginalia.showAnnotations( url, null );
+		if ( currentUser )
+			window.marginalia.showAnnotations( url, null );
 	}
 }
 

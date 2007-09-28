@@ -37,7 +37,7 @@ MARGINALIA_OJS_FILES = \
  $(MARGINALIA_OJS_DIR)/schema-block.xml \
  $(MARGINALIA_OJS_DIR)/schema-range.xml
  
-LANG_FILES = $(MARGINALIA_OJS_DIR)/locale/en_us/locale.xml
+LANG_FILES = $(MARGINALIA_OJS_DIR)/locale/en_US/locale.xml
 
 README_FILES = \
  README.txt \
@@ -64,12 +64,12 @@ zipdir: $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_OJS_FILES) $(MAR
 	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/MarginaliaPlugin/marginalia/3rd-party
 	mkdir -p $(ZIPDIR)/MarginaliaPlugin/marginalia-php
-	mkdir -p $(ZIPDIR)/MarginaliaPlugin/locale/en_us
+	mkdir -p $(ZIPDIR)/MarginaliaPlugin/locale/en_US
 	cp $(MARGINALIA_OJS_FILES) $(ZIPDIR)/MarginaliaPlugin/
 	cp $(MARGINALIA_LIB_FILES) $(ZIPDIR)/MarginaliaPlugin/marginalia/
 	cp $(MARGINALIA_LIB_3RDPARTY_FILES) $(ZIPDIR)/MarginaliaPlugin/marginalia/3rd-party/
 	cp $(MARGINALIA_PHP_FILES) $(ZIPDIR)/MarginaliaPlugin/marginalia-php/
-	cp $(LANG_FILES) $(ZIPDIR)/MarginaliaPlugin/locale/en_us/
+	cp $(LANG_FILES) $(ZIPDIR)/MarginaliaPlugin/locale/en_US/
 	cp $(UTIL_FILES) $(ZIPDIR)/util/
 	cp $(DOC_FILES) $(ZIPDIR)/doc/
 	cp $(README_FILES) $(ZIPDIR)
