@@ -9,3 +9,11 @@
 	width: 24em;
 }
 
+fieldset {
+	margin: 3em 0;
+	padding: 1em 1.5ex;
+}
+
+.replace-count-prompt {
+	display: none;
+}

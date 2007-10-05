@@ -144,6 +144,27 @@ class MoodleAnnotationService extends AnnotationService
 		return update_record( 'annotation', $record );
 	}
 	
+	function doBulkUpdate( $oldNote, $newNote )
+	{
+		global $CFG, $USER;
+		
+		// Count how many replacements will be made
+		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix
+			."annotation WHERE userid='".addslashes($USER->username)."' AND note='".addslashes($oldNote)."'";
+		$result = get_record_sql( $query );
+		$n = $result[ 'n' ];
+		
+		if ( $n )
+		{
+			// Do the replacements
+			$query = 'UPDATE '.$CFG->prefix."annotation set note='".addslashes($newNote)
+				."' WHERE userid='".addslashes($USER->username)."' AND note='".addslashes($oldNote)."'";
+			execute_sql( $query, false );
+		}
+		header( 'Content-type: text/plain' );
+		return $n;
+	}
+	
 	function doDeleteAnnotation( $id )
 	{
 		delete_records( 'annotation', 'id', $id );

@@ -60,6 +60,7 @@ else
 		. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-keywords.js'></script>\n"
+		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotation-update.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='edit-keywords.js'></script>\n"
 		. "<script language='Javascript' type='text/javascript'>\n"
 		. " var serviceRoot = '".htmlspecialchars($CFG->wwwroot).'/annotation'."';\n"
@@ -79,25 +80,31 @@ else
 		. "</script>";
 	
 	$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
-	print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
+	print_header(get_string( 'edit_keywords_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
 	
 	// Keyword list will go here:
 	echo "<table id='keywords'>\n";
 	echo " <thead>\n";
-	echo "  <tr><th>Keyword</th><th>Description</th></tr>\n";
+	echo "  <tr><th>".get_string('keyword_column')."</th><th>".get_string('keyword_desc_column')."</th></tr>\n";
 	echo " </thead>\n";
 	echo " <tbody>\n";
 	
 	// Space to insert new keywords
 	echo "  <tr class='create'>\n";
-//	echo "<label for='new-keyword-name'>Name:</label>\n";
 	echo "    <td class='name'><input type='text' id='new-keyword-name' name='new-keyword-name' onkeypress='return _keypressCreateKeyword(event);'/></td>\n";
-//	echo "<label for='new-keyword-desc'>Description:</label>\n";
 	echo "    <td class='description'><input type='text' id='new-keyword-desc' name='new-keyword-desc' onkeypress='return _keypressCreateKeyword(event);'/></td>\n";
-	echo "    <td><input type='submit' value='Create Keyword' onclick='_createKeyword()'/></td>\n";
+	echo "    <td><input type='submit' value='".get_string('create_keyword_button')."' onclick='_createKeyword()'/></td>\n";
 	echo "  </tr>\n";
 	echo " </tbody>\n";
 	echo "</table>\n";
+	
+	echo "<fieldset>\n";
+	echo " <legend>".get_string('note_replace_legend')."</legend>\n";
+	echo " <label for='old-note'>".get_string('note_replace_old').":</label><input id='old-note' type='text'/>\n";
+	echo " <label for='new-note'>".get_string('note_replace_new').":</label><input id='new-note' type='text'/>\n";
+	echo " <button id='replace'>".get_string('note_replace_button')."</button>\n";
+	echo " <p id='replace-count-prompt'>".get_string('note_update_count')."<span id='replace-count'/></p>\n";
+	echo "</fieldset>\n";
 	
 	print_footer(null);
 

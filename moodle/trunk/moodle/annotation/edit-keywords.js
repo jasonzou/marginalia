@@ -1,8 +1,13 @@
 function keywordsOnload( )
 {
+	var replaceButton = document.getElementById( 'replace' );
+	addEvent( replaceButton, 'click', _replaceNotes );
+
 	window.keywordService = new RestKeywordService( serviceRoot + '/keywords.php' );
 	keywordService.init( annotationKeywords );
 	refreshKeywords( );
+	
+	window.annotationService = new RestAnnotationUpdateService( serviceRoot + '/annotate.php' );
 }
 
 function refreshKeywords( )
@@ -123,4 +128,20 @@ function _createKeyword( event )
 		keywordService.createKeyword( keyword, refreshKeywords );
 	}
 }
+
+function _replaceNotes( event )
+{
+	var oldNote = document.getElementById( 'old-note' );
+	var newNote = document.getElementById( 'new-note' );
+	f = function( t ) {
+		var prompt = document.getElementById( 'replace-count-prompt' );
+		prompt.style.display = 'inline';
+		var count = document.getElementById( 'count' );
+		while ( count.firstChild )
+			count.removeChild( firstChild );
+		count.appendChild( document.createTextNode( n ) );
+	}
+	annotationService.bulkUpdate( oldNote.value, newNote.value, f );	
+}
+
 

@@ -149,7 +149,7 @@ MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'false', null);
 	else
 	{
-		marginalia.username = user;
+		marginalia.anusername = user;
 		marginalia.showAnnotations( url );
 		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'true', null);
 		marginalia.preferences.setPreference( AN_USER_PREF, user, null );
