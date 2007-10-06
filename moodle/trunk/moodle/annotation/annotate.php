@@ -148,17 +148,17 @@ class MoodleAnnotationService extends AnnotationService
 	{
 		global $CFG, $USER;
 		
+		$where = "userid='".addslashes($USER->username)."' AND note='".addslashes($oldNote)."'";
+
 		// Count how many replacements will be made
-		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix
-			."annotation WHERE userid='".addslashes($USER->username)."' AND note='".addslashes($oldNote)."'";
+		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix."annotation WHERE $where";
 		$result = get_record_sql( $query );
-		$n = $result[ 'n' ];
+		$n = (int)$result->n;
 		
 		if ( $n )
 		{
 			// Do the replacements
-			$query = 'UPDATE '.$CFG->prefix."annotation set note='".addslashes($newNote)
-				."' WHERE userid='".addslashes($USER->username)."' AND note='".addslashes($oldNote)."'";
+			$query = 'UPDATE '.$CFG->prefix."annotation set note='".addslashes($newNote)."' WHERE $where";
 			execute_sql( $query, false );
 		}
 		header( 'Content-type: text/plain' );

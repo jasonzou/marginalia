@@ -1,13 +1,20 @@
 function keywordsOnload( )
 {
-	var replaceButton = document.getElementById( 'replace' );
-	addEvent( replaceButton, 'click', _replaceNotes );
+//	var replaceButton = document.getElementById( 'replace' );
 
 	window.keywordService = new RestKeywordService( serviceRoot + '/keywords.php' );
 	keywordService.init( annotationKeywords );
 	refreshKeywords( );
 	
-	window.annotationService = new RestAnnotationUpdateService( serviceRoot + '/annotate.php' );
+	window.annotationService = new RestAnnotationService( serviceRoot + '/annotate.php' );
+	
+	addEvent( '#new-keyword-name', 'keypress', _keypressCreateKeyword );
+	addEvent( '#new-keyword-desc', 'keypress', _keypressCreateKeyword );
+	addEvent( '#new-keyword-button', 'click', _createKeyword );
+ 
+	addEvent( '#replace input', 'change', _clearReplaceCount );
+	addEvent( '#replace input', 'keypress', _keypressReplaceNote );
+	addEvent( '#replace button', 'click', _replaceNotes );
 }
 
 function refreshKeywords( )
@@ -129,17 +136,35 @@ function _createKeyword( event )
 	}
 }
 
+
+function _keypressReplaceNote( event )
+{
+	if ( event.keyCode == 13 )
+	{
+		event.stopPropagation( );
+		_replaceNotes( );
+		return false;
+	}
+	return true;
+}
+
+function _clearReplaceCount( event )
+{
+	var prompt = document.getElementById( 'replace-count-prompt' );
+	prompt.style.display = 'none';
+}
+
 function _replaceNotes( event )
 {
 	var oldNote = document.getElementById( 'old-note' );
 	var newNote = document.getElementById( 'new-note' );
 	f = function( t ) {
 		var prompt = document.getElementById( 'replace-count-prompt' );
-		prompt.style.display = 'inline';
-		var count = document.getElementById( 'count' );
+		prompt.style.display = 'block';
+		var count = document.getElementById( 'replace-count' );
 		while ( count.firstChild )
-			count.removeChild( firstChild );
-		count.appendChild( document.createTextNode( n ) );
+			count.removeChild( count.firstChild );
+		count.appendChild( document.createTextNode( t ) );
 	}
 	annotationService.bulkUpdate( oldNote.value, newNote.value, f );	
 }

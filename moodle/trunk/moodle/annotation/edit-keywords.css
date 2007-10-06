@@ -14,6 +14,6 @@ fieldset {
 	padding: 1em 1.5ex;
 }
 
-.replace-count-prompt {
+#replace-count-prompt {
 	display: none;
 }

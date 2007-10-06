@@ -5,7 +5,7 @@ class AnnotationKeywordsDB
 	function listKeywords( $userid )
 	{
 		global $CFG;
-		$query = 'select name, description from '.$CFG->prefix.'annotation_keywords where userid='.(int)$userid;
+		$query = 'select name, description from '.$CFG->prefix.'annotation_keywords where userid='.(int)$userid.' order by name';
 		$keywordSet = get_records_sql( $query );
 		$keywords = array( );
 		if ( $keywordSet )
