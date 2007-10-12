@@ -35,11 +35,17 @@ class AnnotationSummaryQuery
 		{
 			$this->handler = new CourseAnnotationUrlHandler( $matches[ 1 ] );
 		}
+		// All annotations far a single forum
+		elseif ( preg_match( '/^.*\/mod\/forum\/view\.php\?id=(\d+)/', $url, $matches ) )
+		{
+			$f = (int) $matches[ 1 ];
+			$this->handler = new ForumAnnotationUrlHandler( $f );
+		}
 		// Annotations for a single discussion
 		elseif ( preg_match( '/^.*\/mod\/forum\/discuss\.php\?d=(\d+)/', $url, $matches ) )
 		{
 			$d = (int) $matches[ 1 ];
-			$this->handler = new ForumAnnotationUrlHandler( $matches[ 1 ] );
+			$this->handler = new DiscussionAnnotationUrlHandler( $d );
 		}
 		
 		// Annotations for a single post
@@ -242,9 +248,18 @@ class AnnotationSummaryQuery
 	}
 	
 	/** Generate a summary URL corresponding to this query */
-	function getSummaryUrl( )
+	function getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery )
 	{
 		global $CFG;
+		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($url);
+		if ( null != $searchQuery && '' != $searchQuery )
+			$s .= '&q='.urlencode($searchQuery);
+		if ( null != $searchUser && '' != $searchUser )
+			$s .= '&user='.urlencode($searchUser);
+		if ( null != $searchOf && '' != $searchOf )
+			$s .= '&search-of='.urlencode($searchOf);
+		return $s;
+/*		global $CFG;
 		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($this->url);
 		if ( null != $this->searchQuery && '' != $this->searchQuery )
 			$s .= '&q='.urlencode($this->searchQuery);
@@ -253,12 +268,13 @@ class AnnotationSummaryQuery
 		if ( null != $this->searchOf && '' != $this->searchOf )
 			$s .= '&search-of='.urlencode($this->searchOf);
 		return $s;
-	}
+*/	}
 	
 	/** Generate a feed URL corresponding to this query */
 	function getFeedUrl( $format )
 	{
-		return $this->getSummaryUrl() . '&format=atom';
+		return $this->getSummaryUrl( $this->url, $this->searchUser, $this->searchOf, $this->searchQuery )
+			. '&format=atom';
 	}
 }
 
@@ -342,12 +358,13 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 		
 		// First section:  discussion posts
 		$q = $q_std_select
-			 . ",\n 'course' section_type, 'content' row_type"
-			 . ",\n d.name section_name"
-			 . ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url"
+			 . ",\n 'forum' section_type, 'content' row_type"
+			 . ",\n f.name section_name"
+			 . ",\n concat('{$CFG->wwwroot}/mod/forum/view.php?id=',f.id) section_url"
 			. $q_std_from
 			 . "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseId.' '
 			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type='post' AND p.id=a.object_id "
+			 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
 			. $q_std_where;
 		if ( $orderby )
 			$q .= "\nORDER BY $orderby";
@@ -362,17 +379,15 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 
 class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 {
-	var $d;
+	var $f;
 	var $title;
 	var $parentUrl;
 	var $parentTitle;
 	var $courseId;
 	
-	function ForumAnnotationUrlHandler( $d )
+	function ForumAnnotationUrlHandler( $f )
 	{
-		global $CFG;
-		
-		$this->d = $d;
+		$this->f = $f;
 		$this->title = null;
 	}
 	
@@ -385,6 +400,81 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 		
 		if ( null != $this->title )
 			return;
+		else
+		{
+			$query = "SELECT id, name, course FROM {$CFG->prefix}forum WHERE id={$this->f}";
+			$row = get_record_sql( $query );
+			if ( False !== $row )
+			{
+				$a->name = $row->name;
+				$this->title = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
+				$this->courseId = (int) $row->course;
+			}
+			else
+			{
+				$this->title = get_string( 'unknown_forum', ANNOTATION_STRINGS );
+				$this->courseId = null;
+			}
+			$this->parentUrl = '/course/view.php?id='.$this->courseId;
+			$this->parentTitle = get_string( 'whole_course', ANNOTATION_STRINGS ); 
+		}
+	}
+	
+	function getFields( )
+	{
+		global $CFG;
+		return ",\n 'discussion' section_type, 'post' row_type"
+			. ",\n d.name section_name"
+			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url";
+	}
+	
+	function getTables( )
+	{
+		global $CFG;
+		if ( null == $this->f )
+			return "\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
+				. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON p.discussion=d.id";
+		else
+			return 	"\n JOIN {$CFG->prefix}forum_discussions d ON d.forum=".addslashes($this->f)
+				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
+	}
+	
+	function getConds( )
+	{
+		return "\n  AND a.object_type='post'";
+	}
+	
+	function getSearchFields( )
+	{
+		return array( 'd.name' );
+	}
+}
+
+
+class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
+{
+	var $d;
+	var $title;
+	var $parentUrl;
+	var $parentTitle;
+	var $courseId;
+	var $forumId;
+	
+	function DiscussionAnnotationUrlHandler( $d )
+	{
+		$this->d = $d;
+		$this->title = null;
+	}
+	
+	/** Internal function to fetch title etc. setting the following fields:
+	 *  title, parentUrl, parentTitle, courseId.  Will used cached results in preference
+	 *  to querying the database. */
+	function fetchMetadata( )
+	{
+		global $CFG;
+	
+		if ( null != $this->title )
+			return;
 		if ( null == $this->d )
 		{
 			$this->title = get_string( 'all_discussions', ANNOTATION_STRINGS );
@@ -394,22 +484,29 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 		}
 		else
 		{
-			$query = "SELECT id, name, course"
-				. " FROM {$CFG->prefix}forum_discussions WHERE id={$this->d}";
+			$query = "SELECT d.id AS id, d.name AS name, d.course AS course, d.forum AS forum, f.name AS forum_name"
+				. " FROM {$CFG->prefix}forum_discussions d "
+				. " INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
+				. " WHERE d.id={$this->d}";
 			$row = get_record_sql( $query );
+			$forumName = 'unknown';
 			if ( False !== $row )
 			{
 				$a->name = $row->name;
 				$this->title = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
 				$this->courseId = (int) $row->course;
+				$this->forumId = (int) $row->forum;
+				$forumName = $row->forum_name;
 			}
 			else
 			{
 				$this->title = get_string( 'unknown_discussion', ANNOTATION_STRINGS );
 				$this->courseId = null;
+				$this->forumId = null;
 			}
-			$this->parentUrl = '/course/view.php?id='.$this->courseId;
-			$this->parentTitle = get_string( 'whole_course', ANNOTATION_STRINGS ); 
+			$this->parentUrl = '/mod/forum/view.php?id='.$this->forumId;
+			$a->name = $forumName;
+			$this->parentTitle = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
 		}
 	}
 	
