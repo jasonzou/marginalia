@@ -65,6 +65,7 @@ MoodleMarginalia.prototype.onload = function( )
 			showActions:  false,
 			onkeyCreate:  true,
 			skipContent: _skipSmartcopy,
+			csrfCookie: 'MoodleSessionTest',
 			editors: {
 				link: null
 			}

@@ -31,12 +31,21 @@ class MoodleAnnotationService extends AnnotationService
 	function MoodleAnnotationService( $username )
 	{
 		global $CFG;
+
+		// Note: Cross-site request forgery protection requires cookies, so it will not be
+		// activated if $CFG->usesid=true
+		$csrfProtect = ! empty( $CFG->usesid ) && $CFG->usesid;
+		
 		AnnotationService::AnnotationService( 
 			AnnotationGlobals::getHost(),
 			AnnotationGlobals::getServicePath(),
 			AnnotationGlobals::getInstallDate(),
 			$username,
-			$CFG->wwwroot );
+			array(
+				'baseUrl' => $CFG->wwwroot,
+				'csrfCookie' => $csrfProtect ? null : 'MoodleSessionTest',
+				'csrfCookieValue' => $csrfProtect ? null : $_SESSION['SESSION']->session_test )
+			);
 		$this->tablePrefix = $CFG->prefix;
 	}
 	

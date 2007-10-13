@@ -47,7 +47,7 @@ else
 	$errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
 	$summaryUrl = $_GET[ 'url' ];
 	$excludeFields = array_key_exists( 'exclude', $_GET ) ? $_GET[ 'exclude' ] : '';
-	$excludeFields = split( ' ', $excludeFields );
+	$excludeFields = $excludeFields ? split( ' ', $excludeFields ) : array( );
 	$possibleExcludeFields = array( 'quote', 'note', 'source', 'user', 'controls' );
 	$nCols = 5 - count( array_intersect( $excludeFields, $possibleExcludeFields) );
 	
@@ -150,8 +150,6 @@ else
 				print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
 			}
 	
-			echo "<p><a href='edit-keywords.php'>Edit Keywords</a></p>";
-			
 			// print search header
 			//  * my annotations
 			//  * shared annotations
@@ -222,7 +220,7 @@ else
 					// For each new url, display the title and author
 					if ( $annotation->url != $curUrl ) { //|| $annotation->userid != $curUser ) {
 						echo "<tr class='fragment first'>";
-						if ( ! in_array( 'source', $excludeFields ) )
+						if ( ! $excludeFields || ! in_array( 'source', $excludeFields ) )
 						{
 							$url = $CFG->wwwroot.$annotation->url;
 							echo "<th>";
@@ -241,12 +239,12 @@ else
 					else
 					{
 						echo "<tr>";
-						if ( ! in_array( 'source', $excludeFields ) )
+						if ( ! $excludeFields || ! in_array( 'source', $excludeFields ) )
 							echo "<td class='fragment'></td>\n";
 					}
 					
 					// Show the quoted text
-					if ( ! in_array( 'quote', $excludeFields ) )
+					if ( ! $excludeFields || ! in_array( 'quote', $excludeFields ) )
 					{
 						echo "<td class='quote'>";
 						echo htmlspecialchars( $annotation->quote );
@@ -254,13 +252,13 @@ else
 					}
 					
 					// Show the note
-					if ( ! in_array( 'note', $excludeFields ) )
+					if ( ! $excludeFields || ! in_array( 'note', $excludeFields ) )
 						echo "<td class='note'>" . htmlspecialchars( $annotation->note ) . "&#160;</td>\n";
 	
 					// Show edit controls or the user who created the annotation
-					if ( ! in_array( 'controls', $excludeFields ) || ! in_array( 'user', $excludeFields ) )
+					if ( ! $excludeFields || ! in_array( 'controls', $excludeFields ) || ! in_array( 'user', $excludeFields ) )
 					{
-						if ( ! in_array( 'controls', $excludeFields ) && $annotation->userid == $USER->username )
+						if ( ( ! $excludeFields || ! in_array( 'controls', $excludeFields ) ) && $annotation->userid == $USER->username )
 						{
 							echo "<td class='controls'>";
 							$AN_SUN_SYMBOL = '&#9675;';
@@ -280,7 +278,7 @@ else
 							echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>";
 							echo "</td>\n";
 						}
-						else if ( ! in_array( 'user', $excludeFields ) )
+						else if ( ! $excludeFields || ! in_array( 'user', $excludeFields ) )
 						{
 							echo "<td class='anuser'>";
 							$url = $CFG->wwwroot.$annotation->url;
@@ -326,6 +324,9 @@ else
 				echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
 					. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 			}
+			
+			if ( AN_EDITABLEKEYWORDS )
+				echo "<p><a href='edit-keywords.php'>Edit Keywords</a></p>";
 			
 			echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', ANNOTATION_STRINGS).'</span> '
 				.get_string( 'smartcopy_help', ANNOTATION_STRINGS )."</p>\n";
