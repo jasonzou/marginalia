@@ -58,15 +58,50 @@ class AnnotationService
 	var $niceUrls;		// True or False
 	var $currentUserId;	// ID (username) of the current user, or null if none
 	
-	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $baseUrl='', $niceUrls=False )
+	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $args )
 	{
 		$this->host = $host;
 		$this->servicePath = $servicePath;
 		$this->installDate = $installDate;
-		$this->errorSent = False;
-		$this->niceUrls = $niceUrls;
 		$this->currentUserId = $currentUserId;
-		$this->baseUrl = $baseUrl;
+
+		$this->errorSent = False;
+		
+		// default for optional arguments
+		$this->baseUrl = null;
+		$this->niceUrls = False;
+		$this->csrfCookie = null;
+		$this->csrfCookieValue = null;
+		
+		foreach ( array_keys( $args) as $arg )
+		{
+			$value = $args[ $arg ];
+			switch ( $arg )
+			{
+				// The client will submit relative URLs, with this prefix stripped off
+				// Must also be configured for client
+				case 'baseUrl':
+					$this->baseUrl = $value;
+					break;
+					
+				// Use nice URLs (e.g. annotate/21 instead of annotate.php?id=21
+				// Probably won't work properly as there are no active implementations
+				// Must also be configured for client
+				case 'niceUrls':
+					$this->niceUrls = $value;
+					break;
+					
+				// The name of the session cookie and its value
+				// Used to prevent cross-site request forgeries
+				// Client must also configure csrfCookie (but definitely *not* csrfCookieValue)
+				case 'csrfCookie':
+					$this->csrfCookie = $value;
+					break;
+				case 'csrfCookieValue':
+					$this->csrfCookieValue = $value;
+					break;
+			}
+		}
 	}
 	
 	// Factory method, may be overriden:
@@ -84,47 +119,23 @@ class AnnotationService
 	// OJS needs to replace this with its own version:
 	function getQueryParam( $name, $default )
 	{
-		return array_key_exists( $name, $_GET ) ? $this->unfix_quotes( $_GET[ $name ] ) : $default;
+		return MarginaliaHelper::getQueryParam( $name, $default );
 	}
 	
 	function listBodyParams( )
 	{
-		$method = $_SERVER[ 'REQUEST_METHOD' ];
-		if ( 'POST' == $method )
-		{
-			$params = array();
-			foreach ( array_keys( $_POST ) as $param )
-				$params[ $param ] = $this->unfix_quotes( $_POST[ $param ] );
-			return $params;
-		}
-		elseif ( 'PUT' == $method )
-		{
-			// Now for some joy.  PHP isn't clever enough to populate $_POST if the
-			// Content-Type is application/x-www-form-urlencoded - it only does
-			// that if the request method is POST.  It is, however, clever enough
-			// to insert its bloody !@#$! slashes.  Bleargh.  (Actually, to be fair
-			// the descriptions of PUT I have seen insist that it should accept a
-			// full resource representation, not changed fields as I'm doing here.
-			// In Atom, at least, that's to maintain database consistency.  I don't
-			// think it's an issue here, so I haven't gotten around to doing it.)
-			// Plus, how do I ensure the charset is respected correctly?  Hmph.
-			
-			
-			// Should fail if not Content-Type: application/x-www-form-urlencoded; charset: UTF-8
-			$fp = fopen( 'php://input', 'rb' );
-			$urlencoded = '';
-			while ( $data = fread( $fp, 1024 ) )
-				$urlencoded .= $data;
-			parse_str( $urlencoded, $params );
-			// magic_quotes_gpc - the GPC stands for GET POST COOKIE, so should not affect PUT
-			foreach ( array_keys( $params ) as $param )
-				$params[ $param ] = $params[ $param ];
-			return $params;
-		}
-		else
-			return null;
+		return MarginaliaHelper::listBodyParams( );
 	}
 
+
+	// Verify that the request was sent from within a valid session
+	// Used to prevent cross-site request forgery
+	function verifySession( $params )
+	{
+		return ! $this->csrfCookie ||
+			( array_key_exists( $this->csrfCookie, $params )
+			&& $this->csrfCookieValue == $params[ $this->csrfCookie ] );
+	}
 	
 	function parseAnnotationId( )
 	{
@@ -134,7 +145,7 @@ class AnnotationService
 			$id = $this->getQueryParam( 'id', False );
 		else
 			$id = (int) substr( $urlString, $pos + strlen( $this->servicePath ) + 1 );
-		if ( $id == '' || $id == 0 || !$this->isnum( $id ) )
+		if ( $id == '' || $id == 0 || !MarginaliaHelper::isnum( $id ) )
 			return False;
 		return $id;
 	}
@@ -177,10 +188,15 @@ class AnnotationService
 			
 			// update an existing annotation
 			case 'PUT':
-				if ( False === $id )
-					$this->httpError( 400, 'Bad Request', 'No such annotation #'.(int)$id );
-				elseif ( ! $this->currentUserId )
+				if ( ! $this->currentUserId )
 					$this->httpError( 403, 'Forbidden', 'Must be logged in' );
+				// No ID => bulk update
+				if ( False === $id )
+				{
+					$this->bulkUpdate( );
+					$this->endRequest( );
+				}
+				// ID => individual update
 				elseif ( $this->beginRequest( ) )
 				{
 					$this->updateAnnotation( $id );
@@ -210,8 +226,8 @@ class AnnotationService
 			
 			default:
 				header( "HTTP:/1.1 405 Method Not Allowed" );
-				header( "Allow:  GET, POST, DELETE" );
-				echo "<h1>405 Method Not Allowed</h1>Allow: GET, POST, DELETE";
+				header( "Allow:  GET, POST, PUT, DELETE" );
+				echo "<h1>405 Method Not Allowed</h1>Allow: GET, POST, PUT, DELETE";
 		}
 	}
 	
@@ -223,12 +239,13 @@ class AnnotationService
 		$username = $this->getQueryParam( 'user', null );
 		$block = $this->getQueryParam( 'block', null );
 		$block = $block ? new SequencePoint( $block ) : null;
+		$all = $this->getQueryParam( 'all', 'no' ) == 'yes' ? true : false;
 		
-		if ( $url == null || $url == '' )
+/*		if ( $url == null || $url == '' )
 			$this->httpError( 400, 'Bad Request', 'Bad URL' );
 		else
 		{
-			$annotations = $this->doListAnnotations( $url, $username, $block );
+*/			$annotations = $this->doListAnnotations( $url, $username, $block, $all );
 			
 			if ( null === $annotations )
 				$this->httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
@@ -252,7 +269,7 @@ class AnnotationService
 				$this->getSummary( $annotations, $url );
 			else
 				$this->httpError( 400, 'Bad Request', 'Unknown format' );
-		}
+//		}
 	}
 	
 	/**
@@ -288,6 +305,13 @@ class AnnotationService
 	{
 		$params = $this->listBodyParams( );
 
+		// Check for cross-site request forgery
+		if ( ! $this->verifySession( $params ) )
+		{
+			$this->httpError( 403, 'Forbidden', 'Illegal request' );
+			return;
+		}
+		
 		// Parse annotation values
 		$annotation = $this->newAnnotation( );
 		$error = MarginaliaHelper::annotationFromParams( $annotation, $params );
@@ -319,6 +343,13 @@ class AnnotationService
 	{
 		$params = $this->listBodyParams( );
 		
+		// Check for cross-site request forgery
+		if ( ! $this->verifySession( $params ) )
+		{
+			$this->httpError( 403, 'Forbidden', 'Illegal request' );
+			return;
+		}
+
 		$annotation = $this->doGetAnnotation( $id );
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found', 'No such annotation' );
@@ -342,8 +373,47 @@ class AnnotationService
 	}
 
 	
+	function bulkUpdate( )
+	{
+		$oldNote = $this->getQueryParam( 'note', null );
+		$bodyParams = $this->listBodyParams( );
+		
+		// Check for cross-site request forgery
+		if ( ! $this->verifySession( $params ) )
+		{
+			$this->httpError( 403, 'Forbidden', 'Illegal request' );
+			return;
+		}
+
+		if ( ! method_exists( $this, 'doBulkUpdate' ) )
+			$this->httpError( 400, 'Bad Request', 'This service does not support bulk updates' );
+		elseif ( null === $oldNote )
+			$this->httpError( 400, 'Bad Request', 'Bad bulk query' );
+		elseif ( ! array_key_exists( 'note', $bodyParams ) )
+			$this->httpError( 400, 'Bad Request', 'Bad bulk substitution' );
+		else
+		{
+			$newNote = $bodyParams[ 'note' ];
+			$n = $this->doBulkUpdate( $oldNote, $newNote );
+			if ( False === $n )
+				$this->httpError( 500, 'Internal Service Error', 'Bulk update failed' );
+			else
+			{
+				header( 'HTTP/1.1 200 Bulk Update Complete' );
+				echo htmlspecialchars( '' + $n );
+			}
+		}
+	}
+			
 	function deleteAnnotation( $id )
 	{
+		// Check for cross-site request forgery
+		if ( ! $this->verifySession( $params ) )
+		{
+			$this->httpError( 403, 'Forbidden', 'Illegal request' );
+			return;
+		}
+
 		$annotation = $this->doGetAnnotation( $id );
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found', 'No such annotation' );
@@ -399,18 +469,6 @@ class AnnotationService
 			$this->errorSent = True;
 		}
 	}	
-	
-	// Yeah, gotta love the mess that is PHP
-	function unfix_quotes( $value )
-	{
-		return get_magic_quotes_gpc( ) ? stripslashes( $value ) : $value;
-	}
-	
-	// It sure doesn't hurt to make sure that numbers are really numbers.
-	function isnum( $field )
-	{
-		return strspn( $field, '0123456789' ) == strlen( $field );
-	}
 }
 
 

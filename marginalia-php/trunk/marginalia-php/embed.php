@@ -32,10 +32,11 @@
 function listMarginaliaJavascript( )
 {
 	return array (
-		"3rd-party.js"
-		,"3rd-party/cssQuery.js"
+		"3rd-party/cssQuery.js"
 		,"3rd-party/cssQuery-level2.js"
 		,"3rd-party/cssQuery-standard.js"
+		,"3rd-party/shortcut.js"
+		,"3rd-party.js"
 	
 		,"log.js"
 		,"prefs.js"
@@ -46,8 +47,6 @@ function listMarginaliaJavascript( )
 		,"XPathRange.js"
 		,"annotation.js"
 		,"post-micro.js"
-		,"linkable.js"
-		,"link-ui-clicktolink.js"
 		
 		,"marginalia.js"
 		,"blockmarker-ui.js"
@@ -55,6 +54,8 @@ function listMarginaliaJavascript( )
 		,"note-ui.js"
 		,"link-ui.js"
 		,"link-ui-simple.js"
+		,"link-ui-clicktolink.js"
+		,"linkable.js"
 	
 		,"smartcopy.js"
 		,"RangeInfo.js"

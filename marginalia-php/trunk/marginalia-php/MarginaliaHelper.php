@@ -446,6 +446,62 @@ class MarginaliaHelper
 		else
 			return true;
 	}
+
+	// OJS needs to replace this with its own version:
+	function getQueryParam( $name, $default )
+	{
+		return array_key_exists( $name, $_GET ) ? MarginaliaHelper::unfix_quotes( $_GET[ $name ] ) : $default;
+	}
+	
+	function listBodyParams( )
+	{
+		$method = $_SERVER[ 'REQUEST_METHOD' ];
+		if ( 'POST' == $method )
+		{
+			$params = array();
+			foreach ( array_keys( $_POST ) as $param )
+				$params[ $param ] = MarginaliaHelper::unfix_quotes( $_POST[ $param ] );
+			return $params;
+		}
+		elseif ( 'PUT' == $method )
+		{
+			// Now for some joy.  PHP isn't clever enough to populate $_POST if the
+			// Content-Type is application/x-www-form-urlencoded - it only does
+			// that if the request method is POST.  It is, however, clever enough
+			// to insert its bloody !@#$! slashes.  Bleargh.  (Actually, to be fair
+			// the descriptions of PUT I have seen insist that it should accept a
+			// full resource representation, not changed fields as I'm doing here.
+			// In Atom, at least, that's to maintain database consistency.  I don't
+			// think it's an issue here, so I haven't gotten around to doing it.)
+			// Plus, how do I ensure the charset is respected correctly?  Hmph.
+			
+			
+			// Should fail if not Content-Type: application/x-www-form-urlencoded; charset: UTF-8
+			$fp = fopen( 'php://input', 'rb' );
+			$urlencoded = '';
+			while ( $data = fread( $fp, 1024 ) )
+				$urlencoded .= $data;
+			parse_str( $urlencoded, $params );
+			// magic_quotes_gpc - the GPC stands for GET POST COOKIE, so should not affect PUT
+			foreach ( array_keys( $params ) as $param )
+				$params[ $param ] = $params[ $param ];
+			return $params;
+		}
+		else
+			return null;
+	}
+
+	// Yeah, gotta love the mess that is PHP
+	function unfix_quotes( $value )
+	{
+		return get_magic_quotes_gpc( ) ? stripslashes( $value ) : $value;
+	}
+	
+	// It sure doesn't hurt to make sure that numbers are really numbers.
+	function isnum( $field )
+	{
+		return strspn( $field, '0123456789' ) == strlen( $field );
+	}
 }
 
 ?>
