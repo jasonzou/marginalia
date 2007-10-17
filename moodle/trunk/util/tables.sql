@@ -24,3 +24,8 @@ create table mdl_annotation (
 	object_id int null
 );
 
+create table mdl_annotation_keywords (
+	userid bigint(10) unsigned not null,
+	name varchar(255) not null,
+	description text null
+);

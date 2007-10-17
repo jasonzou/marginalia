@@ -46,4 +46,15 @@ $string['tip'] = 'Tip';
 $string['smartcopy_help'] = 'The Smartcopy feature automatically includes context information'
 	. ' when you copy and paste text from a blog post.  To switch it on or off, press'
 	. ' Shift-Ctrl-S while viewing a discussion forum.';
+	
+/* Edit Keywords Page */
+$string['edit_keywords_title'] = 'Annotation Keywords';
+$string['keyword_column'] = 'Keyword';
+$string['keyword_desc_column'] = 'Description';
+$string['create_keyword_button'] = 'Create Keyword';
+$string['note_replace_legend'] = 'Search and Replace Margin Notes';
+$string['note_replace_old'] = 'Existing note text';
+$string['note_replace_new'] = 'Replacement note text';
+$string['note_replace_button'] = 'Replace Notes';
+$string['note_update_count'] = 'Notes updated: ';
 ?>

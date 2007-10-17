@@ -44,6 +44,12 @@ $sMySQLCommand = "create table {$CFG->prefix}annotation ("
 	.', object_id int null)';
 mysql_query($sMySQLCommand) or die(mysql_error());
 
+$sMySQLCommand = "create table {$CFG->prefix}annotation_keywords ("
+	.'userid bigint(10) unsigned not null'
+	.',name varchar(255) not null'
+	.',description text null)';
+mysql_query($sMySQLCommand) or die(mysql_error());
+
 echo "Database created successfully";
 
 ?>
