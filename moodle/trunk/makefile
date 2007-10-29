@@ -20,6 +20,12 @@ MARGINALIA_MOODLE_FILES = \
  $(MARGINALIA_MOODLE_DIR)/annotation-styles.php \
  $(MARGINALIA_MOODLE_DIR)/AnnotationGlobals.php \
  $(MARGINALIA_MOODLE_DIR)/AnnotationSummaryQuery.php \
+ $(MARGINALIA_MOODLE_DIR)/config.php \
+ $(MARGINALIA_MOODLE_DIR)/edit-keywords.css \
+ $(MARGINALIA_MOODLE_DIR)/edit-keywords.js \
+ $(MARGINALIA_MOODLE_DIR)/edit-keywords.php \
+ $(MARGINALIA_MOODLE_DIR)/keywords.php \
+ $(MARGINALIA_MOODLE_DIR)/KeywordsDB.php \
  $(MARGINALIA_MOODLE_DIR)/lib.php \
  $(MARGINALIA_MOODLE_DIR)/marginalia-config.js \
  $(MARGINALIA_MOODLE_DIR)/marginalia-strings.js \
