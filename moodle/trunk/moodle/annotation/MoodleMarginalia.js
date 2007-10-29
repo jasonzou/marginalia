@@ -156,6 +156,7 @@ MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 		marginalia.preferences.setPreference( AN_USER_PREF, user, null );
 		if ( this.splash && marginalia.username == marginalia.anusername )
 			this.showSplash( );
+		this.fixControlMarginIE();
 	}
 };
 
