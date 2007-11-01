@@ -98,6 +98,12 @@ td.control-margin div {
 	background: #fdf377;   /*should be from the theme, but I'm not sure where that's set in 1.5 yet */
 }
 
+.hentry .notes li.hover,
+.hentry .entry-content em.annotation.hover,
+.hentry .entry-content em.annotation.hover ins,
+.hentry .entry-content em.annotation.hover del {
+	color: red;
+}
 
 /* notes in sidebar */
 .notes a.annotation-summary {
