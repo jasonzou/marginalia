@@ -1,0 +1,262 @@
+<html>
+<head>
+	<title>Marginalia for Moodle Installation</title>
+	<style type="text/css">
+		ol li {
+			margin: 1em 0 ;
+		}
+	</style>
+</head>
+<body>
+<h1>Marginalia for Moodle Installation</h1>
+
+<p>If you are upgrading from an earlier release, you will need to update your database
+manually.  See instructions below for the specific release from which you are upgrading.</p>
+
+<h2>Fresh Installation</h2>
+
+<p>The installation requires the following:</p>
+
+<ul>
+	<li>PHP 4.3 or later</li>
+	<li>Moodle 1.8 (other versions of Moodle might require a bit of tweaking;  
+	the patch utility in step #2 below will let you know)</li>
+	<li>MySQL 4.1 or later (though a colleague has had success with MySQL 3; 
+	I haven't tested with earlier versions or with Postgres)</li>
+	<li>The moodle-lib and moodle-php libraries available on the 
+	<a href="http://www.geof.net/code/annotation">Marginalia
+	web site</a>.</li>
+</ul>
+
+<p>Install Moodle <em>before</em> installing Marginalia.  If you patch Moodle before
+running the Moodle installer, your Moodle istall may not run correctly.</p>
+
+<p>There are two components to the installation:  patching the Moodle code and adding
+(or in the case of a Marginalia upgrade) updating the database.  Note that these 
+instructions are UNIX/Linux/Mac OS X only.  There are no instructions for installing on 
+Windows.</p>
+
+<p>I recommend making a backup of your entire Moodle directory tree before performing
+the install.</p>
+
+
+<h3>1. Patch Moodle</h3>
+
+<p>The moodle.patch file will update existing files in your moodle installation, and
+add the Marginalia libraries.  To patch the files, <code>cd</code> to your 
+<kbd>moodle</kbd> directory (or whatever it's called on your installation), copy in
+<kbd>moodle.patch</kbd> and run the following command:</p>
+
+<pre>
+<code>
+patch -b -p 1 &lt;moodle.patch
+</code>
+</pre>
+
+<p>The digit after the <code>-p</code> is the number, not the letter L.  The 
+<code>-b</code> option is not strictly necessary, but it allows you to run the
+uninstall script.</p>
+
+<p>You should not see any errors.  However, the official release of Moodle is constantly
+changing, so there is a possibility that this patch will not match your Moodle version.
+In this case, you may need to modify the source files by hand.</p>
+
+<p>Also, this command does not work with the version of patch provided with Solaris
+(and possibly with other Unix variants).  If you're on Solaris, you can download the GNU 
+patch utility.</p>
+
+<h3>2. Install Marginalia Support Libraries</h3>
+
+<p>In addition to patching Moodle, you will need to add the Marginalia client- and 
+server-side libraries, plus Moodle-specfic support code.  These have been separated out
+from the Moodle patches in order to make Marginalia upgrades easier.  Copy the contents
+of the supplied <kbd>moodle</kbd> directory under the root of your Moodle installation.  You should 
+end up with a file structure like this (I have listed only one or two sample directories 
+or files in each location so that you can confirm the layout is correct on your system;
+your moodle directory may be named differently):</p>
+
+<pre>
+moodle/
+  annotation/
+    annotate.php
+    ...
+    marginalia/
+      annotation.js
+      ...
+    marginalia-php/
+      Annotation.php
+      ...
+  course/
+  ...
+  lang/
+    en_utf8/
+      annotation.php
+      ...
+      help/
+        forum/
+  	      annotate.html
+          ...
+        ...
+      ...
+    ...
+  ...
+</pre>
+ 
+  
+<h3>3. Update the Database</h3>
+
+<p>You will need to create the annotation table in your Moodle database.  The
+<kbd>create-db.php</kbd> script can do this for you if you're using MySQL and if you do
+not already have annotation data from an older version of Marginalia for Moodle.  If you
+do, please check the upgrade instructions below.  If you are using a database other than
+MySQL (something I haven't tried so it may not work), you will need to create the table by
+hand.</p>
+
+<p>To use <kbd>create-db.php</kbd>, copy it from the <kbd>util</kbd> directory 
+into <kbd>moodle/annotation</kbd>
+(again, your Moodle directory may be different on your web server).  Then reference it
+with the URL <kbd>http://hostname/moodle/annotation/create-db.php</kbd> (where
+<kbd>http://hostname/moodle/</kbd> is the URL of your moodle installation).  This should
+report success;  you should then remove the file from the <kbd>annotation</kbd> directory.
+(The reason I am not including this there by default is to emphasize that it should be
+removed once it has been used.)</p>
+
+<p>If you don't want to use <kbd>create-db.php</kbd>, you can run the commands in
+<kbd>util/tables.sql</kbd>.  In this case, you may need to change the name of the
+table to from <kbd>mdl_annotation</kbd> to conform to your Moodle configuration.</p>
+
+
+<h3>4. Modify Marginalia Security Settings</h3>
+
+<h4>ANNOTATION_REQUIRE_USER</h4>
+
+<p>This setting can be changed in <kbd>moodle/annotation/AnnotationGlobals.php</kbd>.</p>
+
+<p>In the default configuration of Marginalia, public annotations are public to 
+<em>everyone</em> - even non-course members and non-users of Moodle - via the Atom feed.
+If someone wants to read your public annotations, can reach your server, and know the
+the correct URL, they can.  This includes the ability to read the highlighted text
+associated with an annotation.  If you wish to prevent this, set 
+<code>ANNOTATION_REQUIRE_USER</code> to <code>true</code>.  This will also disable
+the Atom feed.</p>
+
+
+<h3>5. Test Marginalia</h3>
+
+<p>You should now be able to connect to your Moodle web server as usual.  You should see
+an annotation margin if you visit a forum with posts while logged in.  Select some text 
+and click in the long vertical button in the right margin to create annotations.  Now
+reload the page:  your annotations should still be there.</p>
+
+
+<h2>Upgrading from Previous Marginalia Releases</h2>
+
+<p>I recommend doing this from an installation of Moodle that does not already have
+Marginalia installed.  If you made a backup before installing Marginalia, simply
+restore that backup (and keep a copy), then patch it as described in step #1 above.
+You should also revisit your configuration settings (step #4 above).</p>
+
+<p>In addition, if your installation is sufficiently old, you may need to apply more 
+than one of these updates in order.</p>
+
+<h3>Upgrading to Release 2006-01-07</h3>
+
+<p>If you are updating from a release of Marginalia (annotation for Moodle)
+prior to the 2006-01-07 release, you will need to update your database.  Two
+columns have since been added to the database schema:
+<kbd>object_id int</kbd> and <kbd>object_type varchar(16)</kbd>.  These make the
+queries faster and simpler.  The following SQL code will add the columns and set
+their contents correctly (you may need to change the table name from 
+mdl_annotation):</p>
+
+<pre>
+<code>
+alter table mdl_annotation add column object_id int null;
+alter table mdl_annotation add column object_type varchar(16) null;
+update mdl_annotation set object_type='post';
+update mdl_annotation set object_id=substring(url,locate('p=',url)+2);
+</code>
+</pre>
+
+
+<h3>Upgrading to Release 2007-08-06</h3>
+
+<p>If you are updating from a release of Marginalia (annotation for Moodle)
+prior to the 2007-08-06 release, you will need to update your database.  Several
+columns have been added to the database in order to support new features and
+increase performance.  The following SQL code will add the columns and set
+their contents correctly (you may need to change the table name from 
+mdl_annotation):</p>
+
+<pre>
+<code>
+alter table mdl_annotation add constraint range null;
+alter table mdl_annotation add column start_block varchar(255) not null;
+alter table mdl_annotation add column start_xpath varchar(255) not null;
+alter table mdl_annotation add column start_word int not null;
+alter table mdl_annotation add column start_char int not null;
+alter table mdl_annotation add column end_block varchar(255) not null;
+alter table mdl_annotation add column end_xpath varchar(255) not null;
+alter table mdl_annotation add column end_word int not null;
+alter table mdl_annotation add column end_char int not null;
+alter table mdl_annotation add column action varchar(30) null;
+alter table mdl_annotation add column link varchar(255) null;
+alter table_mdl_annotation add column link_title vachar(255) null;
+</code>
+</pre>
+
+
+<h2>Installation Problems</h2>
+
+<p>If you have problems (e.g. you can create annotations but they disappear when you
+reload the page), it is probably because of a misconfiguration.  First, make sure
+that the URL through which you are accessing the application matches the one in
+<kbd>config.php</kbd>.  If you are using a different url (e.g. <kbd>localhost</kbd>
+instead of a numerical IP address), annotation will not work.</p>
+
+<p>If your URL matches your configuration, I recommend installing and running the Firebug
+extension for Firefox.  Among other things, it tracks AJAX requests from a web page to
+the server.  The first thing to look for (other than any explicit errors reported by
+Firebug) is the URL of the GET request sent to annotation/annotate.php with the parameter
+"format=atom" when a page with annotations is first loaded.  Trying loading this URL
+on its own in a browser window:  it should return an Atom feed containing the annotations
+for that page.</p>
+
+<p>If there
+is a problem connecting to the service, you will see an error.  A 404 error indicates
+that Apache could not find the annotation service because of a misconfiguration.  One
+possible cause is problems with mod_rewrite (see step 4 above).  Any
+other error code usually means that the service is available, but something else is
+wrong.  If there is a bug in the application, that could show up as an error code other 
+than 404.</p>
+
+<h2>Known Issues</h2>
+
+<ul>
+<li>This version has not yet been tested and tweaked for Internet Explorer.  It may
+work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
+always run a little better on Firefox (e.g. there are user interface niceties on
+Firefox that are absent on IE).</li>
+<li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
+any defence because I believe a) the risk is vanishingly small and b) the consequences
+of such an attack would be minor.  Basically, it is possible for a programmer to create 
+a web page which - if you visited it while logged in to Moodle - could (in theory 
+anyway) quietly create or delete your annotations.  Why anyone would want to do this
+(it would take a bit of effert), I have no idea (this kind of attack is far more
+dangerous for financial transactions online).  I'm just mentioning it in case you
+feel differently.  If I am dreadfully wrong in my assessment, please drop me an email and
+explain.</li>
+</ul>
+
+
+<h2>Uninstalling Annotation</h2>
+
+<p>There is currently no automatic mechanism for uninstalling Marginalia, though it
+is certainly possible to do so by replacing the patched files with the <kbd>.orig</kbd>
+versions and deleting added files.  Previous releases did have an install script, but
+I don't want to release it again unless it is guaranteed to be safe for changed versions
+of Marginalia.</p>
+
+</body>
+</html>
+
