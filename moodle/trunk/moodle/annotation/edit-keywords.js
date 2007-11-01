@@ -6,7 +6,8 @@ function keywordsOnload( )
 	keywordService.init( annotationKeywords );
 	refreshKeywords( );
 	
-	window.annotationService = new RestAnnotationService( serviceRoot + '/annotate.php' );
+	window.annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', {
+		csrfCookie: 'MoodleSessionTest' } );
 	
 	addEvent( '#new-keyword-name', 'keypress', _keypressCreateKeyword );
 	addEvent( '#new-keyword-desc', 'keypress', _keypressCreateKeyword );

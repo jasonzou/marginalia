@@ -51,9 +51,10 @@ MoodleMarginalia.prototype.onload = function( )
 	// The check is here rather in the PHP;  that minimizes the number of patches
 	// that need to be applied to existing Moodle code.
 	var actualUrl = '' + window.location;
-	if ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
+	if ( this.username && actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
-		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php' );
+		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php', {
+			csrfCookie: 'MoodleSessionTest' } );
 		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
 		keywordService.init( );
 		window.marginalia = new Marginalia( annotationService, this.username, this.anuser, {
@@ -65,7 +66,6 @@ MoodleMarginalia.prototype.onload = function( )
 			showActions:  false,
 			onkeyCreate:  true,
 			skipContent: _skipSmartcopy,
-			csrfCookie: 'MoodleSessionTest',
 			editors: {
 				link: null
 			}
@@ -85,7 +85,7 @@ MoodleMarginalia.prototype.onload = function( )
 		var marginaliaDirect = new MarginaliaDirect( annotationService );
 		marginaliaDirect.init( );
 		
-		if ( this.splash )
+		if ( this.showAnnotations && this.splash )
 			this.showSplash( );
 	}
 };

@@ -115,7 +115,8 @@ else
 			$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
 			$navmiddle = "";
 			$meta
-				= "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
+				= "<script language='JavaScript' type='text/javascript' src='marginalia/3rd-party.js'></script>\n"
+				. "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript' src='marginalia/prefs.js'></script>\n"
@@ -125,7 +126,7 @@ else
 				. "<script language='JavaScript' type='text/javascript' src='$sWwwroot/annotation/rest-prefs.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript' src='summary.js'></script>\n"
 				. "<script language='JavaScript' type='text/javascript'>\n"
-				. "var annotationService = new RestAnnotationService('$sWwwroot/annotation/annotate.php');\n"
+				. "var annotationService = new RestAnnotationService('$sWwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
 				. "window.annotationSummary = new AnnotationSummary(annotationService"
 					.", '$sWwwroot'"
 					.", '".htmlspecialchars($USER->username)."');\n"
@@ -326,7 +327,7 @@ else
 			}
 			
 			if ( AN_EDITABLEKEYWORDS )
-				echo "<p><a href='edit-keywords.php'>Edit Keywords</a></p>";
+				echo "<p><a href='edit-keywords.php'>".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )."</a></p>";
 			
 			echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', ANNOTATION_STRINGS).'</span> '
 				.get_string( 'smartcopy_help', ANNOTATION_STRINGS )."</p>\n";
