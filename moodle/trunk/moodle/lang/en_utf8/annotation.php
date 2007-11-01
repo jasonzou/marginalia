@@ -49,10 +49,11 @@ $string['smartcopy_help'] = 'The Smartcopy feature automatically includes contex
 	. ' Shift-Ctrl-S while viewing a discussion forum.';
 	
 /* Edit Keywords Page */
-$string['edit_keywords_title'] = 'Annotation Keywords';
-$string['keyword_column'] = 'Keyword';
+$string['edit_keywords_link' ] = 'Edit Tags';
+$string['edit_keywords_title'] = 'Annotation Tags';
+$string['keyword_column'] = 'Tag';
 $string['keyword_desc_column'] = 'Description';
-$string['create_keyword_button'] = 'Create Keyword';
+$string['create_keyword_button'] = 'Create Tag';
 $string['note_replace_legend'] = 'Search and Replace Margin Notes';
 $string['note_replace_old'] = 'Existing note text';
 $string['note_replace_new'] = 'Replacement note text';
