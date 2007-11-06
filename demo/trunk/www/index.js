@@ -41,32 +41,52 @@
 // Needed when creating annotations:
 ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
 
-function demoOnLoad( userid, queryUrl, serviceRoot )
+function myClickCreateAnnotation( event, id )
 {
-	var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', false );
+	if ( 'bungeni' == window.marginaliaUiStyle )
+		return clickCreateAnnotation( event, id, new SelectActionNoteEditor() );
+	else
+		return clickCreateAnnotation( event, id );
+}
+
+function demoOnLoad( userid, queryUrl, serviceRoot, uiStyle )
+{
+//	initLogging( );
+	window.marginaliaUiStyle = uiStyle;
+	
+	var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', { } );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords.txt');
 	keywordService.init( );
 	var preferences = new Preferences( new StaticPreferenceService( ) );
-	window.marginalia = new Marginalia( annotationService, userid, userid, {
+	
+	marginaliaArgs = {
 		preferences: preferences,
 		keywordService: keywordService,
 		baseUrl:  null,
 		showAccess:  true,
 		showBlockMarkers:  true,
-		showActions:  true,
 		onkeyCreate:  true,
 		warnDelete: false,
 //		skipContent: _skipSmartcopy,
 		showCaret: false,
 		userInRequest: true,
-		displayNote: bungeni.displayNote,
-		editors: {
+	};
+	
+	if ( 'bungeni' == uiStyle )
+	{
+		marginaliaArgs.showActions = true;
+		marginaliaArgs.displayNote = bungeni.displayNote;
+		marginaliaArgs.editors = {
 			'default':  Marginalia.newEditorFunc( BungeniNoteEditor ),
 			freeform:  Marginalia.newEditorFunc( BungeniNoteEditor )
-		}
-	} );
+		};
+	}		
 	
-	trackchanges.addEditShortcuts( );
+	window.marginalia = new Marginalia( annotationService, userid, userid, marginaliaArgs );
+	
+	if ( 'bungeni' == uiStyle )
+		trackchanges.addEditShortcuts( );
+	
 //	smartcopyInit( );
 //	smartcopyOn( );
 	

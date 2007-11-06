@@ -15,7 +15,9 @@
 	<!-- These all need to be included.  The order
 	for inclusion matters for some of them. -->
 	<?php
+		require_once 'config.php';
 		require_once( 'marginalia-php/embed.php' );
+		global $CFG;
 		
 		$marginaliaFiles = listMarginaliaJavascript( );
 		foreach ( $marginaliaFiles as $name )
@@ -26,13 +28,6 @@
 	<script type="text/javascript" src="marginalia/smartcopy.js"></script>
 	<link rel="stylesheet" type="text/css" href="marginalia/marginalia-direct.css"/>
 	
-	<!-- These are implementations of how to fetch annotations, set preferences, and
-	of localized strings.  They will likely be different on every system. -->
-	<script type="text/javascript" src="marginalia-strings.js"></script>
-	<script type="text/javascript" src="static-annotate.js"></script>
-	<script type="text/javascript" src="static-prefs.js"></script>
-	<script type="text/javascript" src="bungeni-annotate.js"></script>
-	
 	<!-- This stylesheet includes styling for the annotation margin.  The code makes heavy
 	uses of CSS, so a stylesheet provides extensive controls over the look and feel of
 	the interface (e.g. add graphics or icons, change the look and position of the delete
@@ -41,6 +36,19 @@
 	
 	<!-- Some of the formatting and layout must be custom -->
 	<link rel="stylesheet" type="text/css" href="index.css"/>
+	
+	<!-- For testing Bungeni-specific features: -->
+	<?php if ( $CFG->bungeniStyle ) { ?>
+		<script type="text/javascript" src="bungeni-annotate.js"></script>
+		<link rel="stylesheet" type="text/css" href="bungeni-annotate.css"/>
+	<?php } ?>
+	
+	<!-- These are implementations of how to fetch annotations, set preferences, and
+	of localized strings.  They will likely be different on every system. -->
+	<script type="text/javascript" src="marginalia-strings.js"></script>
+	<script type="text/javascript" src="static-annotate.js"></script>
+	<script type="text/javascript" src="static-prefs.js"></script>
+	<script type="text/javascript" src="annotate.js"></script>
 	
 	<!-- Custom Javascript to set up Marginalia.  See here for essential code: -->
 	<script type="text/javascript" src="index.js"></script>
@@ -54,14 +62,13 @@
 			// update the bookmark links in the HTML (a rel="bookmark").  Ideally,
 			// it (and they) should match the URL of this page.
 			<?php
-			require_once 'config.php';
-			global $CFG;
 			$userid = array_key_exists( "u", $_GET ) ? $_GET[ "u" ] : 'anonymous';
+			$uiStyle = $CFG->bungeniStyle ? 'bungeni' : null;
 			?>
 			var userid = '<?php echo htmlspecialchars($userid);?>';
 			var serviceRoot = '<?php echo htmlspecialchars($CFG->wwwroot);?>';
 			var url = '<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#*';
-			demoOnLoad( userid, url, serviceRoot );
+			demoOnLoad( userid, url, serviceRoot, '<?php echo $uiStyle ?>' );
 		}
 	</script>
 </head>
@@ -167,7 +174,7 @@ the entrylink class). -->
 				annotations.  All other annotation controls are automatically added by the Javascript, 
 				but this one is under the control of the application (you could call this function 
 				from a pop-up menu, a button at the top of the page, whatever you want). -->
-				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m1',new SelectActionNoteEditor())" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="myClickCreateAnnotation(event,'m1')" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
@@ -275,7 +282,7 @@ the entrylink class). -->
 			</p>
 			
 			<div class="notes">
-				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m2',new SelectActionNoteEditor())" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="myClickCreateAnnotation(event,'m2')" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>
@@ -298,7 +305,7 @@ the entrylink class). -->
 			</p>
 			
 			<div class="notes">
-				<button class="createAnnotation" onclick="clickCreateAnnotation(event,'m3',new SelectActionNoteEditor())" title="Click here to create an annotation">&gt;</button>
+				<button class="createAnnotation" onclick="myClickCreateAnnotation(event,'m3')" title="Click here to create an annotation">&gt;</button>
 				<ol>
 					<li></li>
 				</ol>

@@ -16,7 +16,6 @@
 	<li>PHP 4.3 or later</li>
 	<li>MySQL 4.1 or later (though a colleague has had success with MySQL 3; 
 	I haven't tested with earlier versions or with Postgres)</li>
-	<li>The <a href="http://www.geof.net/code/annotation">Marginalia</a> library.</li>
 </ul>
 
 <h2>Directory Structure</h2>
@@ -51,6 +50,9 @@ integrations (e.g. Moodle and OJS).</p>
 
 <h2>Option 1:  Use a Static XML Back-End</h2>
 
+<p>It is possible to set up Marginalia with a static XML back-end, though the code
+and sample XML may be a little out of date.</p>
+
 <p>Instead of setting up a database, you can simply run the demo off a static
 XML file.  In this case, none of the changes you make will be saved (and you
 may run into a few problems), but you can at least see how things work in
@@ -73,11 +75,11 @@ None of the <code>.php</code> files will be used.</p>
 <p>If you want to be able to save annotations in the database, you must configure
 the dynamic version of the annotation service.  Make sure <code>index.js</code> is
 instantiating <code>RestAnnotationService</code>, not <code>StaticAnnotationService</code>,
-which should look like this:
+which should look like this:</p>
 
 <pre>
 <code>
-		var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', false );
+		var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', { } );
 </code>
 </pre>
 
@@ -101,6 +103,10 @@ $CFG->host = 'localhost';
 $CFG->wwwapp = 'annotation-demo';
 </code>
 </pre>
+
+<p>If you want the Bungeni-style user interface features 
+(including the "track changes" display of highlights), set <code>$CFG->bungeniStyle</code>
+to <code>true</code>.</p>
 
 <h2>Installation Problems</h2>
 
@@ -129,20 +135,16 @@ than 404.</p>
 <h2>Known Issues</h2>
 
 <ul>
+<li>This is a demo, not a full web application.  As such, it may not be secure enough 
+to run as a web application on the Internet.</li>
 <li>This version has not yet been tested and tweaked for Internet Explorer.  It may
 work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
 always run a little better on Firefox (e.g. there are user interface niceties on
 Firefox that are absent on IE).</li>
-<li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
-any defence because I believe a) the risk is vanishingly small and b) the consequences
-of such an attack would be minor.  Basically, it is possible for a programmer to create 
-a web page which - if you visited it while logged in to a system into which Marginalia
-was integrated - could (in theory 
-anyway) quietly create or delete your annotations.  Why anyone would want to do this
-(it would take a bit of effert), I have no idea (this kind of attack is far more
-dangerous for financial transactions online).  I'm just mentioning it in case you
-feel differently.  If I am dreadfully wrong in my assessment, please drop me an email and
-explain.</li>
+<li>Marginalia includes a feature to protect against cross-site request forgery when
+creating and updating annotations (though not, as yet, for preferences and keywords).
+However, this feature is not properly implemented in the demo (again because this is
+not a proper web application).</li>
 </ul>
 
 

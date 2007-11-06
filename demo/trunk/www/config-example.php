@@ -7,6 +7,9 @@ $USER->username = 'anonymous';
 
 unset( $CFG );
 
+// Use Bungeni-style interface?
+$CFG->bungeniStyle = false;
+
 // Database connection info
 $CFG->dbhost = 'localhost';
 $CFG->db = 'annotation';

@@ -87,15 +87,6 @@ ol#articles {
 .hentry .entry-content em.annotation {
 	font-style: inherit;
 }
-/* Action markers */
-.hentry .entry-content em.annotation del {
-	text-decoration: line-through;
-}
-
-.hentry .entry-content em.annotation ins {
-	color: blue;
-	text-decoration: none;
-}
 
 .hentry .entry-content em.annotation a,
 .hentry .entry-content a em.annotation {
@@ -151,31 +142,9 @@ ol#articles {
 	min-height: 1.2em;
 	width: 90%;
 	cursor: pointer;
-	border: #bbb 2px solid;
-}
-
-.hentry .notes li.dummy,
-.hentry .notes li li {
-	border: none;
-}
-
-.hentry .notes li.hover {
-	border-color: red;
-}
-
-.hentry .notes li.hover p,
-.hentry .notes li.hover .note-type {
-	color: black;
-}
-
-.hentry .notes li .note-type {
-	font-weight: bold;
-	float: left;
-	display: block;
 }
 
 .hentry .notes li p {
-	clear: both;
 	margin: 0;
 }
 
@@ -212,27 +181,7 @@ ol#articles {
 
 .hentry .notes li .controls {
 	float: right;
-	/*display: none;*/
 }
-/*
-.hentry .notes li:hover {
-	background: #ddd;
-}
-
-.hentry .notes li:hover .controls {
-	display: block;
-	position: absolute;
-	bottom:  100%;
-	left: 0;
-	width: 100%;
-	background: #ddd;
-}
-
-.hentry .notes li:hover button {
-	background: #ddd;
-	border: #ddd 1px solid;
-}
-*/
 
 .hentry .notes li textarea {
 	font-size: inherit;
@@ -258,12 +207,6 @@ ol#articles {
 	top: 0;
 	right: 100%;
 }
-
-/* Box a note while editing:
-.hentry .notes .editing-note {
-	border: black 1px solid;
-}
-*/
 
 .hentry .notes .editing-link label {
 	position: absolute;
