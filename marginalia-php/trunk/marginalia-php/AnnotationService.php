@@ -58,7 +58,7 @@ class AnnotationService
 	var $niceUrls;		// True or False
 	var $currentUserId;	// ID (username) of the current user, or null if none
 	
-	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $args )
+	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $args=null )
 	{
 		$this->host = $host;
 		$this->servicePath = $servicePath;
@@ -73,33 +73,36 @@ class AnnotationService
 		$this->csrfCookie = null;
 		$this->csrfCookieValue = null;
 		
-		foreach ( array_keys( $args) as $arg )
+		if ( $args )
 		{
-			$value = $args[ $arg ];
-			switch ( $arg )
+			foreach ( array_keys( $args) as $arg )
 			{
-				// The client will submit relative URLs, with this prefix stripped off
-				// Must also be configured for client
-				case 'baseUrl':
-					$this->baseUrl = $value;
-					break;
-					
-				// Use nice URLs (e.g. annotate/21 instead of annotate.php?id=21
-				// Probably won't work properly as there are no active implementations
-				// Must also be configured for client
-				case 'niceUrls':
-					$this->niceUrls = $value;
-					break;
-					
-				// The name of the session cookie and its value
-				// Used to prevent cross-site request forgeries
-				// Client must also configure csrfCookie (but definitely *not* csrfCookieValue)
-				case 'csrfCookie':
-					$this->csrfCookie = $value;
-					break;
-				case 'csrfCookieValue':
-					$this->csrfCookieValue = $value;
-					break;
+				$value = $args[ $arg ];
+				switch ( $arg )
+				{
+					// The client will submit relative URLs, with this prefix stripped off
+					// Must also be configured for client
+					case 'baseUrl':
+						$this->baseUrl = $value;
+						break;
+						
+					// Use nice URLs (e.g. annotate/21 instead of annotate.php?id=21
+					// Probably won't work properly as there are no active implementations
+					// Must also be configured for client
+					case 'niceUrls':
+						$this->niceUrls = $value;
+						break;
+						
+					// The name of the session cookie and its value
+					// Used to prevent cross-site request forgeries
+					// Client must also configure csrfCookie (but definitely *not* csrfCookieValue)
+					case 'csrfCookie':
+						$this->csrfCookie = $value;
+						break;
+					case 'csrfCookieValue':
+						$this->csrfCookieValue = $value;
+						break;
+				}
 			}
 		}
 	}
@@ -379,7 +382,7 @@ class AnnotationService
 		$bodyParams = $this->listBodyParams( );
 		
 		// Check for cross-site request forgery
-		if ( ! $this->verifySession( $params ) )
+		if ( ! $this->verifySession( $bodyParams ) )
 		{
 			$this->httpError( 403, 'Forbidden', 'Illegal request' );
 			return;
