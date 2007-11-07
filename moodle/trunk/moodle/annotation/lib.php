@@ -58,7 +58,7 @@ function showMarginaliaHelp( $module )
 	global $CFG;
 	$helpTitle = 'Help with Annotations';
     $linkobject = '<span class="helplink"><img class="iconhelp" alt="'.$helpTitle.'" src="'.$CFG->pixpath .'/help.gif" /></span>';
-    echo link_to_popup_window ('http://localhost/moodle/help.php?module='.htmlspecialchars($module).'&amp;file=annotate.html&amp;forcelang=', 'popup',
+    echo link_to_popup_window ('/help.php?module='.htmlspecialchars($module).'&amp;file=annotate.html&amp;forcelang=', 'popup',
                                      $linkobject, 400, 500, $helpTitle, 'none', true);
 }
 
