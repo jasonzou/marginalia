@@ -151,20 +151,43 @@ reload the page:  your annotations should still be there.</p>
 
 <h2>Upgrading from Previous Marginalia Releases</h2>
 
-<p>I recommend doing this from an installation of Moodle that does not already have
-Marginalia installed.  If you made a backup before installing Marginalia, simply
-restore that backup (and keep a copy), then patch it as described in step #1 above.
-You should also revisit your configuration settings (step #4 above).</p>
+<p>In most cases, you can upgrade by simply replacing the 
+<code>annotation</code> directory in your Moodle installation with the version included
+in the new release of Marginalia for Moodle.  To determine whether this will work for
+you, check whether your existing installation is older than any of the following dates
+(in newer releases of Marginalia you can discover the date of the existing installation
+by checking the version.txt file in the annotation directory).  Note that if you are 
+upgrading from an older version you may need to perform more than one of these steps:</p>
 
-<p>In addition, if your installation is sufficiently old, you may need to apply more 
-than one of these updates in order.</p>
+<ul>
+<li><strong>2007-11-05</strong>: If your existing version is older than this, you will also need to update
+files outside the <code>annotation</code> directory (e.g. in <code>lang</code>).  In 
+addition, you should check the settings in <code>annotation/config.php</code>.</li>
+<li><strong>2007-10-16</strong>: This version introduced per-user tags.  If you use
+this feature, you will need to create the <code>mdl_annotation_keywords</code> table
+in the database.</li>
+<li><strong>2007-08-16</strong>: If your existing version is older than this, you will need to reapply
+<code>moodle.patch</code>.  You must apply this patch to fresh a fresh copy of the Moodle
+files - not one that has been previously patched for Marginalia.</li>
+<li><strong>2007-08-06</strong>:  If your existing version is older than this, you must update the
+<code>mdl_annotation</code> table in the database.  See instructions below.</li>
+<li><strong>2006-01-07</strong>:  If your existing version is older than this, you must update the
+<code>mdl_annotation</code> table in the database.  See instructions below.</li>
+</ul>
+
+<p>It is conceivable that I will forget to update this list on occasion.  If you run
+into trouble when simply relpacing the <code>annotation</code> directory, it's worth 
+contacting me or trying a more thorough reinstall.  I expect it will always be safe
+to simply replace the <code>annotation</code> directory even if more updates are
+required, but as always I recommend
+making back-ups of your Moodle directory and database just to be safe.</p>
 
 <h3>Upgrading to Release 2006-01-07</h3>
 
 <p>If you are updating from a release of Marginalia (annotation for Moodle)
 prior to the 2006-01-07 release, you will need to update your database.  Two
 columns have since been added to the database schema:
-<kbd>object_id int</kbd> and <kbd>object_type varchar(16)</kbd>.  These make the
+<code>object_id int</code> and <code>object_type varchar(16)</code>.  These make the
 queries faster and simpler.  The following SQL code will add the columns and set
 their contents correctly (you may need to change the table name from 
 mdl_annotation):</p>
@@ -237,15 +260,11 @@ than 404.</p>
 work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
 always run a little better on Firefox (e.g. there are user interface niceties on
 Firefox that are absent on IE).</li>
-<li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
-any defence because I believe a) the risk is vanishingly small and b) the consequences
-of such an attack would be minor.  Basically, it is possible for a programmer to create 
-a web page which - if you visited it while logged in to Moodle - could (in theory 
-anyway) quietly create or delete your annotations.  Why anyone would want to do this
-(it would take a bit of effert), I have no idea (this kind of attack is far more
-dangerous for financial transactions online).  I'm just mentioning it in case you
-feel differently.  If I am dreadfully wrong in my assessment, please drop me an email and
-explain.</li>
+<li>Preferences and keywords (tags, if enabled) are to cross-site request forgery.  
+Annotation operations, however, are protected.  I simply haven't implemented protection
+for the other features yet.  I believe the risk is vanishingly small and the consequences
+of any attack would not amount to more than a minor annoyance (having your keywords or
+preferences changed, but not even allowing a third party to access your data).</li>
 </ul>
 
 

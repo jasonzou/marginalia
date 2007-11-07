@@ -33,7 +33,8 @@ MARGINALIA_MOODLE_FILES = \
  $(MARGINALIA_MOODLE_DIR)/summary-styles.php \
  $(MARGINALIA_MOODLE_DIR)/summary.js \
  $(MARGINALIA_MOODLE_DIR)/summary.php \
- $(MARGINALIA_MOODLE_DIR)/user-preference.php
+ $(MARGINALIA_MOODLE_DIR)/user-preference.php \
+ $(MARGINALIA_MOODLE_DIR)/version.txt 
  
 LANG_FILES = $(MOODLE_DIR)/lang/en_utf8/annotation.php
 
@@ -62,16 +63,19 @@ zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MAR
 	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/moodle/annotation/marginalia/3rd-party
 	mkdir -p $(ZIPDIR)/moodle/annotation/marginalia-php
-	mkdir -p $(ZIPDIR)/moodle/lang/en_utf8/help
+	mkdir -p $(ZIPDIR)/moodle/lang/en_utf8/help/forum
 	cp $(MARGINALIA_MOODLE_FILES) $(ZIPDIR)/moodle/annotation/
 	cp $(MARGINALIA_LIB_FILES) $(ZIPDIR)/moodle/annotation/marginalia/
 	cp $(MARGINALIA_LIB_3RDPARTY_FILES) $(ZIPDIR)/moodle/annotation/marginalia/3rd-party/
 	cp $(MARGINALIA_PHP_FILES) $(ZIPDIR)/moodle/annotation/marginalia-php/
 	cp $(LANG_FILES) $(ZIPDIR)/moodle/lang/en_utf8/
-	cp $(HELP_FILES) $(ZIPDIR)/moodle/lang/en_utf8/help/
+	cp $(HELP_FILES) $(ZIPDIR)/moodle/lang/en_utf8/help/forum
 	cp $(UTIL_FILES) $(ZIPDIR)/util/
 	cp $(DOC_FILES) $(ZIPDIR)/doc/
 	cp $(README_FILES) $(ZIPDIR)
+
+$(MARGINALIA_MOODLE_DIR)/version.txt:
+	echo $(OUTNAME) >$@
 
 $(TMP_DIR)/moodle.patch:  moodle.orig moodle
 	mkdir -p $(ZIPDIR)
