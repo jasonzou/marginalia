@@ -33,26 +33,26 @@ class AnnotationSummaryQuery
 		// All annotations for a course
 		if ( preg_match( '/^.*\/course\/view\.php\?id=(\d+)/', $url, $matches ) )
 		{
-			$this->handler = new CourseAnnotationUrlHandler( $matches[ 1 ] );
+			$this->handler = new CourseAnnotationUrlHandler( $matches[ 1 ], $searchOf );
 		}
 		// All annotations far a single forum
 		elseif ( preg_match( '/^.*\/mod\/forum\/view\.php\?id=(\d+)/', $url, $matches ) )
 		{
 			$f = (int) $matches[ 1 ];
-			$this->handler = new ForumAnnotationUrlHandler( $f );
+			$this->handler = new ForumAnnotationUrlHandler( $f, $searchOf );
 		}
 		// Annotations for a single discussion
 		elseif ( preg_match( '/^.*\/mod\/forum\/discuss\.php\?d=(\d+)/', $url, $matches ) )
 		{
 			$d = (int) $matches[ 1 ];
-			$this->handler = new DiscussionAnnotationUrlHandler( $d );
+			$this->handler = new DiscussionAnnotationUrlHandler( $d, $searchOf );
 		}
 		
 		// Annotations for a single post
 		elseif ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $url, $matches ) )
 		{
 			$postId = (int) $matches[ 1 ];
-			$this->handler = new PostAnnotationUrHandler( $postId );
+			$this->handler = new PostAnnotationUrHandler( $postId, $searchOf );
 		}
 		else
 		{
@@ -281,6 +281,13 @@ class AnnotationSummaryQuery
 
 class AnnotationUrlHandler
 {
+	var $searchOf;
+	
+	function AnnotationUrlHandler( $searchOf )
+	{
+		$this->searchOf = $searchOf;
+	}
+	
 	// This pulls together the query from the standard portions (which are passed in)
 	// and from the handler-specific portions.  Some handlers may override this, e.g. in order
 	// to construct a UNION.
@@ -321,10 +328,9 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 	var $parentUrl;
 	var $parentTitle;
 	
-	function CourseAnnotationUrlHandler( $courseId )
+	function CourseAnnotationUrlHandler( $courseId, $searchOf )
 	{
-		global $CFG;
-		
+		$this->AnnotationUrlHandler( $searchOf );
 		$this->courseId = $courseId;
 		$this->title = null;
 	}
@@ -356,6 +362,11 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 		global $CFG;
 		$q = '';
 		
+		// Conditions
+		$cond = "\n  AND a.object_type='post'";
+		if ( $searchOf )
+			$cond .= " AND p.userid='".addSlashes( $searchOf )."'";
+
 		// First section:  discussion posts
 		$q = $q_std_select
 			 . ",\n 'forum' section_type, 'content' row_type"
@@ -365,7 +376,9 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 			 . "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseId.' '
 			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type='post' AND p.id=a.object_id "
 			 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
-			. $q_std_where;
+			. $q_std_where
+			. $this->getConds( $searchOf );
+		
 		if ( $orderby )
 			$q .= "\nORDER BY $orderby";
 		
@@ -373,6 +386,13 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 		// as part of a UNION.		
 		
 		return $q;
+	}
+
+	function getConds( )
+	{
+		$cond = "\n  AND a.object_type='post'";
+		if ( $this->searchOf )
+			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
 	}
 }
 
@@ -385,8 +405,9 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 	var $parentTitle;
 	var $courseId;
 	
-	function ForumAnnotationUrlHandler( $f )
+	function ForumAnnotationUrlHandler( $f, $searchOf )
 	{
+		$this->AnnotationUrlHandler( $searchOf );
 		$this->f = $f;
 		$this->title = null;
 	}
@@ -441,7 +462,9 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 	
 	function getConds( )
 	{
-		return "\n  AND a.object_type='post'";
+		$cond = "\n  AND a.object_type='post'";
+		if ( $this->searchOf )
+			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
 	}
 	
 	function getSearchFields( )
@@ -460,8 +483,9 @@ class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
 	var $courseId;
 	var $forumId;
 	
-	function DiscussionAnnotationUrlHandler( $d )
+	function DiscussionAnnotationUrlHandler( $d, $searchOf )
 	{
+		$this->AnnotationUrlHandler( $searchOf );
 		$this->d = $d;
 		$this->title = null;
 	}
@@ -531,7 +555,9 @@ class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
 	
 	function getConds( )
 	{
-		return "\n  AND a.object_type='post'";
+		$cond = "\n  AND a.object_type='post'";
+		if ( $this->searchOf )
+			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
 	}
 	
 	function getSearchFields( )
@@ -547,8 +573,9 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 	var $parentTitle;
 	var $courseId;
 	
-	function PostAnnotationUrlHandler( $p )
+	function PostAnnotationUrlHandler( $p, $searchOf )
 	{
+		$this->AnnotationUrlHandler( $searchOf );
 		$this->p = $p;
 		$this->title = null;
 	}
@@ -562,7 +589,7 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 		
 		$query = "SELECT p.subject pname, d.id did, d.name dname, d.course course"
 			. " FROM {$CFG->prefix}forum_posts AS p"
-			. " JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
+			. " INNER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
 			. " WHERE p.id=$p";
 		$row = get_record_sql( $query );
 		if ( False === $row )
@@ -602,7 +629,9 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 	
 	function getConds( )
 	{
-		return "\n AND a.object_type='post'";
+		$cond = "\n AND a.object_type='post'";
+		if ( $this->searchOf )
+			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
 	}
 }
 
