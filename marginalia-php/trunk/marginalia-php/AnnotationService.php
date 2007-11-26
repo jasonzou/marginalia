@@ -72,6 +72,7 @@ class AnnotationService
 		$this->niceUrls = False;
 		$this->csrfCookie = null;
 		$this->csrfCookieValue = null;
+		$this->noPutDelete = False;
 		
 		if ( $args )
 		{
@@ -91,6 +92,15 @@ class AnnotationService
 					// Must also be configured for client
 					case 'niceUrls':
 						$this->niceUrls = $value;
+						break;
+						
+					// Use HTTP POST instead of PUT and DELETE for servers that refuse PUT and DELETE.
+					// The actual method will be sent as a GET parameter.  This is really bad, because 
+					// then the URL doesn't match the resource... but then so is not having PUT and 
+					// DELETE.  The body can't be used, as in future it probably won't be 
+					// application/x-www-url-encoded.
+					case 'noPutDelete':
+						$this->noPutDelete = $value;
 						break;
 						
 					// The name of the session cookie and its value
@@ -156,10 +166,40 @@ class AnnotationService
 	
 	function dispatch( $method=null )
 	{
+		$id = $this->parseAnnotationId( );
 		if ( ! $method )
 			$method = $_SERVER[ 'REQUEST_METHOD' ];
+		if ( $this->noPutDelete && 'POST' == $method )
+		{
+			$method = $_GET[ 'method' ];
+			/* Tried calculating what to do by looking at parameters.  Should work in most cases,
+			 * but isn't a long term solution.  Use GET parameter instead - which is semantically
+			 * bad, because it changes the resource URL depending on the operation, but then not
+			 * having all the methods is also semantically bad so what can you do.
+			 *
+			// POST is being used instead of PUT or DELETE, so figure out actual method and operation
+			if ( False === $id )
+			{
+				// Must be POST or PUT (bulkUpdate)
+				$getParamNames = array_keys( $_GET );
+				$searchParamNames = array( 'note' );
+				$result = array_intersect( $getParamNames, $searchParamNames );
+				if ( $result )
+					$method = 'PUT';
+				else
+					$method = 'POST';
+			}
+			else
+			{
+				// Must be DELETE or PUT (update)
+				if ( $_SERVER[ 'CONTENT_LENGTH' ] > 0 )
+					$method = 'PUT';
+				else
+					$method = 'DELETE';
+			}
+			*/
+		}
 		
-		$id = $this->parseAnnotationId( );
 		switch( $method )
 		{
 			// get a list of annotations
@@ -194,6 +234,10 @@ class AnnotationService
 				if ( ! $this->currentUserId )
 					$this->httpError( 403, 'Forbidden', 'Must be logged in' );
 				// No ID => bulk update
+				// The logic here is that the PUT applies to the named resource - that being a collection
+				// defined by the search parameters.  However, that's kind of fishy - as I read the spec,
+				// PUT should really be replacing the identified resource.  I should be using POST.  Will
+				// fix someday (at this point, the matter seems purely theoretical).
 				if ( False === $id )
 				{
 					$this->bulkUpdate( );
