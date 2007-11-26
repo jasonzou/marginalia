@@ -68,14 +68,16 @@ function showMarginaliaUserDropdown( $refUrl )
 	$summaryQuery = new AnnotationSummaryQuery( $refUrl, null, null, null );
 	$userList = get_records_sql( $summaryQuery->listUsersSql( ) );
 	$annotationUser = getAnnotationUsername( );
-	$showAnnotationsPref = getShowAnnotationsPref( );
+	$showAnnotationsPref = getShowAnnotationsPref( ) == 'true';
 	
 	echo "<select name='anuser' id='anuser' onchange='window.moodleMarginalia.changeAnnotationUser(this,\"$refUrl\");'>\n";
-	echo " <option ".($showAnnotationsPref!='true'?"selected='selected' ":'')
-		."value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
+	$selected = $showAnnotationsPref ? '' : " selected='selected' ";
+	echo " <option $selected value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
 	if ( ! isguest() )
 	{
-		echo " <option ".($showAnnotationsPref=='true'&&$USER->username==$annotationUser?"selected='selected' ":'')
+		$selected = ( $showAnnotationsPref && ( $USER->username == $annotationUser ? "selected='selected' " : '' ) )
+			? " selected='selected' " : '';
+		echo " <option $selected"
 			."value='".htmlspecialchars($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
 	}
 	if ( $userList )
@@ -84,7 +86,9 @@ function showMarginaliaUserDropdown( $refUrl )
 		{
 			if ( $user->username != $USER->username )
 			{
-				echo " <option ".($user->username==$annotationUser?"selected='selected' ":'')
+				$selected = ( $showAnnotationsPref && ( $USER->username == $annotationUser ? "selected='selected' ":'' ) )
+					? " selected='selected' " : '';
+				echo " <option $selected"
 					."value='".htmlspecialchars($user->username)."'>".htmlspecialchars($user->firstname.' '.$user->lastname)."</option>\n";
 			}
 		}

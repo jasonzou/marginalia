@@ -237,14 +237,15 @@ class AnnotationSummaryQuery
 		return $q;
 	}
 	
-	/** Get query to list users with annotations on this discussion */
+	/** Get query to list users with public annotations on this discussion */
 	function listUsersSql( )
 	{
 		global $CFG;
 		return "SELECT u.firstname, u.lastname, u.username "
 			. "\nFROM {$CFG->prefix}user u "
-			. "\nJOIN {$CFG->prefix}annotation a ON a.userid=u.username "
-			. $this->handler->getTables( );
+			. "\nINNER JOIN {$CFG->prefix}annotation a ON a.userid=u.username "
+			. $this->handler->getTables( )
+			. "\nWHERE a.access='public'";
 	}
 	
 	/** Generate a summary URL corresponding to this query */
