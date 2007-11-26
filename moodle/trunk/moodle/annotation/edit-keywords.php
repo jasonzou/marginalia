@@ -100,6 +100,8 @@ else
 	echo " </tbody>\n";
 	echo "</table>\n";
 	
+	echo "<p>Pages with annotations must be reloaded to reflect changes to tags.</p>";
+	
 	echo "<fieldset id='replace'>\n";
 	echo " <legend>".get_string('note_replace_legend',ANNOTATION_STRINGS)."</legend>\n";
 	echo " <label for='old-note'>".get_string('note_replace_old',ANNOTATION_STRINGS).":</label><input id='old-note' type='text'/>\n";
