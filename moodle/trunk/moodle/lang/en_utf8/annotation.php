@@ -39,17 +39,22 @@ $string['whole_course'] = 'whole course';
 $string['unknown_post'] = 'unknown discussion post';
 $string['post_name'] = 'discussion post "$a->name"';
 
-$string['annotation_desc_authorsearch'] = 'annotations by $a->who of work by $a->by containing \\"$a->search\\" in $a->title';
-$string['annotation_desc_author'] = 'annotations by $a->who of work by $a->by in $a->title';
+/* Summary page */
+$string['annotation_desc_authorsearch'] = 'annotations by $a->who of work by $a->author containing \\"$a->search\\" in $a->title';
+$string['annotation_desc_author'] = 'annotations by $a->who of work by $a->author in $a->title';
 $string['annotation_desc_search'] = 'annotations by $a->who containing \\"$a->search\\" in $a->title';
 $string['annotation_desc'] = 'annotations by $a->who in $a->title';
 $string['tip'] = 'Tip';
 $string['smartcopy_help'] = 'The Smartcopy feature automatically includes context information'
 	. ' when you copy and paste text from a blog post.  To switch it on or off, press'
 	. ' Shift-Ctrl-S while viewing a discussion forum.';
+$string['source_th'] = 'Source';
+$string['quote_th'] = 'Highlighted Text';
+$string['note_th'] = 'Margin Note';
+$string['user_th'] = 'User';
 	
 /* Edit Keywords Page */
-$string['edit_keywords_link' ] = 'Edit Tags';
+$string['edit_keywords_link' ] = 'Tags';
 $string['edit_keywords_title'] = 'Annotation Tags';
 $string['keyword_column'] = 'Tag';
 $string['keyword_desc_column'] = 'Description';

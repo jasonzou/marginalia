@@ -40,6 +40,8 @@ LANG_FILES = $(MOODLE_DIR)/lang/en_utf8/annotation.php
 
 HELP_FILES = $(MOODLE_DIR)/lang/en_utf8/help/forum/annotate.html
 
+FORUM_FILES = $(MOODLE_DIR)/mod/forum/permalink.php
+
 README_FILES = \
  README.txt \
  LICENSE.txt \
@@ -58,18 +60,20 @@ UTIL_FILES = \
 release:  zipdir docs
 	cd $(OUTDIR); tar czf $(OUTNAME).tgz $(OUTNAME)
 
-zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES)
+zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES)
 	mkdir -p $(ZIPDIR)/util
 	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/moodle/annotation/marginalia/3rd-party
 	mkdir -p $(ZIPDIR)/moodle/annotation/marginalia-php
 	mkdir -p $(ZIPDIR)/moodle/lang/en_utf8/help/forum
+	mkdir -p $(ZIPDIR)/moodle/mod/forum
 	cp $(MARGINALIA_MOODLE_FILES) $(ZIPDIR)/moodle/annotation/
 	cp $(MARGINALIA_LIB_FILES) $(ZIPDIR)/moodle/annotation/marginalia/
 	cp $(MARGINALIA_LIB_3RDPARTY_FILES) $(ZIPDIR)/moodle/annotation/marginalia/3rd-party/
 	cp $(MARGINALIA_PHP_FILES) $(ZIPDIR)/moodle/annotation/marginalia-php/
 	cp $(LANG_FILES) $(ZIPDIR)/moodle/lang/en_utf8/
-	cp $(HELP_FILES) $(ZIPDIR)/moodle/lang/en_utf8/help/forum
+	cp $(HELP_FILES) $(ZIPDIR)/moodle/lang/en_utf8/help/forum/
+	cp $(FORUM_FILES) $(ZIPDIR)/moodle/mod/forum/
 	cp $(UTIL_FILES) $(ZIPDIR)/util/
 	cp $(DOC_FILES) $(ZIPDIR)/doc/
 	cp $(README_FILES) $(ZIPDIR)
