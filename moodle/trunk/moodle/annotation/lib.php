@@ -1,5 +1,6 @@
 <?php
 
+require_once( $CFG->dirroot.'/annotation/config.php' );
 require_once( $CFG->dirroot.'/annotation/AnnotationGlobals.php' );
 
 /**
@@ -105,6 +106,12 @@ function showMarginaliaSummaryLink( $refUrl, $username )
 	echo " <a id='annotation-summary-link' href='".htmlspecialchars($summaryUrl)."'"
 		. " title='".htmlspecialchars(get_string('summary_link_title',ANNOTATION_STRINGS))
 		."'>".htmlspecialchars(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
+	if ( AN_EDITABLEKEYWORDS )
+	{
+		echo "<a id='annotation-editkeywords-link' href='".$CFG->wwwroot."/annotation/edit-keywords.php'"
+		. " title='".htmlspecialchars(get_string( 'edit_keywords_link', ANNOTATION_STRINGS ))
+		."'>Tags</a>\n";
+	}
 }
 
 

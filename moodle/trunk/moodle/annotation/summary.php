@@ -49,21 +49,27 @@ class AnnotationSummaryPage
 			. "<link rel='stylesheet' type='text/css' href='$sWwwroot/annotation/summary-styles.php'/>\n";
 
 		
+/*		if ( AN_EDITABLEKEYWORDS )
+			$tagsHtml = "<div class='tags'><a href='edit-keywords.php'>".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )."</a></div>";
+		else
+			$tagsHtml = '';
+*/		
 		if (null != $this->course && $this->course->category)
 		{
 			print_header("$this->course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ), "$this->course->fullname",
 				"<A HREF=$CFG->wwwroot/course/view.php?id=$course->id>$course->shortname</A> -> $navtail",
-				"", $meta, true, "", navmenu($this->course));
+				"", $meta, true, "", navmenu($this->course) );
 		}
 		elseif ( null != $this->course )
 		{
 			print_header("$this->course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ), "$this->course->fullname",
-				"$navtail", "", $meta, true, "", navmenu($this->course));
+				"$navtail", "", $meta, true, "", navmenu($this->course) );
 		}
 		else
 		{
-			print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
+			print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null );
 		}
+//		echo $tagsHtml;
 	}
 	
 	function parseParams( )
@@ -211,11 +217,18 @@ class AnnotationSummaryPage
 		// make sure some records came back
 		if ( null != $annotations )
 		{
-			$nCols = 5 - count( array_intersect( $this->excludeFields, $this->possibleExcludeFields) );
+			// Convert $annotations to an indexable array (why isn't it?  for efficiency with large data sets?)
+			$annotationa = array( );
+			foreach ( $annotations as $annotation )
+				$annotationa[ ] = $annotation;
+				
+			$nCols = 6 - count( array_intersect( $this->excludeFields, $this->possibleExcludeFields) );
 	
 			echo "<table cellspacing='0' class='annotations'>";
-			foreach ( $annotations as $annotation ) {
-				// Display a heading for each new URL
+			for ( $annotation_i = 0;  $annotation_i < count( $annotationa );  ++$annotation_i )
+			{
+				$annotation = $annotationa[ $annotation_i ];
+				// Display a heading for each new section URL
 				if ( $annotation->section_type != $curSectionType || $annotation->section_url != $curSection ) {
 					if ( $curSection != null )
 						echo "</tbody>\n";
@@ -232,32 +245,54 @@ class AnnotationSummaryPage
 				
 				// For each new url, display the title and author
 				if ( $annotation->url != $curUrl ) { //|| $annotation->userid != $curUser ) {
+					$curUrl = $annotation->url;
+					$curUser = $annotation->userid;
+
 					echo "<tr class='fragment first'>";
 					if ( ! $excludeFields || ! in_array( 'source', $excludeFields ) )
 					{
+						// Figure out how many rows this source will span
+						$nRows = 1;
+						for ( $j = $annotation_i + 1;  $j < count( $annotationa );  ++$j )
+						{
+							if ( $annotationa[ $j ]->url != $curUrl )
+							{
+//								echo $annotationa[$j]->url . "!=" . $curUrl;
+								break;
+							}
+							$nRows += 1;
+						}
+						
 						$url = $CFG->wwwroot.$annotation->url;
-						echo "<th>";
+						echo "<th rowspan='$nRows'>";
 						if ( MarginaliaHelper::isUrlSafe( $url ) )
 						{
 							$a->row_type = htmlspecialchars( $annotation->row_type );
 							$a->author = htmlspecialchars( $annotation->quote_author );
 							echo "<a href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 							echo htmlspecialchars( $annotation->quote_title ) . '</a>';
+							if ( ! in_array( 'quote-author', $excludeFields ) )
+								echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author )."</span>\n";
 						}
 						echo "</th>\n";
-					}
-					$curUrl = $annotation->url;
-					$curUser = $annotation->userid;
+/*						if ( ! in_array( 'quote-author', $excludeFields ) )
+							echo "<td rowspan='$nRows' class='quote-author'>".htmlspecialchars( $annotation->quote_author )."</td>\n";
+*/					}
 				}
 				else
 				{
 					echo "<tr>";
-					if ( ! $excludeFields || ! in_array( 'source', $excludeFields ) )
-						echo "<td class='fragment'></td>\n";
-				}
+/*					if ( ! in_array( 'source', $excludeFields ) )
+					{
+						if ( ! in_array( 'quote-author', $excludeFields ) )
+							echo "<td colspan='2' class='fragment'></td>\n";
+						else
+							echo "<td class='fragment'></td>\n";
+					}
+*/				}
 				
 				// Show the quoted text
-				if ( ! $excludeFields || ! in_array( 'quote', $excludeFields ) )
+				if ( ! in_array( 'quote', $excludeFields ) )
 				{
 					echo "<td class='quote'>";
 					echo htmlspecialchars( $annotation->quote );
@@ -265,13 +300,13 @@ class AnnotationSummaryPage
 				}
 				
 				// Show the note
-				if ( ! $excludeFields || ! in_array( 'note', $excludeFields ) )
+				if ( ! in_array( 'note', $excludeFields ) )
 					echo "<td class='note'>" . htmlspecialchars( $annotation->note ) . "&#160;</td>\n";
 
 				// Show edit controls or the user who created the annotation
-				if ( ! $excludeFields || ! in_array( 'controls', $excludeFields ) || ! in_array( 'user', $excludeFields ) )
+				if ( ! in_array( 'controls', $excludeFields ) || ! in_array( 'user', $excludeFields ) )
 				{
-					if ( ( ! $excludeFields || ! in_array( 'controls', $excludeFields ) ) && $annotation->userid == $USER->username )
+					if ( ( ! in_array( 'controls', $excludeFields ) ) && $annotation->userid == $USER->username )
 					{
 						echo "<td class='controls'>";
 						$AN_SUN_SYMBOL = '&#9675;';
@@ -291,7 +326,7 @@ class AnnotationSummaryPage
 						echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>";
 						echo "</td>\n";
 					}
-					else if ( ! $excludeFields || ! in_array( 'user', $excludeFields ) )
+					else if ( ! in_array( 'user', $excludeFields ) )
 					{
 						echo "<td class='anuser'>";
 						$url = $CFG->wwwroot.$annotation->url;
@@ -310,6 +345,21 @@ class AnnotationSummaryPage
 			}
 			if ( $curUrl != null )
 				echo "</tbody>\n";
+			echo "<thead class='labels'>\n";
+			if ( ! in_array( 'source', $excludeFields ) )
+			{
+				if ( in_array( 'quote-author', $excludeFields ) )
+					echo "\t<th>Author</th>\n";
+				else
+					echo "\t<th>Source &amp; Author</th>\n";
+			}
+			if ( ! in_array( 'quote', $excludeFields ) )
+				echo "\t<th>Highlighted Text</th>\n";
+			if ( ! in_array( 'note', $excludeFields ) )
+				echo "\t<th>Margin Note</th>\n";
+			if ( ! in_array( 'user', $excludeFields ) )
+				echo "\t<th>User</th>\n";
+			echo "</thead>\n";
 			echo "</table>\n";
 			// print the page content
 		
@@ -337,9 +387,6 @@ class AnnotationSummaryPage
 			echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
 				. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 		}
-		
-		if ( AN_EDITABLEKEYWORDS )
-			echo "<p><a href='edit-keywords.php'>".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )."</a></p>";
 		
 		echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', ANNOTATION_STRINGS).'</span> '
 			.get_string( 'smartcopy_help', ANNOTATION_STRINGS )."</p>\n";

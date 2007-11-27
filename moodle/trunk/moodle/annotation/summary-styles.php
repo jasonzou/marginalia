@@ -22,6 +22,13 @@ form#annotation-search fieldset {
 	margin: 0;
 	padding: 0;
 	background: none;
+	width: 100%;
+}
+
+.tags {
+	width: 100%;
+	text-align: right;
+	font-size: 90%;
 }
 
 p.query {
@@ -45,6 +52,22 @@ table.annotations {
 	 * (man, I hate the W3C box model): */
 	margin: 1em 2em ;
 	width: 90%;
+}
+
+table.annotations thead.labels th {
+	font-weight: normal;
+	text-transform: lowercase;
+	font-size: 80%;
+	text-align: left;
+	margin: 0;
+	padding-top: .25ex;
+	font-style: italic;
+	border-top: black 1px solid;
+}
+
+table.annotations thead.labels th:before {
+	font-style: normal;
+	content: '\2191 ';
 }
 
 table.annotations th,
@@ -84,6 +107,20 @@ table.annotations thead th h3 {
 	text-transform: capitalize;
 }
 
+table.annotations tbody td.quote-author {
+	font-size: 80%;
+	width: 10em;
+}
+
+/*
+table.annotations tbody td.quote-author:before {
+	content: '(';
+}
+table.annotations tbody td.quote-author:after {
+	content: ')';
+}
+*/
+
 table.annotations tbody td.quote {
 	background: white ;
 	width: 40%;
@@ -101,6 +138,11 @@ table.annotations tbody td.controls {
 
 table.annotations tbody td.anuser {
 	font-size: 80%;
+}
+
+table.annotations tbody tr:hover td.quote,
+table.annotations tbody tr:hover td.note {
+	color: red;
 }
 
 

@@ -15,7 +15,8 @@ table td#annotation-controls {
 	white-space:  nowrap;
 }
 
-#annotation-summary-link {
+#annotation-summary-link,
+#annotation-editkeywords-link {
 	font-size: smaller;
 }
 

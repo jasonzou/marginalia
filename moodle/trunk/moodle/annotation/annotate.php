@@ -64,7 +64,7 @@ class MoodleAnnotationService extends AnnotationService
 		}
 		else
 		{
-			$querySql = $query->sql( 'section_type, section_name, quote_title' );
+			$querySql = $query->sql( 'section_type, section_name, quote_title, start_block, start_word, start_char, end_block, end_word, end_char' );
 			$annotationSet = get_records_sql( $querySql );
 			$annotations = Array( );
 			if ( $annotationSet )
