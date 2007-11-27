@@ -16,7 +16,7 @@ class AnnotationSummaryQuery
 	var $error;			// Any error encountered by the constructor
 	
 	/** Construct an immutable summary query */
-	function AnnotationSummaryQuery( $url, $searchUser, $searchOf, $searchQuery )
+	function AnnotationSummaryQuery( $url, $searchUser, $searchOf, $searchQuery, $all=False )
 	{
 		global $CFG, $USER;
 		
@@ -24,14 +24,21 @@ class AnnotationSummaryQuery
 		$this->searchUser = $searchUser;
 		$this->searchOf = $searchOf;
 		$this->searchQuery = $searchQuery;
+		$this->accessAll = $all;	// get access beyond normal privacy limitations (admin only)
 		
 		if ( '' == $this->searchUser )
 			$this->username = null;
 		if ( '' == $this->searchOf )
 			$this->searchOf = null;
 		
+		// A course or something *must* be specified
+		if ( ! $url )
+		{
+			$this->error = "Bad handler URL";
+			return null;
+		}
 		// All annotations for a course
-		if ( preg_match( '/^.*\/course\/view\.php\?id=(\d+)/', $url, $matches ) )
+		elseif ( preg_match( '/^.*\/course\/view\.php\?id=(\d+)/', $url, $matches ) )
 		{
 			$this->handler = new CourseAnnotationUrlHandler( $matches[ 1 ], $searchOf );
 		}
@@ -153,6 +160,8 @@ class AnnotationSummaryQuery
 		}
 		
 		// Filter annotations according to their owners
+		
+		// Admin only (used especially for research): transcend usual privacy limitations
 		if ( null == $this->searchUser )
 			$access_cond = " ($access_visible) ";
 		elseif ( '*students' == $this->searchUser )

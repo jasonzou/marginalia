@@ -49,7 +49,7 @@ class MoodleAnnotationService extends AnnotationService
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
-	function doListAnnotations( $url, $username, $block )
+	function doListAnnotations( $url, $username, $block, $all )
 	{
 		$query = new AnnotationSummaryQuery( $url, $username, null, null );
 		if ( $query->error )
