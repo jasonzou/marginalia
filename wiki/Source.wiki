@@ -1,0 +1,28 @@
+= Repository Structure =
+
+Marginalia consists of several sub-projects for Moodle, OJS, the demo, and so on.  Each project has its own code and also makes use of shared Marginalia code.  For example, to run the demo you will need to fetch `demo`, `marginalia-lib`, and `marginalia-php`.  The INSTALL.html file in the demo contains specific instructions.  See the Browse link under the tabs above to view the sub-projects in the repository.
+
+
+= Command-Line Access =
+
+If you plan to make changes, use HTTPS to check out the code as yourself using HTTPS.  For example, to check out the demo do the following:
+
+{{{
+# Project members authenticate over HTTPS to allow committing changes.
+svn checkout https://marginalia.googlecode.com/svn/demo/trunk/ demo --username <your username here>
+}}}
+
+When prompted, enter your generated [http://code.google.com/hosting/settings googlecode.com password].
+ 
+Use this command to anonymously check out the latest project source code:
+
+{{{
+# Non-members may check out a read-only working copy anonymously over HTTP.
+svn checkout http://marginalia.googlecode.com/svn/demo/trunk/ demo-read-only
+}}}
+
+= GUI and IDE Access =
+
+This project's Subversion repository may be accessed using many different
+[http://subversion.tigris.org/links.html#clients client programs and plug-ins].
+See your client's documentation for more information.
