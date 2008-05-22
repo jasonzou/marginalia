@@ -48,7 +48,6 @@
 	<script type="text/javascript" src="marginalia-strings.js"></script>
 	<script type="text/javascript" src="static-annotate.js"></script>
 	<script type="text/javascript" src="static-prefs.js"></script>
-	<script type="text/javascript" src="annotate.js"></script>
 	
 	<!-- Custom Javascript to set up Marginalia.  See here for essential code: -->
 	<script type="text/javascript" src="index.js"></script>
