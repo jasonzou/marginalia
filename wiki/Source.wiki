@@ -7,19 +7,15 @@ Marginalia consists of several sub-projects for Moodle, OJS, the demo, and so on
 
 If you plan to make changes, check out the code as yourself using HTTPS.  For example, to check out the demo do the following:
 
-{{{
-# Project members authenticate over HTTPS to allow committing changes.
-svn checkout https://marginalia.googlecode.com/svn/demo/trunk/ demo --username <your username here>
-}}}
+  # Project members authenticate over HTTPS to allow committing changes.
+  svn checkout https://marginalia.googlecode.com/svn/demo/trunk/ demo --username <your  username here>
 
 When prompted, enter your generated [http://code.google.com/hosting/settings googlecode.com password].
  
 Use this command to anonymously check out the latest project source code:
 
-{{{
-# Non-members may check out a read-only working copy anonymously over HTTP.
-svn checkout http://marginalia.googlecode.com/svn/demo/trunk/ demo-read-only
-}}}
+  # Non-members may check out a read-only working copy anonymously over HTTP.
+  svn checkout http://marginalia.googlecode.com/svn/demo/trunk/ demo-read-only
 
 = GUI and IDE Access =
 
