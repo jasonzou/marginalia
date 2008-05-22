@@ -5,7 +5,7 @@ Marginalia consists of several sub-projects for Moodle, OJS, the demo, and so on
 
 = Command-Line Access =
 
-If you plan to make changes, use HTTPS to check out the code as yourself using HTTPS.  For example, to check out the demo do the following:
+If you plan to make changes, check out the code as yourself using HTTPS.  For example, to check out the demo do the following:
 
 {{{
 # Project members authenticate over HTTPS to allow committing changes.
