@@ -305,9 +305,9 @@ class AnnotationUrlHandler
 	{
 		$q = $q_std_select
 			. $this->getFields( )
-			. $q_std_from
+			. "\n" . $q_std_from
 			. $this->getTables( )
-			. $q_std_where
+			. "\n" . $q_std_where
 			. $this->getConds( );
 		if ( $orderby )
 			$q .= "\nORDER BY $orderby";
@@ -402,7 +402,8 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 	{
 		$cond = "\n  AND a.object_type='post'";
 		if ( $this->searchOf )
-			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		return $cond;
 	}
 }
 
@@ -474,7 +475,8 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 	{
 		$cond = "\n  AND a.object_type='post'";
 		if ( $this->searchOf )
-			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		return $cond;
 	}
 	
 	function getSearchFields( )
@@ -567,7 +569,8 @@ class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
 	{
 		$cond = "\n  AND a.object_type='post'";
 		if ( $this->searchOf )
-			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		return $cond;
 	}
 	
 	function getSearchFields( )
@@ -641,7 +644,8 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 	{
 		$cond = "\n AND a.object_type='post'";
 		if ( $this->searchOf )
-			$cond .= " AND p.userid='".addSlashes( $this->searchOf )."'";
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		return $cond;
 	}
 }
 

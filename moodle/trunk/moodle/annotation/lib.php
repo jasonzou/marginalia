@@ -87,7 +87,7 @@ function showMarginaliaUserDropdown( $refUrl )
 		{
 			if ( $user->username != $USER->username )
 			{
-				$selected = ( $showAnnotationsPref && ( $USER->username == $annotationUser ? "selected='selected' ":'' ) )
+				$selected = ( $showAnnotationsPref && ( $user->username == $annotationUser ? "selected='selected' ":'' ) )
 					? " selected='selected' " : '';
 				echo " <option $selected"
 					."value='".htmlspecialchars($user->username)."'>".htmlspecialchars($user->firstname.' '.$user->lastname)."</option>\n";
