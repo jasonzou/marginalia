@@ -105,8 +105,8 @@ class AnnotationSummaryPage
 			{
 				// Display individual annotations
 				// Dunno if the range sorting is working
-				$sql = $query->sql( 'section_type, section_name, quote_title, start_block, start_word, start_char, end_block, end_word, end_char' );
-				//echo "SQL: $sql\n";
+				$sql = $query->sql( 'section_type, section_name, a.url, start_block, start_word, start_char, end_block, end_word, end_char' );
+				// echo "SQL: $sql\n";
 				$annotations = get_records_sql( $sql );
 				
 				$format = array_key_exists( 'format', $_GET ) ? $_GET[ 'format' ] : 'html';
