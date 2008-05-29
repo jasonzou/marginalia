@@ -263,7 +263,12 @@ class AnnotationSummaryPage
 							$nRows += 1;
 						}
 						
-						$url = $CFG->wwwroot.$annotation->url;
+						// Only prefix the URL with the site root if it doesn't already have a scheme
+						// Only check for http and https schemes to prevent obscure attacks
+						$url = $annotation->url;
+						if ( ! ( str_startswith( $url, 'http://' ) || str_startswith( $url, 'https://' ) ) ) 
+							$url = $CFG->wwwroot.$annotation->url;
+						
 						echo "<th rowspan='$nRows'>";
 						if ( MarginaliaHelper::isUrlSafe( $url ) )
 						{
@@ -417,6 +422,15 @@ if ($mode) {
 $displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
 */
 
+// substr_compare was crashing on my PHP version, so had to write my own :P
+function str_startswith( $s1, $s2 )
+{
+	$s2len = strlen( $s2 );
+	if ( strlen( $s1 ) < $s2len )
+		return False;
+	return substr( $s1, 0, $s2len ) === $s2;
+}
+	
 $urlString = $_SERVER[ 'REQUEST_URI' ];
 
 if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )

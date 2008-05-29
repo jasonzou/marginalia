@@ -126,7 +126,7 @@ class AnnotationGlobals
 		return $annotation;
 	}
 		
-	function annotationToRecord( $annotation )
+	function annotationToRecord( $annotation, $forUpdate=False )
 	{
 		$id = $annotation->getAnnotationId( );
 		if ( $id )
@@ -140,7 +140,8 @@ class AnnotationGlobals
 		$record->quote_author = addslashes( $annotation->getQuoteAuthor( ) );
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
-		$record->created = $annotation->getCreated( );
+		if ( ! $forUpdate )
+			$record->created = $annotation->getCreated( );
 
 		$sequenceRange = $annotation->getSequenceRange( );
 		$sequenceStart = $sequenceRange->getStart( );
