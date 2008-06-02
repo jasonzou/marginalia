@@ -94,6 +94,13 @@ function showMarginaliaUserDropdown( $refUrl )
 			}
 		}
 	}
+	// Show item for all users
+	if ( true )
+	{
+		$selected = ( $showAnnotationsPref && ( '' == $annotationUser ? "selected='selected' ":'' ) )
+			? " selected='selected' " : '';
+		echo " <option $selected value='*'>".get_string('all_annotations',ANNOTATION_STRINGS)."</option>\n";
+	}
 	echo "</select>\n";	
 }
 

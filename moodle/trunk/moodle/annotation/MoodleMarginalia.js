@@ -57,7 +57,7 @@ MoodleMarginalia.prototype.onload = function( )
 			csrfCookie: 'MoodleSessionTest' } );
 		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
 		keywordService.init( );
-		window.marginalia = new Marginalia( annotationService, this.username, this.anuser, {
+		window.marginalia = new Marginalia( annotationService, this.username, this.anuser == '*' ? '' : this.anuser, {
 			preferences: this.preferences,
 			keywordService: keywordService,
 			baseUrl:  this.moodleRoot,
@@ -150,11 +150,11 @@ MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'false', null);
 	else
 	{
-		marginalia.anusername = user;
+		marginalia.anusername = user == '*' ? '' : user;
 		marginalia.showAnnotations( url );
 		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'true', null);
 		marginalia.preferences.setPreference( AN_USER_PREF, user, null );
-		if ( this.splash && marginalia.username == marginalia.anusername )
+		if ( this.splash && ( marginalia.username == marginalia.anusername || '' == marginalia.anusername ) )
 			this.showSplash( );
 		this.fixControlMarginIE();
 	}

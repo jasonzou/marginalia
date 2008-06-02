@@ -147,7 +147,7 @@ class MoodleAnnotationService extends AnnotationService
 	function doUpdateAnnotation( $annotation )
 	{
 		$urlQueryStr = '';
-		$record = AnnotationGlobals::annotationToRecord( $annotation );
+		$record = AnnotationGlobals::annotationToRecord( $annotation, True );
 		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
 		add_to_log( null, 'annotation', 'update', $logUrl, "{$annotation->id}" );
 		return update_record( 'annotation', $record );
