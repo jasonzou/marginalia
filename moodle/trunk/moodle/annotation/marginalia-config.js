@@ -26,7 +26,7 @@
  * $Id: marginalia-config.js 80 2007-07-20 03:36:11Z geof.glass $
  */
 
-ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
+ANNOTATION_ACCESS_DEFAULT = 'public';	// default access
 
 function initLogging( )
 {
