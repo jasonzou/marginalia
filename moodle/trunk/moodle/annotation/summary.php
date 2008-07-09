@@ -54,19 +54,20 @@ class AnnotationSummaryPage
 		else
 			$tagsHtml = '';
 */		
-		if (null != $this->course && $this->course->category)
+		if ( null != $this->course && $this->course->category)
 		{
-			print_header("$this->course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ), "$this->course->fullname",
-				"<A HREF=$CFG->wwwroot/course/view.php?id=$course->id>$course->shortname</A> -> $navtail",
+			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
+				'<a href='.$CFG->wwwroot.'/course/view.php?id='.$course->id.'>'.$course->shortname.'</a> -> '.$navtail,
 				"", $meta, true, "", navmenu($this->course) );
 		}
 		elseif ( null != $this->course )
 		{
-			print_header("$this->course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ), "$this->course->fullname",
-				"$navtail", "", $meta, true, "", navmenu($this->course) );
+			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
+				$navtail, "", $meta, true, "", navmenu($this->course) );
 		}
 		else
 		{
+			echo 'print_header3';
 			print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null );
 		}
 //		echo $tagsHtml;
@@ -437,6 +438,7 @@ if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )
 {
 	header( 'HTTP/1.1 405 Method Not Allowed' );
 	header( 'Allow: GET' );
+	echo 'grr';
 }
 else
 {
