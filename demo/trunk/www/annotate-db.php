@@ -86,13 +86,15 @@ class AnnotationDB
 		$query = "insert into $CFG->dbannotation "
 			. "(userid, url, note, access, action"
 			. ", quote, quote_title, quote_author, link, link_title, created"
-			. ", start_xpath, start_block, start_word, start_char"
-			. ", end_xpath, end_block, end_word, end_char"
+			. ", start_xpath, start_block, start_line, start_word, start_char"
+			. ", end_xpath, end_block, end_line, end_word, end_char"
 			. ") values ("
 			. "'$sUser', '$sUrl', '$sNote', '$sAccess', '$sAction'"
 			. ", '$sQuote', '$sQuote_title', '$sQuote_author', $sLink, '$sLinkTitle', now()"
-			. ", '".$xpathStart->getPathStr()."', '".$sequenceStart->getPaddedPathStr()."', ".$sequenceStart->getWords().", ".$sequenceStart->getChars()
-			. ", '".$xpathEnd->getPathStr()."', '".$sequenceEnd->getPaddedPathStr()."', ".$sequenceEnd->getWords().", ".$sequenceEnd->getChars()
+			. ", '".$xpathStart->getPathStr()."', '".$sequenceStart->getPaddedPathStr()
+			."', ".$sequenceStart->getLines().", ".$sequenceStart->getWords().", ".$sequenceStart->getChars()
+			. ", '".$xpathEnd->getPathStr()."', '".$sequenceEnd->getPaddedPathStr()
+			."', ".$sequenceEnd->getLines().", ".$sequenceEnd->getWords().", ".$sequenceEnd->getChars()
 			. ")";
 	//	echo "\nQUERY: $query\n\n";
 		mysql_query( $query );
@@ -150,12 +152,16 @@ class AnnotationDB
 		// Must do it only once, even if both block and xpath range are set
 		if ( null !== $rangeForWords )
 		{
+			$sStartLines = (int) $rangeForWords->start->lines;
 			$sStartWords = (int) $rangeForWords->start->words;
 			$sStartChars = (int) $rangeForWords->start->chars;
+			$sEndLines = (int) $rangeForWords->end->lines; 
 			$sEndWords = (int) $rangeForWords->end->words;
 			$sEndChars = (int) $rangeForWords->end->chars;
+			$query = AnnotationDB::appendToUpdateStr( $query, "start_line=$sStartLines" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_word=$sStartWords" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_char=$sStartChars" );
+			$query = AnnotationDB::appendToUpdateStr( $query, "end_line=$sEndLines" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "end_word=$sEndWords" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "end_char=$sEndChars" );
 		}
@@ -322,15 +328,15 @@ class AnnotationDB
 			if ( $row[ 'start_block' ] && $row[ 'end_block' ] )
 			{
 				$sequenceRange = new SequenceRange(
-					new SequencePoint( $row[ 'start_block' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-					new SequencePoint( $row[ 'end_block' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+					new SequencePoint( $row[ 'start_block' ], $row[ 'start_line' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+					new SequencePoint( $row[ 'end_block' ], $row[ 'end_line' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
 				$annotation->setSequenceRange( $sequenceRange );
 			}
 			if ( $row[ 'start_xpath' ] != null )
 			{
 				$xpathRange = new XPathRange(
-					new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
-					new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
+					new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_line' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
+					new XPathPoint( $row[ 'end_xpath' ], $row[ 'end_line' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
 				$annotation->setXPathRange( $xpathRange );
 			}
 			return $annotation;

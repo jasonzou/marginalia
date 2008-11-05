@@ -94,6 +94,7 @@ function demoOnLoad( userid, queryUrl, serviceRoot, uiStyle )
 	marginaliaDirect.init( );
 	window.marginaliaQueryUrl = queryUrl;
 	window.marginalia.showAnnotations( queryUrl );
+	
 }
 
 
