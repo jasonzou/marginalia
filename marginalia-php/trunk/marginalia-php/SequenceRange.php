@@ -45,10 +45,11 @@ class SequenceRange
 		$r = true;
 		if ( null != $this->start || null != $this->end )
 			die( "Attempt to modify SequenceRange" );
-		// Standard format, e.g. /2/3.1;/2/3.5
-		if ( False !== strpos( $s, ';' ) )
+		// Standard format, e.g. 2/1.3.1;2/1.3.5
+		// OR old overlap format, e.g. /2/3.1;/2/3.5
+		$points = split( ';', $s );
+		if ( 2 == count( $points ) )
 		{
-			$points = split( ';', $s );
 			$this->start = new SequencePoint( $points[ 0 ] );
 			$this->end = new SequencePoint( $points[ 1 ] );
 		}
@@ -121,38 +122,68 @@ class SequencePoint
 {
 	/**
 	 * Two ways to call:
-	 * - BlockPoint( '/2/7/1', 15, 3 )
-	 * - BlockPoint( '/2/7/1/15.3' )
+	 * - BlockPoint( '2.7.1', 15, 3 )
+	 * - BlockPoint( '2.7.1/15.3' )
 	 */
-	function SequencePoint( $blockStr, $words=null, $chars=null )
+	function SequencePoint( $blockStr, $lines=null, $words=null, $chars=null )
 	{
-		$dot = strpos( $blockStr, '.' );
-		$parts = split( '/', $blockStr );
-		$n = count( $parts );
-		
-		// Transform the second call style (all one string)
-		// into the correct parameters for the first
-		if ( null === $words )
+		if ( null !== $lines )
 		{
-			if ( false !== $dot )
-			{
-				$slash = strrpos( $blockStr, '/' );
-				$words = (int) substr( $blockStr, $slash + 1, $dot - $slash );
-				$chars = (int) substr( $blockStr, $dot + 1 );
-				$blockStr = substr( $blockStr, 0, $slash );
-				$n -= 1;
-			}
-			else
-				$this->words = null;
-				$this->chars = null;
+			$this->lines = (int) $lines;
+			$this->words = (int) $words;
+			$this->chars = (int) $chars;
 		}
-		
-		// The blockStr may be padded with zeros.  Strip them.
-		$this->path = array( );
-		for ( $i = 1;  $i < $n;  ++$i )
-			$this->path[] = (int) $parts[ $i ];
-		$this->words = (int) $words;
-		$this->chars = (int) $chars;
+
+		// Old overlap format, e.g. /2/7/1/15.3
+		if ( '/' == $blockStr[ 0 ] )
+		{
+			$dot = strpos( $blockStr, '.' );
+			$parts = split( '/', $blockStr );
+			$n = count( $parts );
+			
+			// Transform the second call style (all one string)
+			// into the correct parameters for the first
+			if ( null === $lines )
+			{
+				if ( false !== $dot )
+				{
+					$slash = strrpos( $blockStr, '/' );
+					$words = (int) substr( $blockStr, $slash + 1, $dot - $slash );
+					$chars = (int) substr( $blockStr, $dot + 1 );
+					$blockStr = substr( $blockStr, 0, $slash );
+					$n -= 1;
+				}
+				else
+				{
+					$this->words = null;
+					$this->chars = null;
+				}
+				$this->lines = null;
+			}
+			// The blockStr may be padded with zeros.  Strip them.
+			$this->path = array( );
+			for ( $i = 1;  $i < $n;  ++$i )
+				$this->path[] = (int) $parts[ $i ];		
+		}
+		// Standard format, e.g. 2.7.1/1.15.3
+		else
+		{
+			$sides = split( '/', $blockStr );
+			$parts = split( '\\.', $sides[ 0 ] );
+			$this->path = array( );
+			$n = count( $parts );
+			for ( $i = 0;  $i < $n;  ++$i )
+				$this->path[] = (int) $parts[ $i ];
+			
+			if ( null === $lines )
+			{
+				$counts = split( '\\.', $sides[ 1 ] );
+				assert( count( $counts ) == 3 );
+				$this->lines = (int) $counts[ 0 ];
+				$this->words = (int) $counts[ 1 ];
+				$this->chars = (int) $counts[ 2 ];
+			}
+		}
 	}
 	
 	/**
@@ -186,6 +217,16 @@ class SequencePoint
 		$r = $this->comparePath( $point2 );
 		if ( $r != 0 )
 			return $r;
+		elseif ( $this->lines === null && $point2->lines === null )
+			return 0;
+		elseif ( $this->lines === null )
+			return -1;
+		elseif ( $point2->lines === null )
+			return 1;
+		elseif ( $this->lines < $point2->lines )
+			return -1;
+		elseif ( $this->lines > $point2->lines )
+			return 1;
 		elseif ( $this->words === null && $point2->words === null )
 			return 0;
 		elseif ( $this->words === null )
@@ -219,10 +260,7 @@ class SequencePoint
 	 */
 	function getPathStr( )
 	{
-		$s = '';
-		for ( $i = 0;  $i < count( $this->path );  ++$i )
-			$s .= '/' . $this->path[ $i ];
-		return $s;
+		return join( '.', $this->path );
 	}
 	
 	/**
@@ -234,8 +272,13 @@ class SequencePoint
 	{
 		$s = '';
 		for ( $i = 0;  $i < count( $this->path );  ++$i )
-			$s .= '/' . sprintf( '%04d', $this->path[ $i ] );
+			$s .= ( $i > 0 ? '.' : '' ) . sprintf( '%04d', $this->path[ $i ] );
 		return $s;
+	}
+	
+	function getLines( )
+	{
+		return $this->lines;
 	}
 	
 	function getWords( )
@@ -251,17 +294,22 @@ class SequencePoint
 	function toString( )
 	{
 		$s = $this->getPathStr( );
-		if ( $this->words !== null )
+		if ( $this->lines !== null )
 		{
-			$s .= '/' . $this->words . '.';
-			if ( $this->chars !== null )
-				$s .= $this->chars;
+			$s .= '/' . $this->lines . '.';
+			if ( $this->words !== null )
+			{
+				$s .= $this->words . '.';
+				if ( $this->chars !== null )
+					$s .= $this->chars;
+			}
 		}
 		return $s;
 	}
 	
 	function makeBlockLevel( )
 	{
+		$this->lines = null;
 		$this->words = null;
 		$this->chars = null;
 	}

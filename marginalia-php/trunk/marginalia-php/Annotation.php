@@ -57,6 +57,7 @@ class Annotation
 		$this->linkTitle = null;
 		$this->created = null;
 		$this->modified = null;
+		$this->version = 1;
 	}
 	
 	/** This method is intended to be called when an annotation is created via 
@@ -171,6 +172,12 @@ class Annotation
 	
 	function getModified( )
 	{ return $this->modified; }
+	
+	function setVersion( $version )
+	{ $this->version = (int) $version; }
+	
+	function getVersion( )
+	{ return (int) $this->version; }
 	
 	/**
 	 * Convert to an Atom entry

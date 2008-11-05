@@ -166,7 +166,14 @@ class MarginaliaHelper
 			$modified = $params[ 'modified' ];
 			$this->setModified( $modified );
 		}
-
+		
+		// Version
+		if ( array_key_exists( 'version', $params ) )
+		{
+			$version = $params[ 'version' ];
+			$this->setVersion( $version );
+		}
+		
 		// Ok, I know in PHP it's traditional to return True for success,
 		// but that requires the triple === which drives me nuts and is
 		// easy to forget (and if ( f() ) won't work), so I'll go with the
@@ -241,7 +248,7 @@ class MarginaliaHelper
 			$summary = $sQuote;
 		
 		
-		$s = " <entry>\n";
+		$s = " <entry ptr:version='".$annotation->getVersion()."'>\n";
 
 		// Emit range in two formats:  sequence for sorting, xpath for authority and speed
 		$sequenceRange = $annotation->getSequenceRange( );

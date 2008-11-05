@@ -82,9 +82,17 @@ class XPathPoint
 	 * - XPathPoint( '/p[2]/p[7]', 15, 3 )
 	 * - XPathPoint( '/p[2]/p[7]/word(15,3)' )
 	 */
-	function XPathPoint( $xpathStr, $words=null, $chars=null )
+	function XPathPoint( $xpathStr, $lines=null, $words=null, $chars=null )
 	{
-		if ( preg_match( '/^(.*)\/word\((\d+)\)\/char\((\d+)\)$/', $xpathStr, $matches ) )
+		if ( preg_match( '/^(.*)\/line\((\d+)\)\/word\((\d+)\)\/char\((\d+)\)$/', $xpathStr, $matches ) )
+		{
+			if ( XPathPoint::isXPathSafe( $matches[ 1 ] ) )
+				$this->path = $matches[ 1 ];
+			$this->lines = (int) $matches[ 2 ];
+			$this->words = (int) $matches[ 3 ];
+			$this->chars = (int) $matches[ 4 ];
+		}
+		elseif ( preg_match( '/^(.*)\/word\((\d+)\)\/char\((\d+)\)$/', $xpathStr, $matches ) )
 		{
 			if ( XPathPoint::isXPathSafe( $matches[ 1 ] ) )
 				$this->path = $matches[ 1 ];
@@ -97,6 +105,7 @@ class XPathPoint
 		{
 			if ( XPathPoint::isXPathSafe( $xpathStr ) )
 				$this->path = $xpathStr;
+			$this->lines = $lines;
 			$this->words = $words;
 			$this->chars = $chars;
 		}
@@ -108,6 +117,11 @@ class XPathPoint
 	function getPathStr( )
 	{
 		return $this->path;
+	}
+	
+	function getLines( )
+	{
+		return $this->lines;
 	}
 	
 	function getWords( )
@@ -122,12 +136,14 @@ class XPathPoint
 	
 	function toString( )
 	{
+		$s = $this->path;
+		if ( $this->lines !== null )
+			$s .= '/line(' . $this->lines . ')';
+		if ( $this->words !== null )
+			$s .= '/word(' . $this->words . ')';
 		if ( $this->chars !== null )
-			return $this->path . '/word(' . $this->words . ')/char(' . $this->chars . ')';
-		elseif ( $this->words !== null )
-			return $this->path . '/word(' . $this->words;
-		else
-			return $this->path;
+			$s .= '/char(' . $this->chars . ')';
+		return $s;
 	}
 	
 	/**
@@ -206,6 +222,7 @@ class XPathPoint
 	
 	function makeBlockLevel( )
 	{
+		$this->lines = null;
 		$this->words = null;
 		$this->chars = null;
 	}
