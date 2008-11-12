@@ -187,7 +187,7 @@ class MarginaliaHelper
 		$NS_ATOM = 'http://www.w3.org/2005/Atom';
 		
 		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.5'";
+		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.6'";
 		if ( $baseUrl )
 			echo " xml:base='".htmlspecialchars($baseUrl)."'";
 		echo ">\n";

@@ -127,13 +127,11 @@ class SequencePoint
 	 */
 	function SequencePoint( $blockStr, $lines=null, $words=null, $chars=null )
 	{
-		if ( null !== $lines )
-		{
-			$this->lines = (int) $lines;
-			$this->words = (int) $words;
-			$this->chars = (int) $chars;
-		}
-
+		// Create them in case nothing sets them below
+		$this->lines = $lines;
+		$this->words = $words;
+		$this->chars = $chars;
+		
 		// Old overlap format, e.g. /2/7/1/15.3
 		if ( '/' == $blockStr[ 0 ] )
 		{
@@ -148,17 +146,13 @@ class SequencePoint
 				if ( false !== $dot )
 				{
 					$slash = strrpos( $blockStr, '/' );
-					$words = (int) substr( $blockStr, $slash + 1, $dot - $slash );
-					$chars = (int) substr( $blockStr, $dot + 1 );
+					if ( $this->words === null )
+						$this->words = (int) substr( $blockStr, $slash + 1, $dot - $slash );
+					if ( $this->chars === null )
+						$this->chars = (int) substr( $blockStr, $dot + 1 );
 					$blockStr = substr( $blockStr, 0, $slash );
 					$n -= 1;
 				}
-				else
-				{
-					$this->words = null;
-					$this->chars = null;
-				}
-				$this->lines = null;
 			}
 			// The blockStr may be padded with zeros.  Strip them.
 			$this->path = array( );
@@ -175,15 +169,20 @@ class SequencePoint
 			for ( $i = 0;  $i < $n;  ++$i )
 				$this->path[] = (int) $parts[ $i ];
 			
-			if ( null === $lines )
+			if ( count( $sides ) > 1 )
 			{
 				$counts = split( '\\.', $sides[ 1 ] );
 				assert( count( $counts ) == 3 );
-				$this->lines = (int) $counts[ 0 ];
-				$this->words = (int) $counts[ 1 ];
-				$this->chars = (int) $counts[ 2 ];
+				if ( $this->lines === null )
+					$this->lines = (int) $counts[ 0 ];
+				if ( $this->words === null )
+					$this->words = (int) $counts[ 1 ];
+				if ( $this->chars === null )
+					$this->chars = (int) $counts[ 2 ];
+				echo "set lines = " . $this->lines . "\n";
 			}
 		}
+		
 	}
 	
 	/**
@@ -294,15 +293,12 @@ class SequencePoint
 	function toString( )
 	{
 		$s = $this->getPathStr( );
-		if ( $this->lines !== null )
+		if ( $this->lines !== null || $this->words !== null || $this->chars !== null )
 		{
-			$s .= '/' . $this->lines . '.';
-			if ( $this->words !== null )
-			{
-				$s .= $this->words . '.';
-				if ( $this->chars !== null )
-					$s .= $this->chars;
-			}
+			$s .= '/';
+			$s .= ( $this->lines === null ? '' : $this->lines ) . '.';
+			$s .= ( $this->words === null ? '' : $this->words ) . '.';
+			$s .= ( $this->chars === null ? '' : $this->chars );
 		}
 		return $s;
 	}
