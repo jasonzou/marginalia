@@ -139,8 +139,11 @@ class AnnotationDB
 		
 		// XPath Range
 		$xpathRange = $annotation->getXPathRange( );
-		if ( null !== $xpathRange )
+		if ( ! $rangeForWords && null !== $xpathRange )
 		{
+			// did not used to test rangeForWords above, so if both sequence and xpath ranges
+			// were present the xpath range was used.  This causes problems for the front-end
+			// range update code.  Why was this the choice?
 			$sStartXPath = addslashes( $xpathRange->start->getPathStr( ) );
 			$sEndXPath = addslashes( $xpathRange->end->getPathStr( ) );
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_xpath='$sStartXPath'" );
@@ -300,7 +303,7 @@ class AnnotationDB
 		
 		// Get the data rows
 		$query = "select * from $CFG->dbannotation $cond";
-		$query .= " order by url, start_block, start_word, start_char, end_block, end_word, end_char";
+		$query .= " order by url, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char";
 		//echo "Query: " . htmlspecialchars( $query ) ."<br/>";
 		$result = mysql_query( $query );
 
