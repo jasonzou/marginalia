@@ -98,6 +98,7 @@ class XPathPoint
 				$this->path = $matches[ 1 ];
 //			else
 //				echo "Unsafe XPATH " + $matches[1] + "\n";
+			$this->lines = null;
 			$this->words = (int) $matches[ 2 ];
 			$this->chars = (int) $matches[ 3 ];
 		}
@@ -109,6 +110,12 @@ class XPathPoint
 			$this->words = $words;
 			$this->chars = $chars;
 		}
+		
+		// Treat zero as null for lines and words (but 0 is valid for chars)
+		if ( $this->lines == 0 )
+			$this->lines = null;
+		if ( $this->words == 0 )
+			$this->words = null;
 	}
 	
 	/**

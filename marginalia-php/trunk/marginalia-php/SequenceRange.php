@@ -174,15 +174,19 @@ class SequencePoint
 				$counts = split( '\\.', $sides[ 1 ] );
 				assert( count( $counts ) == 3 );
 				if ( $this->lines === null )
-					$this->lines = (int) $counts[ 0 ];
+					$this->lines = null === $counts[ 0 ] ? null : (int) $counts[ 0 ];
 				if ( $this->words === null )
-					$this->words = (int) $counts[ 1 ];
+					$this->words = null === $counts[ 1 ] ? null : (int) $counts[ 1 ];
 				if ( $this->chars === null )
-					$this->chars = (int) $counts[ 2 ];
-				echo "set lines = " . $this->lines . "\n";
+					$this->chars = null === $counts[ 2 ] ? null : (int) $counts[ 2 ];
 			}
 		}
 		
+		// Treat zero as null for lines and words (but 0 is valid for chars)
+		if ( $this->lines == 0 )
+			$this->lines = null;
+		if ( $this->words == 0 )
+			$this->words = null;
 	}
 	
 	/**
