@@ -257,7 +257,7 @@ class MarginaliaHelper
 
 			// Make 100% certain that the XPath expression contains no unsafe calls (e.g. to document())
 		$xpathRange = $annotation->getXPathRange( );
-		if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
+		if ( XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 			$s .= "  <ptr:range format='xpath'>".htmlspecialchars($xpathRange->toString())."</ptr:range>\n";
 		
 		$s .= "  <ptr:access>$sAccess</ptr:access>\n"

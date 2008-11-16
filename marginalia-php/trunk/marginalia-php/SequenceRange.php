@@ -132,8 +132,31 @@ class SequencePoint
 		$this->words = $words;
 		$this->chars = $chars;
 		
+		// Standard format, e.g. 2.7.1/1.15.3
+		// Also accepts block only, e.g. 2.7.1
+		if ( preg_match( '/^[0-9\.]*(\/\d*\.\d*\.\d*)?$/', $blockStr ) )
+		{
+			$sides = split( '/', $blockStr );
+			$parts = split( '\\.', $sides[ 0 ] );
+			$this->path = array( );
+			$n = count( $parts );
+			for ( $i = 0;  $i < $n;  ++$i )
+				$this->path[] = (int) $parts[ $i ];
+			
+			if ( count( $sides ) > 1 )
+			{
+				$counts = split( '\\.', $sides[ 1 ] );
+				assert( count( $counts ) == 3 );
+				if ( $this->lines === null )
+					$this->lines = null === $counts[ 0 ] ? null : (int) $counts[ 0 ];
+				if ( $this->words === null )
+					$this->words = null === $counts[ 1 ] ? null : (int) $counts[ 1 ];
+				if ( $this->chars === null )
+					$this->chars = null === $counts[ 2 ] ? null : (int) $counts[ 2 ];
+			}
+		}
 		// Old overlap format, e.g. /2/7/1/15.3
-		if ( '/' == $blockStr[ 0 ] )
+		elseif ( '/' == $blockStr[ 0 ] )
 		{
 			$dot = strpos( $blockStr, '.' );
 			$parts = split( '/', $blockStr );
@@ -158,28 +181,6 @@ class SequencePoint
 			$this->path = array( );
 			for ( $i = 1;  $i < $n;  ++$i )
 				$this->path[] = (int) $parts[ $i ];		
-		}
-		// Standard format, e.g. 2.7.1/1.15.3
-		else
-		{
-			$sides = split( '/', $blockStr );
-			$parts = split( '\\.', $sides[ 0 ] );
-			$this->path = array( );
-			$n = count( $parts );
-			for ( $i = 0;  $i < $n;  ++$i )
-				$this->path[] = (int) $parts[ $i ];
-			
-			if ( count( $sides ) > 1 )
-			{
-				$counts = split( '\\.', $sides[ 1 ] );
-				assert( count( $counts ) == 3 );
-				if ( $this->lines === null )
-					$this->lines = null === $counts[ 0 ] ? null : (int) $counts[ 0 ];
-				if ( $this->words === null )
-					$this->words = null === $counts[ 1 ] ? null : (int) $counts[ 1 ];
-				if ( $this->chars === null )
-					$this->chars = null === $counts[ 2 ] ? null : (int) $counts[ 2 ];
-			}
 		}
 		
 		// Treat zero as null for lines and words (but 0 is valid for chars)

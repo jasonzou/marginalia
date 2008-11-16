@@ -84,38 +84,45 @@ class XPathPoint
 	 */
 	function XPathPoint( $xpathStr, $lines=null, $words=null, $chars=null )
 	{
-		if ( preg_match( '/^(.*)\/line\((\d+)\)\/word\((\d+)\)\/char\((\d+)\)$/', $xpathStr, $matches ) )
+		$path = $xpathStr;		
+		while ( $path != '' )
 		{
-			if ( XPathPoint::isXPathSafe( $matches[ 1 ] ) )
-				$this->path = $matches[ 1 ];
-			$this->lines = (int) $matches[ 2 ];
-			$this->words = (int) $matches[ 3 ];
-			$this->chars = (int) $matches[ 4 ];
+			$x = strrpos( $path, '/' );
+			$tail = FALSE === $x ? $path : substr( $path, $x + 1 );
+
+			if ( preg_match( '/^(line|word|char)\((\d+)\)$/', $tail, $matches ) )
+			{
+				echo 'Matches 1: ' . $matches[ 1 ];
+				if ( 'line' == $matches[ 1 ] )
+					$this->lines = (int) $matches[ 2 ];
+				elseif ( 'word' == $matches[ 1 ] )
+					$this->words = (int) $matches[ 2 ];
+				elseif ( 'char' == $matches[ 1 ] )
+					$this->chars = (int) $matches[ 2 ];
+				$path = FALSE === $x ? '' : substr( $path, 0, $x );
+			}
+			else
+				break;
 		}
-		elseif ( preg_match( '/^(.*)\/word\((\d+)\)\/char\((\d+)\)$/', $xpathStr, $matches ) )
-		{
-			if ( XPathPoint::isXPathSafe( $matches[ 1 ] ) )
-				$this->path = $matches[ 1 ];
-//			else
-//				echo "Unsafe XPATH " + $matches[1] + "\n";
-			$this->lines = null;
-			$this->words = (int) $matches[ 2 ];
-			$this->chars = (int) $matches[ 3 ];
-		}
+
+		if ( XPathPoint::isXPathSafe( $path ) )
+			$this->path = $path;
 		else
-		{
-			if ( XPathPoint::isXPathSafe( $xpathStr ) )
-				$this->path = $xpathStr;
+			$this->path = null;
+
+		if ( null !== $lines )
 			$this->lines = $lines;
+		if ( null !== $words )
 			$this->words = $words;
+		if ( null !== $chars )
 			$this->chars = $chars;
-		}
-		
+
 		// Treat zero as null for lines and words (but 0 is valid for chars)
 		if ( $this->lines == 0 )
 			$this->lines = null;
 		if ( $this->words == 0 )
 			$this->words = null;
+		//echo "path: " . $this->path . ' (' . $path . ")\n";
 	}
 	
 	/**
