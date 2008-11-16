@@ -137,11 +137,16 @@ class SequencePoint
 		if ( preg_match( '/^[0-9\.]*(\/\d*\.\d*\.\d*)?$/', $blockStr ) )
 		{
 			$sides = split( '/', $blockStr );
-			$parts = split( '\\.', $sides[ 0 ] );
-			$this->path = array( );
-			$n = count( $parts );
-			for ( $i = 0;  $i < $n;  ++$i )
-				$this->path[] = (int) $parts[ $i ];
+			if ( $sides[ 0 ] == '' )
+				$this->path = array( );
+			else
+			{
+				$parts = split( '\\.', $sides[ 0 ] );
+				$this->path = array( );
+				$n = count( $parts );
+				for ( $i = 0;  $i < $n;  ++$i )
+					$this->path[] = (int) $parts[ $i ];
+			}
 			
 			if ( count( $sides ) > 1 )
 			{
