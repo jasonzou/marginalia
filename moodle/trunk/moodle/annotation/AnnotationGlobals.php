@@ -103,8 +103,8 @@ class AnnotationGlobals
 		if ( $r->start_block !== null )
 		{
 			$range = new SequenceRange( );
-			$range->setStart( new SequencePoint( $r->start_block, $r->start_word, $r->start_char ) );
-			$range->setEnd( new SequencePoint( $r->end_block, $r->end_word, $r->end_char ) );
+			$range->setStart( new SequencePoint( $r->start_block, $r->start_line, $r->start_word, $r->start_char ) );
+			$range->setEnd( new SequencePoint( $r->end_block, $r->end_line, $r->end_word, $r->end_char ) );
 			$annotation->setSequenceRange( $range );
 		}
 		// Older versions used a range string column.  Check and translate that field here:
@@ -118,8 +118,8 @@ class AnnotationGlobals
 		if ( $r->start_xpath !== null )
 		{
 			$range = new XPathRange( );
-			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_word, $r->start_char ) );
-			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_word, $r->end_char ) );
+			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_line, $r->start_word, $r->start_char ) );
+			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_line, $r->end_word, $r->end_char ) );
 			$annotation->setXPathRange( $range );
 		}
 		
@@ -152,11 +152,13 @@ class AnnotationGlobals
 		
 		$record->start_block = addslashes( $sequenceStart->getPaddedPathStr( ) );
 		$record->start_xpath = addslashes( $xpathStart->getPathStr( ) );
+		$record->start_line = $xpathStart->getLines( );
 		$record->start_word = $xpathStart->getWords( );
 		$record->start_char = $xpathStart->getChars( );
 		
 		$record->end_block = addslashes( $sequenceEnd->getPaddedPathStr( ) );
 		$record->end_xpath = addslashes( $xpathEnd->getPathStr( ) );
+		$record->end_line = $xpathEnd->getLines( );
 		$record->end_word = $xpathEnd->getWords( );
 		$record->end_char = $xpathEnd->getChars( );
 		return $record;

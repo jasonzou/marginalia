@@ -20,6 +20,7 @@ create table mdl_annotation (
 	action varchar(30) null,
 	link varchar(255) null,
 	link_title varchar(255) null,
+	version int null,
 	object_type varchar(16) null,
 	object_id int null
 );

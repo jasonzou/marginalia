@@ -19,7 +19,7 @@ manually.  See instructions below for the specific release from which you are up
 
 <ul>
 	<li>PHP 4.3 or later</li>
-	<li>Moodle 1.8 (other versions of Moodle might require a bit of tweaking;  
+	<li>Moodle 1.8 or 1.9(other versions of Moodle might require a bit of tweaking;  
 	the patch utility in step #2 below will let you know)</li>
 	<li>MySQL 4.1 or later (though a colleague has had success with MySQL 3; 
 	I haven't tested with earlier versions or with Postgres)</li>
@@ -42,14 +42,16 @@ the install.</p>
 
 <h3>1. Patch Moodle</h3>
 
-<p>The moodle.patch file will update existing files in your moodle installation, and
-add the Marginalia libraries.  To patch the files, <code>cd</code> to your 
-<kbd>moodle</kbd> directory (or whatever it's called on your installation), copy in
-<kbd>moodle.patch</kbd> and run the following command:</p>
+<p>The patch file will update existing files in your moodle installation.  There
+are two versions of the patch:  one for Moodle 1.8, another for Moodle 1.9. They
+are named moodle18.patch and moodle19.patch respectively.  To apply the patch to
+a Moodle 1.9 installation, <code>cd</code> to your <kbd>moodle</kbd> directory 
+(or whatever it's called on your installation), copy in <kbd>moodle.patch</kbd> 
+and run the following command:</p>
 
 <pre>
 <code>
-patch -b -p 1 &lt;moodle.patch
+patch -b -p 1 &lt;moodle19.patch
 </code>
 </pre>
 

@@ -202,8 +202,8 @@ class AnnotationSummaryQuery
 
 		// These that follow are standard fields, for which no page type exceptions can apply
 		$q_std_select = "SELECT a.id AS id, a.url AS url, a.userid AS userid, "
-		. "a.start_block, a.start_xpath, a.start_word, a.start_char, "
-		. "a.end_block, a.end_xpath, a.end_word, a.end_char, "
+		. "a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char, "
+		. "a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char, "
 		. "a.link AS link, a.link_title AS link_title, a.action AS action, "
 		. "a.access AS access, a.created, a.modified $range"
 		. ",\n concat(u.firstname, ' ', u.lastname) AS note_author"

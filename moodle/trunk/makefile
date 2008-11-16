@@ -60,7 +60,7 @@ UTIL_FILES = \
 release:  zipdir docs
 	cd $(OUTDIR); tar czf $(OUTNAME).tgz $(OUTNAME)
 
-zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES)
+zipdir: $(ZIPDIR)/moodle19.patch $(ZIPDIR)/moodle18.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES)
 	mkdir -p $(ZIPDIR)/util
 	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/moodle/annotation/marginalia/3rd-party
@@ -81,9 +81,13 @@ zipdir: $(TMP_DIR)/moodle.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MAR
 $(MARGINALIA_MOODLE_DIR)/version.txt:
 	echo $(OUTNAME) >$@
 
-$(TMP_DIR)/moodle.patch:  moodle.orig moodle
+$(ZIPDIR)/moodle19.patch:  moodle.orig moodle
 	mkdir -p $(ZIPDIR)
-	-diff -Bbur -x .svn -x .DS_Store moodle.orig moodle >$(ZIPDIR)/moodle.patch
+	-diff -Bbur -x .svn -x .DS_Store moodle.orig moodle >$(ZIPDIR)/moodle19.patch
+	
+$(ZIPDIR)/moodle18.patch:  moodle18.orig moodle18
+	mkdir -p $(ZIPDIR)
+	-diff -Bbur -x .svn -x .DS_Store moodle18.orig moodle18 >$(ZIPDIR)/moodle18.patch
 	
 %.txt: docs/%.html
 	html2txt $< >$@

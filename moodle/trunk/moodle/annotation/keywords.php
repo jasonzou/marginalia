@@ -55,45 +55,43 @@ class MoodleKeywordService extends KeywordService
 	function doListKeywords( )
 	{
 		global $USER;
-		$keywords = AnnotationKeywordsDB::listKeywords( $USER->id );
+		$keywords = AnnotationKeywordsDB::listKeywords( $this->currentUserId );
 		$logUrl = 'keywords.php';
 		add_to_log( null, 'annotation', 'list', $logUrl );
 		return $keywords;
 	}
 	
+	/**
+	 * Because keywords are automatically generated from margin notes,
+	 * they cannot be created, updated, or deleted, nor is there any reason
+	 * to fetch them individually.
+	 */
 	function doGetKeyword( $name )
 	{
-		global $USER;
-		return AnnotationKeywordsDB::getKeyword( $USER->id, $name );
+		header( 'HTTP/1.1 501 Not Implemented' );
+		echo "Individual keywords cannot be fetched";
+		return False;
 	}
 	
 	function doCreateKeyword( $keyword )
 	{
-		global $USER;
-		if ( null != $this->doGetKeyword( $keyword->name ) )
-			return False;
-		elseif ( AnnotationKeywordsDB::createKeyword( $USER->id, $keyword ) )
-		{
-			add_to_log( null, 'annotation', 'create', 'keywords.php', $keyword->name );
-			return True;
-		}
-		else
-			return False;
+		header( 'HTTP/1.1 501 Not Implemented' );
+		echo "Keywords are automatically generated";
+		return False;
 	}
 	
 	function doUpdateKeyword( $keyword )
 	{
-		global $USER;
-		add_to_log( null, 'annotation', 'update', "keywords.php", $keyword->name );
-		return AnnotationKeywordsDB::updateKeyword( $USER->id, $keyword );
+		header( 'HTTP/1.1 501 Not Implemented' );
+		echo "Keywords are automatically generated";
+		return False;
 	}
 	
 	function doDeleteKeyword( $name )
 	{
-		global $USER;
-		AnnotationKeywordsDB::deleteKeyword( $USER->id, $name );
-		add_to_log( null, 'annotation', 'delete', "keywords.php", $name );
-		return True;
+		header( 'HTTP/1.1 501 Not Implemented' );
+		echo "Keywords are automatically generated";
+		return False;
 	}
 }
 

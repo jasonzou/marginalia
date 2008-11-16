@@ -56,7 +56,7 @@ MoodleMarginalia.prototype.onload = function( )
 		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php', {
 			csrfCookie: 'MoodleSessionTest' } );
 		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
-		keywordService.init( );
+		keywordService.init( null, true );
 		window.marginalia = new Marginalia( annotationService, this.username, this.anuser == '*' ? '' : this.anuser, {
 			preferences: this.preferences,
 			keywordService: keywordService,
@@ -70,6 +70,8 @@ MoodleMarginalia.prototype.onload = function( )
 				link: null
 			}
 		} );
+		
+		this.cleanUpPostContent( );
 		
 		var url = this.url;
 		if ( this.showAnnotations )
@@ -131,7 +133,7 @@ MoodleMarginalia.prototype.hideSplash = function( )
  */
 MoodleMarginalia.prototype.fixControlMarginIE = function( )
 {
-	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null );
+	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null, _skipPostContent );
 	for ( var i = 0;  i < controlMargins.length;  ++i )
 	{
 		var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );
@@ -139,6 +141,29 @@ MoodleMarginalia.prototype.fixControlMarginIE = function( )
 	}
 };
 
+MoodleMarginalia.prototype.cleanUpPostContent = function( )
+{
+	var f = function( node ) {
+		for ( var child = node.firstChild;  child;  child = child.nextSibling )
+		{
+			if ( child.nodeType == ELEMENT_NODE )
+			{
+				domutil.removeClass( child, PM_POST_CLASS );
+				domutil.removeClass( child, PM_CONTENT_CLASS );
+				domutil.removeClass( child, AN_NOTES_CLASS );
+				child.removeAttribute( 'id' );
+				if ( child.id )
+					delete child.id;
+				f( child );
+			}
+		}
+	};
+	var posts = marginalia.listPosts( ).getAllPosts( );
+	for ( var i = 0;  i < posts.length;  ++i )
+	{
+		f ( posts[ i ].getContentElement( ) );
+	}
+}
 
 MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 {

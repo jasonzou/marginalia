@@ -40,6 +40,7 @@ $sMySQLCommand = "create table {$CFG->prefix}annotation ("
 	.', link varchar(255) null'
 	.', link_title varchar(255) null'
 	.', action varchar(30) null'
+	.', version int null'
 	.', object_type varchar(16) null'
 	.', object_id int null)';
 mysql_query($sMySQLCommand) or die(mysql_error());
