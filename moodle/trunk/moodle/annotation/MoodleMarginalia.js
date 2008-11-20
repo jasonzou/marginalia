@@ -65,7 +65,6 @@ MoodleMarginalia.prototype.onload = function( )
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
-			skipContent: _skipSmartcopy,
 			editors: {
 				link: null
 			}
@@ -80,17 +79,72 @@ MoodleMarginalia.prototype.onload = function( )
 			this.fixControlMarginIE();
 		}
 		
-		smartcopyInit( this.preferences );
-		if ( this.enableSmartcopy )
-			smartcopy.smartcopyOn( );
+		// Enable smartquote buttons
+		var posts = marginalia.listPosts( ).getAllPosts( );
+		for ( var i = 0;  i < posts.length;  ++i )
+		{
+			var button = domutil.childByTagClass( posts[ i ].element, 'button', 'smartquote', marginalia._skipContent );
+			if ( button )
+			{
+				var content = posts[ i ].getContentElement( );
+				button.onclick = this.getOnSmartquoteHandler( marginalia, content );
+			}
+		}
 		
-		var marginaliaDirect = new MarginaliaDirect( annotationService );
-		marginaliaDirect.init( );
+//		var marginaliaDirect = new MarginaliaDirect( annotationService );
+//		marginaliaDirect.init( );
 		
 		if ( this.showAnnotations && this.splash )
 			this.showSplash( );
 	}
 };
+
+
+/**
+ * Return a function for handling a smartquote button click
+ */
+MoodleMarginalia.prototype.getOnSmartquoteHandler = function( marginalia, content )
+{
+	var moodleMarginalia = this;
+	return function( ) { moodleMarginalia.onSmartquote( marginalia, content ); };
+}
+
+MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
+{
+	// Test for selection support (W3C or IE)
+	if ( ( ! window.getSelection || null == window.getSelection().rangeCount )
+		&& null == document.selection )
+	{
+		if ( warn )
+			alert( getLocalized( 'browser support of W3C range required for smartquote' ) );
+		return false;
+	}
+		
+	var textRange0 = getPortableSelectionRange();
+	if ( null == textRange0 )
+	{
+		if ( warn )
+			alert( getLocalized( 'select text to quote' ) );
+		return false;
+	}
+	
+	// Strip off leading and trailing whitespace and preprocess so that
+	// conversion to WordRange will go smoothly.
+	var textRange = TextRange.fromW3C( textRange0 );
+	textRange = textRange.shrinkwrap( marginalia.skipContent );
+	if ( ! textRange )
+	{
+		// this happens if the shrinkwrapped range has no non-whitespace text in it
+		if ( warn )
+			alert( getLocalized( 'select text to quote' ) );
+		return false;
+	}
+	
+	var quote = getTextRangeContent( textRange, marginalia.skipContent );
+	quote = quote.replace( /(\s|\u00a0)+/g, ' ' );
+	var bus = new CookieBus( 'smartquote' );
+	bus.publish( quote );
+}
 
 
 MoodleMarginalia.prototype.createAnnotation = function( event, postId )
