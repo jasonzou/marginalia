@@ -92,7 +92,6 @@ class XPathPoint
 
 			if ( preg_match( '/^(line|word|char)\((\d+)\)$/', $tail, $matches ) )
 			{
-				echo 'Matches 1: ' . $matches[ 1 ];
 				if ( 'line' == $matches[ 1 ] )
 					$this->lines = (int) $matches[ 2 ];
 				elseif ( 'word' == $matches[ 1 ] )
@@ -122,7 +121,6 @@ class XPathPoint
 			$this->lines = null;
 		if ( $this->words == 0 )
 			$this->words = null;
-		//echo "path: " . $this->path . ' (' . $path . ")\n";
 	}
 	
 	/**
@@ -174,10 +172,7 @@ class XPathPoint
 	function isXPathSafe( $xpath )
 	{
 		if ( '' == $xpath )
-		{
-//			echo "Range is blank";
 			return true;
-		}
 		if ( preg_match( '/^.\/\/(.*)$/', $xpath, $matches ) )
 			$xpath = $matches[ 1 ];
 		$parts = split( '/', $xpath );
