@@ -104,7 +104,7 @@ bungeni = {
 		var noteText = document.createElement( 'p' );
 		var titleText = null;
 	
-		if ( ! params.quoteFound || ! annotation.getRange( SEQUENCE_RANGE ) )
+		if ( ! params.quoteFound || ! annotation.getSequenceRange( ) )
 			titleText = getLocalized( 'quote not found' ) + ': \n"' + annotation.getQuote() + '"';
 		else if ( params.keyword )
 			titleText = params.keyword.description;

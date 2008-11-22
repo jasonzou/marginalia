@@ -25,7 +25,6 @@
 	?>
 	
 	<script type="text/javascript" src="marginalia/track-changes.js"></script>
-	<script type="text/javascript" src="marginalia/smartcopy.js"></script>
 	<link rel="stylesheet" type="text/css" href="marginalia/marginalia-direct.css"/>
 	
 	<!-- This stylesheet includes styling for the annotation margin.  The code makes heavy
@@ -310,17 +309,68 @@ the entrylink class). -->
 				</ol>
 			</div>
 		</li>
+		
+		<li id="m4" class="hentry">
+			<h3 class="entry-title">Line-oriented area</h3>
+			<div class="entry-content">
+				'Twas brillig, and the slithy toves<br/>
+				Did gyre and gimble in the wabe;<br/>
+				All mimsy were the borogoves,<br/>
+				And the mome raths outgrabe.<br/>
+				<br/>
+				"Beware the Jabberwock, my son!<br/>
+				The jaws that bite, the claws that catch!<br/>
+				Beware the Jubjub bird, and shun<br/>
+				The frumious Bandersnatch!"<br/>
+				<br/>
+				He took his vorpal sword in hand:<br/>
+				Long time the manxome foe he sought—<br/>
+				So rested he by the Tumtum tree,<br/>
+				And stood awhile in thought.<br/>
+				<br/>
+				And as in uffish thought he stood,<br/>
+				The Jabberwock, with eyes of flame,<br/>
+				Came whiffling through the tulgey wood,<br/>
+				And burbled as it came!<br/>
+				<br/>
+				One, two! One, two! and through and through<br/>
+				The vorpal blade went snicker-snack!<br/>
+				He left it dead, and with its head<br/>
+				He went galumphing back.<br/>
+				<br/>
+				"And hast thou slain the Jabberwock?<br/>
+				Come to my arms, my beamish boy!<br/>
+				O frabjous day! Callooh! Callay!"<br/>
+				He chortled in his joy.<br/>
+				<br/>
+				'Twas brillig, and the slithy toves<br/>
+				Did gyre and gimble in the wabe;<br/>
+				All mimsy were the borogoves,<br/>
+				And the mome raths outgrabe.
+			</div>
+			
+			<p class="metadata">
+				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m4">#</a>
+				Last Updated <abbr class="published" title="2008-1-14T10:49-08:00">14 November 2008</abbr>
+				by <span class="author">Geof Glass</span>
+			</p>
+			
+			<div class="notes">
+				<button class="createAnnotation" onclick="myClickCreateAnnotation(event,'m4')" title="Click here to create an annotation">&gt;</button>
+				<ol>
+					<li></li>
+				</ol>
+			</div>
 	</ol>
 	
-	<h2>Text Area for Smart Copy</h2>
+	<h2>Text Area for Smart Quote</h2>
 	<form id="form" action="#form" method="get">
 		<div>
-<textarea cols="80" rows="6">Copy some text from one of the above messages and paste it here (Firefox only):
+<textarea cols="80" rows="6">Not implemented yet:
 
 </textarea>
 		</div>
 	</form>
-	<p>Note: Smartcopy can be toggled on and off by pressing <kbd>Shift</kbd>-<kbd>Ctrl</kbd>-<kbd>S</kbd>.</p>
 
 	<div id="footer">
 		<p>This software is made possible by funding from <a href="http://bccampus.ca/">BC Campus</a>

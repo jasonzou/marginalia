@@ -87,9 +87,6 @@ function demoOnLoad( userid, queryUrl, serviceRoot, uiStyle )
 	if ( 'bungeni' == uiStyle )
 		trackchanges.addEditShortcuts( );
 	
-//	smartcopyInit( );
-//	smartcopyOn( );
-	
 	var marginaliaDirect = new MarginaliaDirect( annotationService );
 	marginaliaDirect.init( );
 	window.marginaliaQueryUrl = queryUrl;

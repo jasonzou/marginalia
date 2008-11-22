@@ -155,12 +155,12 @@ class AnnotationDB
 		// Must do it only once, even if both block and xpath range are set
 		if ( null !== $rangeForWords )
 		{
-			$sStartLines = (int) $rangeForWords->start->lines;
-			$sStartWords = (int) $rangeForWords->start->words;
-			$sStartChars = (int) $rangeForWords->start->chars;
-			$sEndLines = (int) $rangeForWords->end->lines; 
-			$sEndWords = (int) $rangeForWords->end->words;
-			$sEndChars = (int) $rangeForWords->end->chars;
+			$sStartLines = null === $rangeForWords->start->lines ? 'null' : (int) $rangeForWords->start->lines;
+			$sStartWords = null === $rangeForWords->start->words ? 'null' : (int) $rangeForWords->start->words;
+			$sStartChars = null === $rangeForWords->start->chars ? 'null' : (int) $rangeForWords->start->chars;
+			$sEndLines = null === $rangeForWords->start->lines ? 'null' : (int) $rangeForWords->end->lines; 
+			$sEndWords = null === $rangeForWords->start->words ? 'null' : (int) $rangeForWords->end->words;
+			$sEndChars = null === $rangeForWords->start->chars ? 'null' : (int) $rangeForWords->end->chars;
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_line=$sStartLines" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_word=$sStartWords" );
 			$query = AnnotationDB::appendToUpdateStr( $query, "start_char=$sStartChars" );
@@ -289,7 +289,8 @@ class AnnotationDB
 		if ( $result )
 		{
 			$row = mysql_fetch_assoc( $result );
-			return $this->rowToAnnotation( $row );
+			$annotation = $this->rowToAnnotation( $row );
+			return $annotation;
 		}
 		else
 			return null;
@@ -328,14 +329,14 @@ class AnnotationDB
 		}
 		else
 		{
-			if ( $row[ 'start_block' ] && $row[ 'end_block' ] )
+			if ( $row[ 'start_block' ] !== null && $row[ 'end_block' ] !== null )
 			{
 				$sequenceRange = new SequenceRange(
 					new SequencePoint( $row[ 'start_block' ], $row[ 'start_line' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
 					new SequencePoint( $row[ 'end_block' ], $row[ 'end_line' ], $row[ 'end_word' ], $row[ 'end_char' ] ) );
 				$annotation->setSequenceRange( $sequenceRange );
 			}
-			if ( $row[ 'start_xpath' ] != null )
+			if ( $row[ 'start_xpath' ] !== null )
 			{
 				$xpathRange = new XPathRange(
 					new XPathPoint( $row[ 'start_xpath' ], $row[ 'start_line' ], $row[ 'start_word' ], $row[ 'start_char' ] ),
