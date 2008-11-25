@@ -32,6 +32,10 @@
 	
 	<field name="start_xpath" type="C2" size="255"/>
 	
+	<field name="start_line" type="I8">
+		<NOTNULL/>
+	</field>
+
 	<field name="start_word" type="I8">
 		<NOTNULL/>
 	</field>
@@ -46,6 +50,10 @@
 		<NOTNULL/>
 	</field>
 	
+	<field name="end_line" type="I8">
+		<NOTNULL/>
+	</field>
+
 	<field name="end_word" type="I8">
 		<NOTNULL/>
 	</field>

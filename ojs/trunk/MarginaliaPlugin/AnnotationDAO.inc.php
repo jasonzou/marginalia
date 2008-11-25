@@ -75,8 +75,10 @@ class AnnotationDAO extends DAO
 		$annotation->setCreated( $row[ 'created' ] );
 		$annotation->setModified( $row[ 'modified' ] );
 		
+		$start_line = $row[ 'start_line' ];
 		$start_word = $row[ 'start_word' ];
 		$start_char = $row[ 'start_char' ];
+		$end_line = $row[ 'end_line' ];
 		$end_word = $row[ 'end_word' ];
 		$end_char = $row[ 'end_char' ];
 		
@@ -84,8 +86,8 @@ class AnnotationDAO extends DAO
 		if ( $row[ 'start_block' ] )
 		{
 			$range = new SequenceRange( );
-			$range->setStart( new SequencePoint( $row[ 'start_block' ], $start_word, $start_char ) );
-			$range->setEnd( new SequencePoint( $row[ 'end_block' ], $end_word, $end_char ) );
+			$range->setStart( new SequencePoint( $row[ 'start_block' ], $start_line, $start_word, $start_char ) );
+			$range->setEnd( new SequencePoint( $row[ 'end_block' ], $end_line, $end_word, $end_char ) );
 			$annotation->setSequenceRange( $range );
 		}
 		// Create a block range using the out-of-date old format
@@ -100,8 +102,8 @@ class AnnotationDAO extends DAO
 		if ( $row[ 'start_xpath' ] )
 		{
 			$range = new XPathRange( );
-			$range->setStart( new XPathPoint( $row[ 'start_xpath' ], $start_word, $start_char ) );
-			$range->setEnd( new XPathPoint( $row[ 'end_xpath' ], $end_word, $end_char ) );
+			$range->setStart( new XPathPoint( $row[ 'start_xpath' ], $start_line, $start_word, $start_char ) );
+			$range->setEnd( new XPathPoint( $row[ 'end_xpath' ], $end_line, $end_word, $end_char ) );
 			$annotation->setXPathRange( $range );
 		}
 
@@ -131,11 +133,11 @@ class AnnotationDAO extends DAO
 					'INSERT INTO annotations'
 					.' (userid, url, note, access, action'
 					.', quote, quote_title, quote_author, link, link_title'
-					.', start_xpath, start_block, start_word, start_char'
-					.', end_xpath, end_block, end_word, end_char'
+					.', start_xpath, start_block, start_line, start_word, start_char'
+					.', end_xpath, end_block, end_line, end_word, end_char'
 					.', created, modified)'
 					.' VALUES '
-					.' (?,?,?,?,?, ?,?,?,?,?,  ?,?,?,?, ?,?,?,?, %s, %s)',
+					.' (?,?,?,?,?, ?,?,?,?,?,  ?,?,?,?,?, ?,?,?,?,?, %s, %s)',
 					$this->datetimeToDB( $now ),
 					$this->datetimeToDB( $now )
 				),
@@ -154,11 +156,13 @@ class AnnotationDAO extends DAO
 					
 					$xpathStart->getPathStr( ),
 					$sequenceStart->getPaddedPathStr( ),
+					$xpathStart->getLines( ),
 					$xpathStart->getWords( ),
 					$xpathStart->getChars( ),
 
 					$xpathEnd->getPathStr( ),
 					$sequenceEnd->getPaddedPathStr( ),
+					$xpathEnd->getLines( ),
 					$xpathEnd->getWords( ),
 					$xpathEnd->getChars( )
 				)
@@ -195,10 +199,12 @@ class AnnotationDAO extends DAO
 				.' url=?'
 				.' , start_xpath=?'
 				.' , start_block=?'
+				.' , start_line=?'
 				.' , start_word=?'
 				.' , start_char=?'
 				.' , end_xpath=?'
 				.' , end_block=?'
+				.' , end_line=?'
 				.' , end_word=?'
 				.' , end_char=?'
 				.' , note=?'
@@ -215,10 +221,12 @@ class AnnotationDAO extends DAO
 					$annotation->getUrl( ),
 					$xpathStart ? $xpathStart->getPathStr( ) : null,
 					$sequenceStart->getPaddedPathStr( ),
+					$sequenceStart->getLines( ),
 					$sequenceStart->getWords( ),
 					$sequenceStart->getChars( ),
 					$xpathEnd ? $xpathEnd->getPathStr( ) : null,
 					$sequenceEnd->getPaddedPathStr( ),
+					$sequenceEnd->getLines( ),
 					$sequenceEnd->getWords( ),
 					$sequenceEnd->getChars( ),
 					$annotation->getNote( ),
@@ -314,7 +322,7 @@ class AnnotationDAO extends DAO
 			array_push( $queryParams, $testBlockStr, $testBlockStr );
 		}
 		
-		$query .= " ORDER BY start_block, start_word, start_char";
+		$query .= " ORDER BY start_block, start_line, start_word, start_char";
 		$result = &$this->retrieve( $query, $queryParams );
 		
 		if ( DEBUG_ANNOTATION_QUERY )
@@ -356,13 +364,13 @@ class AnnotationDAO extends DAO
 		// Only fetch annotations visible to the current user
 		if ( $currentUser && $currentUser->getUsername() == $username )
 		{
-			$query = "SELECT * FROM annotations WHERE url=? AND userid=? ORDER BY start_block, start_word, start_char";
+			$query = "SELECT * FROM annotations WHERE url=? AND userid=? ORDER BY start_block, start_line, start_word, start_char";
 //			echo $query;
 			$result = &$this->retrieve( $query, array ( $url, $username ) );
 		}
 		else
 		{
-			$query = "SELECT * FROM annotations WHERE url=? AND access='public' AND userid=? ORDER BY start_block, start_word, start_char";
+			$query = "SELECT * FROM annotations WHERE url=? AND access='public' AND userid=? ORDER BY start_block, start_line, start_word, start_char";
 			$result = &$this->retrieve( $query, array ( $url, $username ) );
 		}
 
