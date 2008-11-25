@@ -2,6 +2,13 @@
 
 Marginalia consists of several sub-projects for Moodle, OJS, the demo, and so on.  Each project has its own code and also makes use of shared Marginalia code.  For example, to run the demo you will need to fetch `demo`, `marginalia-lib`, and `marginalia-php`.  The INSTALL.html file in the demo contains specific instructions.  See the Browse link under the tabs above to view the sub-projects in the repository.
 
+The sub-projects are:
+
+  * `marginalia-lib` - the core Javascript client-side code
+  * `marginalia-php` - support code for PHP server-side implementations
+  * `demo` - the demo application
+  * `moodle` - the Moodle implementation
+  * `ojs` - the Open Journal Systems plugin
 
 = Command-Line Access =
 
