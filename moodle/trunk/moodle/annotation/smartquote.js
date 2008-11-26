@@ -8,7 +8,7 @@ function subscribeSmartquoteHtmlArea( editor )
 	// The test for the range is necessary - otherwise if the user hasn't
 	// clicked in the area, everything can blow up.
 	var bus = new CookieBus( 'smartquote' );
-	bus.subscribe( 600, function( pub ) {
+	bus.subscribe( 2000, function( pub ) {
 		if ( ! HTMLArea.is_ie )
 		{
 			var sel = editor._getSelection( );
@@ -17,7 +17,7 @@ function subscribeSmartquoteHtmlArea( editor )
 			// no parent (best way I could think to test for that).  HTMLArea
 			// blows up when an insert is attempted then.
 			if ( range.startContainer.parentNode )
-				editor.insertHTML( domutil.htmlEncode( pub.value ) );
+				editor.insertHTML( pub.value );
 		}
 	} );
 }

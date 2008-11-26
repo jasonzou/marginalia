@@ -83,7 +83,7 @@ MoodleMarginalia.prototype.onload = function( )
 		var posts = marginalia.listPosts( ).getAllPosts( );
 		for ( var i = 0;  i < posts.length;  ++i )
 		{
-			var button = domutil.childByTagClass( posts[ i ].element, 'button', 'smartquote', marginalia._skipContent );
+			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', marginalia._skipContent );
 			if ( button )
 			{
 				var content = posts[ i ].getContentElement( );
@@ -142,8 +142,20 @@ MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
 	
 	var quote = getTextRangeContent( textRange, marginalia.skipContent );
 	quote = quote.replace( /(\s|\u00a0)+/g, ' ' );
+	
+	var postInfo = PostPageInfo.getPostPageInfo( document );
+	var post = postInfo.getPostMicro( textRange.startContainer );
+	var leadIn = '';
+	if ( post )
+	{
+		leadIn = '<p>' + ( post.getAuthor( ) ? post.getAuthor( ) : 'Someone' )
+			+ ( post.getUrl( ) ? ' <a href="' + domutil.htmlEncode( post.getUrl( ) ) + '">wrote</a>' : 'wrote' )
+			+ ",</p>";
+	}
+	var pub = leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
+	
 	var bus = new CookieBus( 'smartquote' );
-	bus.publish( quote );
+	bus.publish( pub );
 }
 
 
@@ -187,7 +199,7 @@ MoodleMarginalia.prototype.hideSplash = function( )
  */
 MoodleMarginalia.prototype.fixControlMarginIE = function( )
 {
-	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null, _skipPostContent );
+	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null, PostMicro.skipPostContent );
 	for ( var i = 0;  i < controlMargins.length;  ++i )
 	{
 		var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );

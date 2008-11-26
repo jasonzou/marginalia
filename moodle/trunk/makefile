@@ -30,6 +30,7 @@ MARGINALIA_MOODLE_FILES = \
  $(MARGINALIA_MOODLE_DIR)/marginalia-config.js \
  $(MARGINALIA_MOODLE_DIR)/marginalia-strings.js \
  $(MARGINALIA_MOODLE_DIR)/MoodleMarginalia.js \
+ $(MARGINALIA_MOODLE_DIR)/smartquote.js \
  $(MARGINALIA_MOODLE_DIR)/summary-styles.php \
  $(MARGINALIA_MOODLE_DIR)/summary.js \
  $(MARGINALIA_MOODLE_DIR)/summary.php \
