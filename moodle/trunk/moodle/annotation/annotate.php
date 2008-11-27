@@ -64,7 +64,7 @@ class MoodleAnnotationService extends AnnotationService
 		}
 		else
 		{
-			$querySql = $query->sql( 'section_type, section_name, quote_title, start_block, start_word, start_char, end_block, end_word, end_char' );
+			$querySql = $query->sql( 'section_type, section_name, quote_title, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
 			$annotationSet = get_records_sql( $querySql );
 			$annotations = Array( );
 			if ( $annotationSet )
@@ -91,8 +91,8 @@ class MoodleAnnotationService extends AnnotationService
 		
 		// Caller should ensure that id is numeric
 		$query = "SELECT a.id, a.userid, a.url,
-			  a.start_block, a.start_xpath, a.start_word, a.start_char,
-			  a.end_block, a.end_xpath, a.end_word, a.end_char,
+			  a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char,
+			  a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char,
 			  a.note, a.access, a.quote, a.quote_title, a.quote_author,
 			  a.link, a.link_title, a.action,
 			  a.created, a.modified $range

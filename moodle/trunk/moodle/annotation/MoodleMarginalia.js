@@ -66,8 +66,9 @@ MoodleMarginalia.prototype.onload = function( )
 			showActions:  false,
 			onkeyCreate:  true,
 			editors: {
-				link: null
-			}
+				link: null,
+				'default':  Marginalia.newEditorFunc( FreeformNoteEditor )
+			},
 		} );
 		
 		this.cleanUpPostContent( );
@@ -148,7 +149,7 @@ MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
 	var leadIn = '';
 	if ( post )
 	{
-		leadIn = '<p>' + ( post.getAuthor( ) ? post.getAuthor( ) : 'Someone' )
+		leadIn = '<p>' + ( post.getAuthor( ) ? domutil.htmlEncode( post.getAuthor( ) ) : 'Someone' )
 			+ ( post.getUrl( ) ? ' <a href="' + domutil.htmlEncode( post.getUrl( ) ) + '">wrote</a>' : 'wrote' )
 			+ ",</p>";
 	}

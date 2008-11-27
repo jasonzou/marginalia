@@ -161,6 +161,13 @@ function marginaliaHeaderHtml( $refUrl, $allowSmartcopy )
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-config.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-strings.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/MoodleMarginalia.js'></script>\n";
+
+	// Bits of YUI
+	$meta .= "<link type='text/css' rel='stylesheet' href='$CFG->wwwroot/lib/yui/autocomplete/assets/skins/sam/autocomplete.css'/>\n";
+	$meta .= "<script type='text/javascript' src='$CFG->wwwroot/lib/yui/yahoo-dom-event/yahoo-dom-event.js'></script>\n"; 
+	$meta .= "<script type='text/javascript' src='$CFG->wwwroot/lib/yui/datasource/datasource-min.js'></script>\n";
+	$meta .= "<script type='text/javascript' src='$CFG->wwwroot/lib/yui/autocomplete/autocomplete-min.js'></script>\n";
+	
 	$meta .= "<script language='JavaScript' type='text/javascript'>\n";
 	$meta .= "function myOnload() {\n";
 	$meta .= " var moodleRoot = '".htmlspecialchars($CFG->wwwroot)."';\n";
