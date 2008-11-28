@@ -247,9 +247,16 @@ class AnnotationSummaryPage
 					if ( $curSection != null )
 						echo "</tbody>\n";
 					echo "<thead><tr><th colspan='$nCols'>";
-						$a->section_type = htmlspecialchars( $annotation->section_type );
-						echo '<h3>'.htmlspecialchars($annotation->section_type).'</h3>: '
-							. "<a href='".htmlspecialchars($annotation->section_url)."' title='".get_string( 'prompt_section', ANNOTATION_STRINGS, $a )."'>" . htmlspecialchars( $annotation->section_name ) . "</a>";
+					$a->section_type = htmlspecialchars( $annotation->section_type );
+					echo '<h3>'.htmlspecialchars($annotation->section_type).'</h3>: '
+						. "<a href='".htmlspecialchars($annotation->section_url)
+						."' title='".get_string( 'prompt_section', ANNOTATION_STRINGS, $a )."'>" 
+						. htmlspecialchars( $annotation->section_name ) . "</a>";
+					if ( $annotation->section_url != $query->url )
+					{
+						$turl = $query->getSummaryUrl( $annotation->section_url, $query->searchUser, $query->searchOf, $query->searchQuery, $query->exactMatch );
+						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
+					}
 					echo "</th></tr></thead><tbody>\n";
 					$curSection = $annotation->section_url;
 					$curSectionType = $annotation->section_type;

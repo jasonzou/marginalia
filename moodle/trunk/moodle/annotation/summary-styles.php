@@ -25,6 +25,10 @@ form#annotation-search fieldset {
 	width: 100%;
 }
 
+form#annotation-search #search-text {
+	width: 30em;	
+}
+
 .tags {
 	width: 100%;
 	text-align: right;
