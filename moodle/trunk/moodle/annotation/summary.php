@@ -9,9 +9,11 @@
 require_once( "../config.php" );
 require_once( "marginalia-php/MarginaliaHelper.php" );
 require_once( 'marginalia-php/Annotation.php' );
+require_once( 'marginalia-php/Keyword.php' );
 require_once( 'config.php' );
 require_once( 'AnnotationGlobals.php' );
 require_once( "AnnotationSummaryQuery.php" );
+require_once( "KeywordsDB.php" );
 
 global $CFG;
 
@@ -84,6 +86,7 @@ class AnnotationSummaryPage
 		$this->searchQuery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
 		$this->searchUser = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
 		$this->searchOf = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
+		$this->exactMatch = array_key_exists( 'match', $_GET ) ? 'exact' == $_GET[ 'match' ] : false;
 	}
 	
 	function show( )
@@ -96,7 +99,7 @@ class AnnotationSummaryPage
 		}
 		else
 		{
-			$query = new AnnotationSummaryQuery( $this->summaryUrl, $this->searchUser, $this->searchOf, $this->searchQuery );
+			$query = new AnnotationSummaryQuery( $this->summaryUrl, $this->searchUser, $this->searchOf, $this->searchQuery, $this->exactMatch );
 			if ( $query->error )
 			{
 				header( 'HTTP/1.1 400 Bad Request' );
@@ -168,6 +171,14 @@ class AnnotationSummaryPage
 		
 		$this->showHeader( );
 
+		$keywords = AnnotationKeywordsDB::listKeywords( $USER->username );
+		$keywordHash = array( );
+		for ( $i = 0;  $i < count( $keywords );  ++$i )
+		{
+			$keyword = $keywords[ $i ];
+			$keywordHash[ $keyword->name ] = true;
+		}
+		
 		// print search header
 		//  * my annotations
 		//  * shared annotations
@@ -285,8 +296,8 @@ class AnnotationSummaryPage
 								// Link to filter only annotations by this user
 								if ( $annotation->quote_author_id != $query->searchOf )
 								{
-									$turl = $query->getSummaryUrl( $query->url, $query->searchUser, $annotation->quote_author_id, $query->searchQuery );
-									echo "<a class='zoom-user' title='Show only annotations of work by ".htmlspecialchars($annotation->quote_author)."' href='$turl'>&#9756;</a>\n";
+									$turl = $query->getSummaryUrl( $query->url, $query->searchUser, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
+									echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
 								}
 								echo "</span>\n";
 							}
@@ -318,7 +329,22 @@ class AnnotationSummaryPage
 				
 				// Show the note
 				if ( ! in_array( 'note', $excludeFields ) )
-					echo "<td class='note'>" . htmlspecialchars( $annotation->note ) . "&#160;</td>\n";
+				{
+					echo "<td class='note'>";
+					if ( ! $annotation->note )
+						echo '&#160;';
+					else
+						echo htmlspecialchars( $annotation->note );
+
+					if ( ! $this->exactMatch && $keywordHash[ $annotation->note ] )
+					{
+						$turl = $query->getSummaryUrl( $query->url, $query->searchUser, $query->searchOf, $annotation->note, true );
+						echo "<a class='zoom' title='"
+							.htmlspecialchars(get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
+							."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+					}
+					echo "</td>\n";
+				}
 
 				// Show edit controls or the user who created the annotation
 				if ( ! in_array( 'controls', $excludeFields ) || ! in_array( 'user', $excludeFields ) )
@@ -358,8 +384,8 @@ class AnnotationSummaryPage
 					// Link to filter only annotations by this user
 					if ( $annotation->userid != $query->searchUser )
 					{
-						$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery );
-						echo "<a class='zoom-user' title='Show only annotations by ".htmlspecialchars($annotation->note_author)."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+						$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery, $query->exactMatch );
+						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
 					}
 					echo "</td>\n";
 				}
@@ -392,30 +418,6 @@ class AnnotationSummaryPage
 	
 		//$moodlePath = getMoodlePath( );
 		
-		// Show link to search of all users
-		if ( '' != $query->searchUser )
-		{
-			$link = $this->getSummaryLink( 'Include annotations by all users', '', $query,
-				$query->url, '', $query->searchOf, $query->searchQuery );
-			echo "<p>$link</p>\n";
-		}
-		
-		// Show link to search of annotations of works by all users
-		if ( '' != $query->searchOf )
-		{
-			$link = $this->getSummaryLink( 'Include annotations of works by all users', '', $query,
-				$query->url, $query->searchUser, '', $query->searchQuery );
-			echo "<p>$link</p>\n";
-		}
-			
-		// Show link to parent search
-		if ( null != $query->parentSummaryTitle() )
-		{
-			$link = $this->getSummaryLink( 'Show '.$query->desc($query->parentSummaryTitle()), '', $query,
-				$query->parentSummaryUrl(), $query->searchUser, $query->searchOf, $query->searchQuery );
-			echo "<p>$link</p>\n";
-		}
-		
 		// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
 		// if a login is required I won't include the feature.
 		if ( ! ANNOTATION_REQUIRE_USER )
@@ -433,9 +435,9 @@ class AnnotationSummaryPage
 		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logUrl?'?'.$logUrl:''), $query->desc(null) );
 	}
 	
-	function getSummaryLink( $text, $title, $query, $url, $searchUser, $searchOf, $searchQuery )
+	function getSummaryLink( $text, $title, $query, $url, $searchUser, $searchOf, $searchQuery, $exactMatch )
 	{
-		$turl = $query->getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery );
+		$turl = $query->getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery, $exactMatch );
 		return "<a href='".htmlspecialchars($turl)."' title='".htmlspecialchars($title)."'>"
 			. htmlspecialchars($text)."</a>";
 	}

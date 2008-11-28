@@ -154,14 +154,19 @@ table.annotations tbody tr:hover td.note {
 	color: red;
 }
 
-table.annotations a.zoom-user {
+table.annotations a.zoom {
 	visibility: hidden;
 	margin-left: 1ex;
 	font-size: 120%;
 }
 
-table.annotations tr:hover a.zoom-user {
+table.annotations tr:hover a.zoom {
 	visibility: visible;
+}
+
+table.annotations a.zoom:hover {
+	font-weight: bold;
+	text-decoration: none;
 }
 
 

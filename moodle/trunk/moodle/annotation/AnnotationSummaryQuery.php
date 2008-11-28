@@ -16,7 +16,7 @@ class AnnotationSummaryQuery
 	var $error;			// Any error encountered by the constructor
 	
 	/** Construct an immutable summary query */
-	function AnnotationSummaryQuery( $url, $searchUser, $searchOf, $searchQuery, $all=False )
+	function AnnotationSummaryQuery( $url, $searchUser, $searchOf, $searchQuery, $exactMatch=False, $all=False )
 	{
 		global $CFG, $USER;
 		
@@ -24,6 +24,7 @@ class AnnotationSummaryQuery
 		$this->searchUser = $searchUser;
 		$this->searchOf = $searchOf;
 		$this->searchQuery = $searchQuery;
+		$this->exactMatch = $exactMatch;
 		$this->accessAll = $all;	// get access beyond normal privacy limitations (admin only)
 		
 		if ( '' == $this->searchUser )
@@ -108,6 +109,8 @@ class AnnotationSummaryQuery
 		$a->author = $this->searchOf;
 		$a->search = $this->searchQuery;
 		
+		$a->match = get_string( $this->exactMatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
+		
 		if ( null != $this->searchQuery && '' != $this->searchQuery )
 			$s = ( null != $this->searchOf ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
 		else
@@ -124,34 +127,59 @@ class AnnotationSummaryQuery
 		global $USER;
 		
 		$this->handler->fetchMetadata( );
+		$title = ( null == $title ) ? $this->handler->title : $title;
+		$a->title = $title;
 		
-		$a->title = ( null == $title ) ? $this->handler->title : $title;
+		// Show link to parent search
+		if ( null != $this->parentSummaryTitle( ) )
+		{
+			$url = $this->getSummaryUrl( $this->parentSummaryUrl( ), $this->searchUser, $this->searchOf, $this->searchQuery, $this->exactMatch );
+			$a->title = '<a class="opt-link" href="'.htmlspecialchars($url)
+				. '" title="'.htmlspecialchars( get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ) ).'">'
+				. '<span class="current">'.htmlspecialchars($title).'</span>'
+				. '<span class="alt">'.htmlspecialchars($this->parentSummaryTitle( )).'</span></a>';
+		}
 		
 		// Access restrictions.  Need to look up actual user names in DB.
 		if ( ! $this->searchUser )
 			$a->who = 'anyone';
 		else
 		{
-			$url = $this->getSummaryUrl( $this->url, '', $this->searchOf, $this->searchQuery );
+			$url = $this->getSummaryUrl( $this->url, '', $this->searchOf, $this->searchQuery, $this->exactMatch );
 			if ( '*students' == $this->searchUser )
 				$s = 'students';
 			elseif ( '*teachers' == $this->searchUser )
 				$s = 'teachers';
 			else
 				$s = $this->searchUser;
-			$a->who = '<a class="opt-link" href="'.htmlspecialchars($url).'"><span class="current">'.$s.'</span><span class="alt">anyone</a></a>';
+			$a->who = '<a class="opt-link" href="'.htmlspecialchars($url)
+				.'" title="'.htmlspecialchars( get_string( 'unzoom_user_hover', ANNOTATION_STRINGS ) )
+				.'"><span class="current">'.htmlspecialchars($s).'</span><span class="alt">'
+				.htmlspecialchars( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</a></a>';
 		}
 		
 		if ( $this->searchOf )
 		{
-			$url = $this->getSummaryUrl( $this->url, $this->searchUser, '', $this->searchQuery );
-			$a->author = '<a class="opt-link" href="'.htmlspecialchars($url).'"><span class="current">'.$this->searchOf.'</span><span class="alt">anyone</span></a>';
+			$url = $this->getSummaryUrl( $this->url, $this->searchUser, '', $this->searchQuery, $this->exactMatch );
+			$a->author = '<a class="opt-link" href="'.htmlspecialchars($url)
+				.'" title="'.htmlspecialchars( get_string( 'unzoom_author_hover', ANNOTATION_STRINGS ) )
+				.'"><span class="current">'.htmlspecialchars($this->searchOf).'</span><span class="alt">'
+				.htmlspecialchars( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</span></a>';
 		}
 		else
 			$a->author = null;
 		
 		$a->search = $this->searchQuery;
 		
+		$url = $this->getSummaryUrl( $this->url, $this->searchUser, '', $this->searchQuery, ! $this->exactMatch );
+		$hover = get_string( $this->exactMatch ? 'unzoom_match_hover' : 'zoom_match_hover', ANNOTATION_STRINGS );
+		$m1 = get_string( $this->exactMatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
+		$m2 = get_string( $this->exactMatch ? 'containing' : 'matching', ANNOTATION_STRINGS );
+		$a->match = '<a class="opt-link" href="'.htmlspecialchars($url)
+			.'" title="'.htmlspecialchars( $hover )
+			.'"><span class="current">'.htmlspecialchars( $m1 )
+			.'</span><span class="alt">'.htmlspecialchars( $m2 ).'</span></a>';
+
 		if ( null != $this->searchQuery && '' != $this->searchQuery )
 			$s = ( null != $this->searchOf ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
 		else
@@ -270,19 +298,24 @@ class AnnotationSummaryQuery
 		// add to them also those a page of this type might use.
 		if ( null != $this->searchQuery && '' != $this->searchQuery )
 		{
-			$search_cond = '';
-			$add_search_fields = $handler->getSearchFields( );
-			$search_cond = '';
-			$queryWords = split( ' ', $this->searchQuery );
-			foreach ( $queryWords as $word )
+			if ( $this->exactMatch )
+				$q_std_where .= "\n   AND a.note='".addslashes($this->searchQuery)."'";
+			else
 			{
-				$sWord = addslashes( $word );
-				foreach ( $std_search_fields as $field )
-					$search_cond .= ( $search_cond == '' ) ? "$field LIKE '%$sWord%'" : " OR $field LIKE '%$sWord%'";
-				foreach ( $add_search_fields as $field )
-					$search_cond .= " OR $field LIKE '%$sWord%'";
+				$search_cond = '';
+				$add_search_fields = $handler->getSearchFields( );
+				$search_cond = '';
+				$queryWords = split( ' ', $this->searchQuery );
+				foreach ( $queryWords as $word )
+				{
+					$sWord = addslashes( $word );
+					foreach ( $std_search_fields as $field )
+						$search_cond .= ( $search_cond == '' ) ? "$field LIKE '%$sWord%'" : " OR $field LIKE '%$sWord%'";
+					foreach ( $add_search_fields as $field )
+						$search_cond .= " OR $field LIKE '%$sWord%'";
+				}
+				$q_std_where .= "\n   AND ($search_cond)";
 			}
-			$q_std_where .= "\n   AND ($search_cond)";
 		}
 		
 		// The handler must construct the query, which might be a single SELECT or a UNION of multiple SELECTs
@@ -303,7 +336,7 @@ class AnnotationSummaryQuery
 	}
 	
 	/** Generate a summary URL corresponding to this query */
-	function getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery )
+	function getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery, $exactMatch=false )
 	{
 		global $CFG;
 		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($url);
@@ -313,6 +346,8 @@ class AnnotationSummaryQuery
 			$s .= '&u='.urlencode($searchUser);
 		if ( null != $searchOf && '' != $searchOf )
 			$s .= '&search-of='.urlencode($searchOf);
+		if ( $exactMatch )
+			$s .= '&match=exact';
 		return $s;
 /*		global $CFG;
 		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($this->url);
