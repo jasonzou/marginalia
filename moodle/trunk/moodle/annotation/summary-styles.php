@@ -145,6 +145,16 @@ table.annotations tbody tr:hover td.note {
 	color: red;
 }
 
+table.annotations a.zoom-user {
+	visibility: hidden;
+	margin-left: 1ex;
+	font-size: 120%;
+}
+
+table.annotations tr:hover a.zoom-user {
+	visibility: visible;
+}
+
 
 /* buttons */
 table.annotations button {

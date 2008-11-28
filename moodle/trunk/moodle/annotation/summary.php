@@ -176,9 +176,11 @@ class AnnotationSummaryPage
 		echo "<form id='annotation-search' method='get' action='summary.php'>\n";
 		echo "<fieldset>\n";
 		echo "<label for='search-of'>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
-		if ( isguest() )
+		echo "<input type='hidden' name='search-of' id='search-of' value='".$query->searchOf."'/>\n";
+		echo "<input type='hidden' name='u' id='u' value='".$query->searchUser."'/>\n";
+/*		if ( isguest() )
 		{
-			echo "<input type='hidden' name='search_of' id='search_of' value='' />\n";
+			echo "<input type='hidden' name='search-of' id='search-of' value='' />\n";
 			echo get_string( 'search_of_all', ANNOTATION_STRINGS ).' ';
 		}
 		else
@@ -197,7 +199,7 @@ class AnnotationSummaryPage
 //			echo " <option value='*students'".('*students'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_students', ANNOTATION_STRINGS )."</option>\n";
 		echo "</select>\n";
 		echo "<label for='search-text'>".get_string( 'search_text', ANNOTATION_STRINGS )."</label>\n";
-		echo "<input type='text' id='search-text' name='q' value='".htmlspecialchars($query->searchQuery)."'/>\n";
+*/		echo "<input type='text' id='search-text' name='q' value='".htmlspecialchars($query->searchQuery)."'/>\n";
 		echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
 		echo "<input type='hidden' name='url' value='".htmlspecialchars($query->url)."'/>\n";
 		echo "</fieldset>\n";
@@ -278,7 +280,16 @@ class AnnotationSummaryPage
 							echo "<a href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 							echo htmlspecialchars( $annotation->quote_title ) . '</a>';
 							if ( ! in_array( 'quote-author', $excludeFields ) )
-								echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author )."</span>\n";
+							{
+								echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author );
+								// Link to filter only annotations by this user
+								if ( $annotation->quote_author_id != $query->searchOf )
+								{
+									$turl = $query->getSummaryUrl( $query->url, $query->searchUser, $annotation->quote_author_id, $query->searchQuery );
+									echo "<a class='zoom-user' title='Show only annotations of work by ".htmlspecialchars($annotation->quote_author)."' href='$turl'>&#9756;</a>\n";
+								}
+								echo "</span>\n";
+							}
 						}
 						echo "</th>\n";
 /*						if ( ! in_array( 'quote-author', $excludeFields ) )
@@ -330,7 +341,6 @@ class AnnotationSummaryPage
 						echo "</select>\n";
 						*/
 						echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>";
-						echo "</td>\n";
 					}
 					else if ( ! in_array( 'user', $excludeFields ) )
 					{
@@ -343,8 +353,15 @@ class AnnotationSummaryPage
 							echo "<a onclick='setAnnotationUser(\"".htmlspecialchars($annotation->userid)."\")' href='".htmlspecialchars($url)."'>"
 								.htmlspecialchars($annotation->note_author)."</a>";
 						}
-						echo "</td>\n";
 					}
+					
+					// Link to filter only annotations by this user
+					if ( $annotation->userid != $query->searchUser )
+					{
+						$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery );
+						echo "<a class='zoom-user' title='Show only annotations by ".htmlspecialchars($annotation->note_author)."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+					}
+					echo "</td>\n";
 				}
 				
 				echo "</tr>\n";
@@ -375,14 +392,28 @@ class AnnotationSummaryPage
 	
 		//$moodlePath = getMoodlePath( );
 		
+		// Show link to search of all users
+		if ( '' != $query->searchUser )
+		{
+			$link = $this->getSummaryLink( 'Include annotations by all users', '', $query,
+				$query->url, '', $query->searchOf, $query->searchQuery );
+			echo "<p>$link</p>\n";
+		}
+		
+		// Show link to search of annotations of works by all users
+		if ( '' != $query->searchOf )
+		{
+			$link = $this->getSummaryLink( 'Include annotations of works by all users', '', $query,
+				$query->url, $query->searchUser, '', $query->searchQuery );
+			echo "<p>$link</p>\n";
+		}
+			
 		// Show link to parent search
 		if ( null != $query->parentSummaryTitle() )
 		{
-			$excludeFields = join( '+', $excludeFields );
-			$turl = $query->getSummaryUrl( $query->parentSummaryUrl(), $query->searchUser, $query->searchOf, $query->searchQuery );
-	
-			echo "<p><a href='".htmlspecialchars("$turl&exclude=$excludeFields")."'>Show "
-				. htmlspecialchars($query->desc($query->parentSummaryTitle()))."</a></p>\n";
+			$link = $this->getSummaryLink( 'Show '.$query->desc($query->parentSummaryTitle()), '', $query,
+				$query->parentSummaryUrl(), $query->searchUser, $query->searchOf, $query->searchQuery );
+			echo "<p>$link</p>\n";
 		}
 		
 		// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
@@ -394,9 +425,6 @@ class AnnotationSummaryPage
 				. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 		}
 		
-		echo '<p id="smartcopy-help"><span class="tip">'.get_string('tip', ANNOTATION_STRINGS).'</span> '
-			.get_string( 'smartcopy_help', ANNOTATION_STRINGS )."</p>\n";
-		
 		print_footer($this->course);
 
 		$logUrl = $_SERVER[ 'REQUEST_URI' ];
@@ -405,6 +433,12 @@ class AnnotationSummaryPage
 		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logUrl?'?'.$logUrl:''), $query->desc(null) );
 	}
 	
+	function getSummaryLink( $text, $title, $query, $url, $searchUser, $searchOf, $searchQuery )
+	{
+		$turl = $query->getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery );
+		return "<a href='".htmlspecialchars($turl)."' title='".htmlspecialchars($title)."'>"
+			. htmlspecialchars($text)."</a>";
+	}
 }
 
 /*

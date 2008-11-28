@@ -209,6 +209,7 @@ class AnnotationSummaryQuery
 		. ",\n concat(u.firstname, ' ', u.lastname) AS note_author"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
 		. ",\n a.note note, a.quote, a.quote_title AS quote_title"
+		. ",\n a.quote_author AS quote_author_id"
 		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) AS quote_author_url";
 		
@@ -265,7 +266,7 @@ class AnnotationSummaryQuery
 		if ( null != $searchQuery && '' != $searchQuery )
 			$s .= '&q='.urlencode($searchQuery);
 		if ( null != $searchUser && '' != $searchUser )
-			$s .= '&user='.urlencode($searchUser);
+			$s .= '&u='.urlencode($searchUser);
 		if ( null != $searchOf && '' != $searchOf )
 			$s .= '&search-of='.urlencode($searchOf);
 		return $s;
