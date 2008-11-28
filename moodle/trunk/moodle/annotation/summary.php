@@ -430,7 +430,9 @@ class AnnotationSummaryPage
 		if ( ! ANNOTATION_REQUIRE_USER )
 		{
 			$turl = $query->getFeedUrl( 'atom' );
-			echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='".get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='$CFG->wwwroot/annotation/images/atomicon.gif'/>"
+			echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )
+				."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='"
+				.get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='$CFG->wwwroot/pix/i/rss.gif'/>"
 				. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 		}
 		

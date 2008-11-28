@@ -35,8 +35,12 @@ form#annotation-search #search-text {
 	font-size: 90%;
 }
 
+p {
+	margin: 1ex;
+}
+
 p#query {
-	margin: 2em 0;
+	margin-top: 1.5em;
 }
 
 p#query a .alt,
@@ -63,7 +67,7 @@ p.error em.range-error {
 table.annotations {
 	/* These aren't really compatible, but for practical purposes they work
 	 * (man, I hate the W3C box model): */
-	margin: 1em 2em ;
+	margin: .5em 2em ;
 	width: 90%;
 }
 
@@ -112,12 +116,13 @@ table.annotations thead th {
 	text-align: left ;
 	font-weight: bold ;
 	background: none ;
-	padding-top: 1em;
+	padding-top: 1ex;
 }
 
 table.annotations thead th h3 {
 	display: inline;
 	text-transform: capitalize;
+	margin: 0;
 }
 
 table.annotations tbody td.quote-author {
