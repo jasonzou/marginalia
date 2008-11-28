@@ -50,8 +50,12 @@ elseif ( ! AN_EDITABLEKEYWORDS )
 else
 {
 	$errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
+	$courseId = required_param( 'course' );
 
-	$keywords = AnnotationKeywordsDB::listKeywords( $USER->id );
+    if (! $course = get_record('course', 'id', $courseId ) )
+        error("Course ID $courseId is incorrect - discussion is faulty");
+
+	$keywords = AnnotationKeywordsDB::listKeywords( $USER->username );
 	
 	$meta
 		= "<link type='text/css' rel='stylesheet' href='edit-keywords.css'/>\n"
@@ -61,46 +65,31 @@ else
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
-		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-keywords.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='edit-keywords.js'></script>\n"
 		. "<script language='Javascript' type='text/javascript'>\n"
 		. " var serviceRoot = '".htmlspecialchars($CFG->wwwroot).'/annotation'."';\n"
-		. " var annotationKeywords = [\n";
-	if ( $keywords )
+		. "</script>\n";
+		
+	$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
+	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
+		$course->fullname, "$navtail", "", $meta, true, "", null);
+		
+	if ( $keywords && $courseId )
 	{
+		echo "<p>You have used following notes multiple times.  Click"
+			. " on a link to view a summary of annotations with that note.</p>\n";
+		echo "<ul id='keywords'>\n";
 		for ( $i = 0;  $i < count( $keywords );  ++$i )
 		{
 			$keyword = $keywords[ $i ];
-			if ( $i > 0 )
-				$meta .= ", ";
-			$meta .= "new Keyword('".htmlspecialchars($keyword->name)."', '".htmlspecialchars($keyword->description)."')\n";
+			$url = 'summary.php?url='
+				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseId" )
+				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name);
+			echo '<li><a href="'.htmlspecialchars( $url ).'">'.urlencode($keyword->name)."</a></li>\n";
 		}
+		echo "</ul>\n";
 	}
-	$meta .= "];\n"
-		. "addEvent( window, 'load', keywordsOnload );\n"
-		. "</script>";
-	
-	$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
-	print_header(get_string( 'edit_keywords_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null);
-	
-	// Keyword list will go here:
-	echo "<table id='keywords'>\n";
-	echo " <thead>\n";
-	echo "  <tr><th>".get_string('keyword_column',ANNOTATION_STRINGS)."</th><th>".get_string('keyword_desc_column',ANNOTATION_STRINGS)."</th></tr>\n";
-	echo " </thead>\n";
-	echo " <tbody>\n";
-	
-	// Space to insert new keywords
-	echo "  <tr class='create'>\n";
-	echo "    <td class='name'><input type='text' id='new-keyword-name' name='new-keyword-name'/></td>\n";
-	echo "    <td class='description'><input type='text' id='new-keyword-desc' name='new-keyword-desc'/></td>\n";
-	echo "    <td><input id='new-keyword-button' type='submit' value='".get_string('create_keyword_button',ANNOTATION_STRINGS)."'/></td>\n";
-	echo "  </tr>\n";
-	echo " </tbody>\n";
-	echo "</table>\n";
-	
-	echo "<p>Pages with annotations must be reloaded to reflect changes to tags.</p>";
 	
 	echo "<fieldset id='replace'>\n";
 	echo " <legend>".get_string('note_replace_legend',ANNOTATION_STRINGS)."</legend>\n";

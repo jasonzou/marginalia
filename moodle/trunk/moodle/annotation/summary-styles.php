@@ -31,8 +31,17 @@ form#annotation-search fieldset {
 	font-size: 90%;
 }
 
-p.query {
+p#query {
 	margin: 2em 0;
+}
+
+p#query a .alt,
+p#query a:hover .current {
+	display: none;
+}
+
+p#query a:hover .alt {
+	display: inline;
 }
 
 p.error em.range-error {

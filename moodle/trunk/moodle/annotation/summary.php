@@ -211,7 +211,7 @@ class AnnotationSummaryPage
 			echo "<p class='error'><em class='range-error'>!</em>".get_string( 'summary_range_error', ANNOTATION_STRINGS )."</p>\n";
 		}
 		
-		echo "<p id='query'>".get_string( 'prompt_search_desc', ANNOTATION_STRINGS ).' '.htmlspecialchars($query->desc(null)).":</p>\n";
+		echo "<p id='query'>".get_string( 'prompt_search_desc', ANNOTATION_STRINGS ).' '.$query->descWithLinks(null).":</p>\n";
 		
 		$curSection = null;
 		$curSectionType = null;

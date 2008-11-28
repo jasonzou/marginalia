@@ -107,18 +107,16 @@ function showMarginaliaUserDropdown( $refUrl )
 
 function showMarginaliaSummaryLink( $refUrl, $username )
 {
-	global $CFG;
+	global $CFG, $course;
 	$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($username)
 		."&url=".urlencode( $refUrl );
 	echo " <a id='annotation-summary-link' href='".htmlspecialchars($summaryUrl)."'"
 		. " title='".htmlspecialchars(get_string('summary_link_title',ANNOTATION_STRINGS))
 		."'>".htmlspecialchars(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
-	if ( AN_EDITABLEKEYWORDS )
-	{
-		echo "<a id='annotation-editkeywords-link' href='".$CFG->wwwroot."/annotation/edit-keywords.php'"
+
+	echo "<a id='annotation-editkeywords-link' href='".$CFG->wwwroot."/annotation/edit-keywords.php?course=".$course->id."'"
 		. " title='".htmlspecialchars(get_string( 'edit_keywords_link', ANNOTATION_STRINGS ))
 		."'>Tags</a>\n";
-	}
 }
 
 

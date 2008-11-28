@@ -118,6 +118,50 @@ class AnnotationSummaryQuery
 		return $desc;
 	}
 	
+	/** A natural language description, with elements as links to more general queries */
+	function descWithLinks( $title )
+	{
+		global $USER;
+		
+		$this->handler->fetchMetadata( );
+		
+		$a->title = ( null == $title ) ? $this->handler->title : $title;
+		
+		// Access restrictions.  Need to look up actual user names in DB.
+		if ( ! $this->searchUser )
+			$a->who = 'anyone';
+		else
+		{
+			$url = $this->getSummaryUrl( $this->url, '', $this->searchOf, $this->searchQuery );
+			if ( '*students' == $this->searchUser )
+				$s = 'students';
+			elseif ( '*teachers' == $this->searchUser )
+				$s = 'teachers';
+			else
+				$s = $this->searchUser;
+			$a->who = '<a class="opt-link" href="'.htmlspecialchars($url).'"><span class="current">'.$s.'</span><span class="alt">anyone</a></a>';
+		}
+		
+		if ( $this->searchOf )
+		{
+			$url = $this->getSummaryUrl( $this->url, $this->searchUser, '', $this->searchQuery );
+			$a->author = '<a class="opt-link" href="'.htmlspecialchars($url).'"><span class="current">'.$this->searchOf.'</span><span class="alt">anyone</span></a>';
+		}
+		else
+			$a->author = null;
+		
+		$a->search = $this->searchQuery;
+		
+		if ( null != $this->searchQuery && '' != $this->searchQuery )
+			$s = ( null != $this->searchOf ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
+		else
+			$s = ( null != $this->searchOf ) ? 'annotation_desc_author' : 'annotation_desc';
+			
+		return get_string( $s, ANNOTATION_STRINGS, $a );
+		
+		return $desc;
+	}
+	
 	/**
 	 * This takes a list of handlers, each of which corresponds to a particular type of
 	 * query (e.g. discussion forum), along with search fields for performing a search.
