@@ -248,7 +248,7 @@ class MarginaliaHelper
 			$summary = $sQuote;
 		
 		
-		$s = " <entry ptr:version='".$annotation->getVersion()."'>\n";
+		$s = " <entry>\n";
 
 		// Emit range in two formats:  sequence for sorting, xpath for authority and speed
 		$sequenceRange = $annotation->getSequenceRange( );
