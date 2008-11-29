@@ -85,7 +85,7 @@ else
 			$keyword = $keywords[ $i ];
 			$url = 'summary.php?url='
 				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseId" )
-				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name);
+				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name).'&match=exact';
 			echo '<li><a href="'.htmlspecialchars( $url ).'">'.urlencode($keyword->name)."</a></li>\n";
 		}
 		echo "</ul>\n";
