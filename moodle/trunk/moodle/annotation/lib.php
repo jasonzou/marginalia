@@ -26,16 +26,15 @@ function getAnnotationsPref( $name, $default )
 function getAllAnnotationPrefs( )
 {
 	return array(
-		AN_USER_PREF => getAnnotationUsername( ),
+		AN_USER_PREF => getAnnotationUserId( ),
 		AN_SHOWANNOTATIONS_PREF => getAnnotationsPref( AN_SHOWANNOTATIONS_PREF, 'false' ),
 		AN_NOTEEDITMODE_PREF => getAnnotationsPref( AN_NOTEEDITMODE_PREF, 'freeform' ),
-		AN_SPLASH_PREF => getAnnotationsPref( AN_SPLASH_PREF, 'true' ),
-		SMARTCOPY_PREF => getAnnotationsPref( SMARTCOPY_PREF, 'false' )
+		AN_SPLASH_PREF => getAnnotationsPref( AN_SPLASH_PREF, 'true' )
 	);
 		
 }
 
-function getAnnotationUsername( )
+function getAnnotationUserId( )
 {
 	global $USER;
 	// Get the users whose annotations are to be shown
@@ -68,7 +67,7 @@ function showMarginaliaUserDropdown( $refUrl )
 	global $USER;
 	$summaryQuery = new AnnotationSummaryQuery( $refUrl, null, null, null );
 	$userList = get_records_sql( $summaryQuery->listUsersSql( ) );
-	$annotationUser = getAnnotationUsername( );
+	$annotationUserId = getAnnotationUserId( );
 	$showAnnotationsPref = getShowAnnotationsPref( ) == 'true';
 	
 	echo "<select name='anuser' id='anuser' onchange='window.moodleMarginalia.changeAnnotationUser(this,\"$refUrl\");'>\n";
@@ -76,7 +75,7 @@ function showMarginaliaUserDropdown( $refUrl )
 	echo " <option $selected value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
 	if ( ! isguest() )
 	{
-		$selected = ( $showAnnotationsPref && ( $USER->username == $annotationUser ? "selected='selected' " : '' ) )
+		$selected = ( $showAnnotationsPref && ( $USER->username == $annotationUserId ? "selected='selected' " : '' ) )
 			? " selected='selected' " : '';
 		echo " <option $selected"
 			."value='".htmlspecialchars($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
@@ -85,19 +84,19 @@ function showMarginaliaUserDropdown( $refUrl )
 	{
 		foreach ( $userList as $user )
 		{
-			if ( $user->username != $USER->username )
+			if ( $user->userid != $USER->username )
 			{
-				$selected = ( $showAnnotationsPref && ( $user->username == $annotationUser ? "selected='selected' ":'' ) )
+				$selected = ( $showAnnotationsPref && ( $user->userid == $annotationUserId ? "selected='selected' ":'' ) )
 					? " selected='selected' " : '';
 				echo " <option $selected"
-					."value='".htmlspecialchars($user->username)."'>".htmlspecialchars($user->firstname.' '.$user->lastname)."</option>\n";
+					."value='".htmlspecialchars($user->userid)."'>".htmlspecialchars($user->firstname.' '.$user->lastname)."</option>\n";
 			}
 		}
 	}
 	// Show item for all users
 	if ( true )
 	{
-		$selected = ( $showAnnotationsPref && ( '*' == $annotationUser ? "selected='selected' ":'' ) )
+		$selected = ( $showAnnotationsPref && ( '*' == $annotationUserId ? "selected='selected' ":'' ) )
 			? " selected='selected' " : '';
 		echo " <option $selected value='*'>".get_string('all_annotations',ANNOTATION_STRINGS)."</option>\n";
 	}
@@ -105,10 +104,10 @@ function showMarginaliaUserDropdown( $refUrl )
 }
 
 
-function showMarginaliaSummaryLink( $refUrl, $username )
+function showMarginaliaSummaryLink( $refUrl, $userId )
 {
 	global $CFG, $course;
-	$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($username)
+	$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($userId)
 		."&url=".urlencode( $refUrl );
 	echo " <a id='annotation-summary-link' href='".htmlspecialchars($summaryUrl)."'"
 		. " title='".htmlspecialchars(get_string('summary_link_title',ANNOTATION_STRINGS))
@@ -125,7 +124,7 @@ function showMarginaliaSummaryLink( $refUrl, $username )
  * and initialize Marginalia.  If necessary, also creates relevant user preferences 
  * (necessary for Marginalia to function correctly).
  */
-function marginaliaHeaderHtml( $refUrl, $allowSmartcopy )
+function marginaliaHeaderHtml( $refUrl )
 {
 	global $CFG, $USER;
 	
@@ -134,7 +133,6 @@ function marginaliaHeaderHtml( $refUrl, $allowSmartcopy )
 	$showAnnotationsPref = $prefs[ AN_SHOWANNOTATIONS_PREF ];
 	$annotationUser = $prefs[ AN_USER_PREF ];
 	$showSplashPref = $prefs[ AN_SPLASH_PREF ];
-	$allowSmartcopy = $prefs[ SMARTCOPY_PREF ];
 	
 	// Build a string of initial preference values for passing to Marginalia
 	$first = true;
@@ -155,7 +153,6 @@ function marginaliaHeaderHtml( $refUrl, $allowSmartcopy )
 	$anScripts = listMarginaliaJavascript( );
 	for ( $i = 0;  $i < count( $anScripts );  ++$i )
 		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anScripts[$i]."'></script>\n";	
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/smartcopy.js'></script>\n";	
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-config.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-strings.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/MoodleMarginalia.js'></script>\n";
@@ -170,8 +167,8 @@ function marginaliaHeaderHtml( $refUrl, $allowSmartcopy )
 	$meta .= "function myOnload() {\n";
 	$meta .= " var moodleRoot = '".htmlspecialchars($CFG->wwwroot)."';\n";
 	$meta .= " var url = '".htmlspecialchars($refUrl)."';\n";
-	$meta .= ' var username = \''.htmlspecialchars($USER->username)."';\n";
-	$meta .= ' moodleMarginalia = new MoodleMarginalia( url, moodleRoot, username, '.$sPrefs.', {'."\n";
+	$meta .= ' var userId = \''.htmlspecialchars($USER->username)."';\n";
+	$meta .= ' moodleMarginalia = new MoodleMarginalia( url, moodleRoot, userId, '.$sPrefs.', {'."\n";
 	if ( $showSplashPref == 'true' )
 		$meta .= '  splash: \''.htmlspecialchars(get_string('splash',ANNOTATION_STRINGS)).'\'';
 	$meta .= '  } );'."\n";
@@ -192,9 +189,9 @@ function marginaliaHeaderHtml( $refUrl, $allowSmartcopy )
  * @param int $username the name of the user (note, the username, *not* the userid!)
  * @return boolean
  */
-function annotations_delete_user( $username )
+function annotations_delete_user( $userId )
 {
-	return delete_records( 'annotation', 'userid', $username );
+	return delete_records( 'annotation', 'userid', $userId );
 }
 
 /**

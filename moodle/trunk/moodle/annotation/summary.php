@@ -84,7 +84,7 @@ class AnnotationSummaryPage
 		$this->possibleExcludeFields = array( 'quote', 'note', 'source', 'user', 'controls' );
 		
 		$this->searchQuery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
-		$this->searchUser = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
+		$this->searchUserId = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
 		$this->searchOf = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
 		$this->exactMatch = array_key_exists( 'match', $_GET ) ? 'exact' == $_GET[ 'match' ] : false;
 	}
@@ -99,7 +99,7 @@ class AnnotationSummaryPage
 		}
 		else
 		{
-			$query = new AnnotationSummaryQuery( $this->summaryUrl, $this->searchUser, $this->searchOf, $this->searchQuery, $this->exactMatch );
+			$query = new AnnotationSummaryQuery( $this->summaryUrl, $this->searchUserId, $this->searchOf, $this->searchQuery, $this->exactMatch );
 			if ( $query->error )
 			{
 				header( 'HTTP/1.1 400 Bad Request' );
@@ -188,7 +188,7 @@ class AnnotationSummaryPage
 		echo "<fieldset>\n";
 		echo "<label for='search-of'>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
 		echo "<input type='hidden' name='search-of' id='search-of' value='".$query->searchOf."'/>\n";
-		echo "<input type='hidden' name='u' id='u' value='".$query->searchUser."'/>\n";
+		echo "<input type='hidden' name='u' id='u' value='".$query->searchUserId."'/>\n";
 /*		if ( isguest() )
 		{
 			echo "<input type='hidden' name='search-of' id='search-of' value='' />\n";
@@ -203,9 +203,9 @@ class AnnotationSummaryPage
 		}
 		echo "<label for='u'>".get_string( 'prompt_by', ANNOTATION_STRINGS )."</label>\n";
 		echo "<select name='u' id='u'>\n";
-		echo " <option value='' ".(!$query->searchUser?"selected='selected'":'').'>'.get_string( 'search_by_all', ANNOTATION_STRINGS )."</option>\n";
+		echo " <option value='' ".(!$query->searchUserId?"selected='selected'":'').'>'.get_string( 'search_by_all', ANNOTATION_STRINGS )."</option>\n";
 		if ( ! isguest() )
-			echo " <option value='".htmlspecialchars($USER->username)."' ".($query->searchUser==$USER->username?" selected='selected'":'').">".get_string( 'search_by_self', ANNOTATION_STRINGS)."</option>\n";
+			echo " <option value='".htmlspecialchars($USER->username)."' ".($query->searchUserId==$USER->username?" selected='selected'":'').">".get_string( 'search_by_self', ANNOTATION_STRINGS)."</option>\n";
 //			echo " <option value='*teachers'".('*teachers'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_teachers', ANNOTATION_STRINGS )."</option>\n";
 //			echo " <option value='*students'".('*students'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_students', ANNOTATION_STRINGS )."</option>\n";
 		echo "</select>\n";
@@ -254,7 +254,7 @@ class AnnotationSummaryPage
 						. htmlspecialchars( $annotation->section_name ) . "</a>";
 					if ( $annotation->section_url != $query->url )
 					{
-						$turl = $query->getSummaryUrl( $annotation->section_url, $query->searchUser, $query->searchOf, $query->searchQuery, $query->exactMatch );
+						$turl = $query->getSummaryUrl( $annotation->section_url, $query->searchUserId, $query->searchOf, $query->searchQuery, $query->exactMatch );
 						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
 					}
 					echo "</th></tr></thead><tbody>\n";
@@ -294,16 +294,16 @@ class AnnotationSummaryPage
 						if ( MarginaliaHelper::isUrlSafe( $url ) )
 						{
 							$a->row_type = htmlspecialchars( $annotation->row_type );
-							$a->author = htmlspecialchars( $annotation->quote_author );
+							$a->author = htmlspecialchars( $annotation->quote_author_name );
 							echo "<a href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 							echo htmlspecialchars( $annotation->quote_title ) . '</a>';
 							if ( ! in_array( 'quote-author', $excludeFields ) )
 							{
-								echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author );
+								echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author_name );
 								// Link to filter only annotations by this user
 								if ( $annotation->quote_author_id != $query->searchOf )
 								{
-									$turl = $query->getSummaryUrl( $query->url, $query->searchUser, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
+									$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
 									echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
 								}
 								echo "</span>\n";
@@ -345,7 +345,7 @@ class AnnotationSummaryPage
 
 					if ( ! $this->exactMatch && $keywordHash[ $annotation->note ] )
 					{
-						$turl = $query->getSummaryUrl( $query->url, $query->searchUser, $query->searchOf, $annotation->note, true );
+						$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $query->searchOf, $annotation->note, true );
 						echo "<a class='zoom' title='"
 							.htmlspecialchars(get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
 							."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
@@ -384,12 +384,12 @@ class AnnotationSummaryPage
 						if ( MarginaliaHelper::isUrlSafe( $url ) )
 						{
 							echo "<a onclick='setAnnotationUser(\"".htmlspecialchars($annotation->userid)."\")' href='".htmlspecialchars($url)."'>"
-								.htmlspecialchars($annotation->note_author)."</a>";
+								.htmlspecialchars($annotation->username)."</a>";
 						}
 					}
 					
 					// Link to filter only annotations by this user
-					if ( $annotation->userid != $query->searchUser )
+					if ( $annotation->userid != $query->searchUserId )
 					{
 						$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery, $query->exactMatch );
 						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
@@ -444,9 +444,9 @@ class AnnotationSummaryPage
 		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logUrl?'?'.$logUrl:''), $query->desc(null) );
 	}
 	
-	function getSummaryLink( $text, $title, $query, $url, $searchUser, $searchOf, $searchQuery, $exactMatch )
+	function getSummaryLink( $text, $title, $query, $url, $searchUserId, $searchOf, $searchQuery, $exactMatch )
 	{
-		$turl = $query->getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery, $exactMatch );
+		$turl = $query->getSummaryUrl( $url, $searchUserId, $searchOf, $searchQuery, $exactMatch );
 		return "<a href='".htmlspecialchars($turl)."' title='".htmlspecialchars($title)."'>"
 			. htmlspecialchars($text)."</a>";
 	}

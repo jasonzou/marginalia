@@ -81,6 +81,7 @@ class AnnotationGlobals
 		
 		$annotation->setAnnotationId( $r->id );
 		$annotation->setUserId( $r->userid );
+		$annotation->setUserName( $r->username );
 		if ( $r->access )
 			$annotation->setAccess( $r->access );
 		if ( $r->url )
@@ -91,8 +92,10 @@ class AnnotationGlobals
 			$annotation->setQuote( $r->quote );
 		if ( $r->quote_title )
 			$annotation->setQuoteTitle( $r->quote_title );
-		if ( $r->quote_author )
-			$annotation->setQuoteAuthor( $r->quote_author );
+		if ( $r->quote_author_id )
+			$annotation->setQuoteAuthorId( $r->quote_author_id );
+		if ( $r->quote_author_name )
+			$annotation->setQuoteAuthorName( $r->quote_author_name );
 		if ( $r->link )
 			$annotation->setLink( $r->link );
 		if ( $r->link_title )
@@ -132,12 +135,14 @@ class AnnotationGlobals
 		if ( $id )
 			$record->id = $id;
 		$record->userid = addslashes( $annotation->getUserId( ) );
+		$record->username = addslashes( $annotation->getUserName( ) );
 		$record->access = addslashes( $annotation->getAccess( ) );
 		$record->url = addslashes( $annotation->getUrl( ) );
 		$record->note = addslashes( $annotation->getNote( ) );
 		$record->quote = addslashes( $annotation->getQuote( ) );
 		$record->quote_title = addslashes( $annotation->getQuoteTitle( ) );
-		$record->quote_author = addslashes( $annotation->getQuoteAuthor( ) );
+		$record->quote_author_id = addslashes( $annotation->getQuoteAuthorId( ) );
+		$record->quote_author_name = addslashes( $annotation->getQuoteAuthorName( ) );
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
 		if ( ! $forUpdate )

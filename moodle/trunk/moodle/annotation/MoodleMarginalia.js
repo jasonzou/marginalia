@@ -28,15 +28,15 @@
  * $Id$
  */
 
-function MoodleMarginalia( url, moodleRoot, username, prefs, params )
+function MoodleMarginalia( url, moodleRoot, userId, prefs, params )
 {
 	this.url = url;
 	this.moodleRoot = moodleRoot;
-	this.username = username;
+	this.loginUserId = userId;
 	this.preferences = new Preferences( 
 		new RestPreferenceService( this.moodleRoot + '/annotation/user-preference.php' ),
 		prefs );
-	this.anuser = prefs[ AN_USER_PREF ];
+	this.displayUserId = prefs[ AN_USER_PREF ];
 	this.showAnnotations = prefs[ AN_SHOWANNOTATIONS_PREF ];
 	this.showAnnotations = this.showAnnotations == 'true';
 	this.enableSmartcopy = prefs[ SMARTCOPY_PREF ] == 'true';
@@ -51,13 +51,13 @@ MoodleMarginalia.prototype.onload = function( )
 	// The check is here rather in the PHP;  that minimizes the number of patches
 	// that need to be applied to existing Moodle code.
 	var actualUrl = '' + window.location;
-	if ( this.username && actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
+	if ( this.loginUserId && actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
 		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php', {
 			csrfCookie: 'MoodleSessionTest' } );
 		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
 		keywordService.init( null, true );
-		window.marginalia = new Marginalia( annotationService, this.username, this.anuser == '*' ? '' : this.anuser, {
+		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.displayUserId == '*' ? '' : this.displayUserId, {
 			preferences: this.preferences,
 			keywordService: keywordService,
 			baseUrl:  this.moodleRoot,
@@ -67,7 +67,7 @@ MoodleMarginalia.prototype.onload = function( )
 			onkeyCreate:  true,
 			editors: {
 				link: null,
-				'default':  Marginalia.newEditorFunc( FreeformNoteEditor )
+				'default':  Marginalia.newEditorFunc( YuiAutocompleteNoteEditor )
 			},
 		} );
 		
@@ -149,7 +149,7 @@ MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
 	var leadIn = '';
 	if ( post )
 	{
-		leadIn = '<p>' + ( post.getAuthor( ) ? domutil.htmlEncode( post.getAuthor( ) ) : 'Someone' )
+		leadIn = '<p>' + ( post.getAuthorName( ) ? domutil.htmlEncode( post.getAuthorName( ) ) : 'Someone' )
 			+ ( post.getUrl( ) ? ' <a href="' + domutil.htmlEncode( post.getUrl( ) ) + '">wrote</a>' : 'wrote' )
 			+ ",</p>";
 	}
@@ -235,18 +235,18 @@ MoodleMarginalia.prototype.cleanUpPostContent = function( )
 MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 {
 	var marginalia = window.marginalia;
-	var user = userControl.value;
+	var userId = userControl.value;
 	this.hideSplash( )
 	marginalia.hideAnnotations( );
-	if ( null == user || '' == user )
+	if ( null == userId || '' == userId )
 		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'false', null);
 	else
 	{
-		marginalia.anusername = user == '*' ? '' : user;
+		marginalia.displayUserId = userId == '*' ? '' : userId;
 		marginalia.showAnnotations( url );
 		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'true', null);
-		marginalia.preferences.setPreference( AN_USER_PREF, user, null );
-		if ( this.splash && ( marginalia.username == marginalia.anusername || '' == marginalia.anusername ) )
+		marginalia.preferences.setPreference( AN_USER_PREF, userId, null );
+		if ( this.splash && ( marginalia.loginUserId == marginalia.displayUserId || '' == marginalia.displayUserId ) )
 			this.showSplash( );
 		this.fixControlMarginIE();
 	}

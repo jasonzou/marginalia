@@ -28,7 +28,7 @@ class MoodleAnnotation extends Annotation
 
 class MoodleAnnotationService extends AnnotationService
 {
-	function MoodleAnnotationService( $username )
+	function MoodleAnnotationService( $userid )
 	{
 		global $CFG;
 
@@ -40,7 +40,7 @@ class MoodleAnnotationService extends AnnotationService
 			AnnotationGlobals::getHost(),
 			AnnotationGlobals::getServicePath(),
 			AnnotationGlobals::getInstallDate(),
-			$username,
+			$userid,
 			array(
 				'baseUrl' => $CFG->wwwroot,
 				'csrfCookie' => $csrfProtect ? null : 'MoodleSessionTest',
@@ -49,9 +49,9 @@ class MoodleAnnotationService extends AnnotationService
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
-	function doListAnnotations( $url, $username, $block, $all )
+	function doListAnnotations( $url, $userid, $block, $all )
 	{
-		$query = new AnnotationSummaryQuery( $url, $username, null, null );
+		$query = new AnnotationSummaryQuery( $url, $userid, null, null );
 		if ( $query->error )
 		{
 			$this->httpError( 400, 'Bad Request', 'Bad URL 1' );
@@ -74,7 +74,7 @@ class MoodleAnnotationService extends AnnotationService
 					$annotations[ $i++ ] = AnnotationGlobals::recordToAnnotation( $r );
 			}
 			$format = $this->getQueryParam( 'format', 'atom' );
-			$logUrl = 'annotate.php?format='.$format.($username ? '&user='.$username : '').'&url='.$url;
+			$logUrl = 'annotate.php?format='.$format.($userid ? '&user='.$userid : '').'&url='.$url;
 			add_to_log( $query->handler->courseId, 'annotation', 'list', $logUrl );
 			return $annotations;
 		}

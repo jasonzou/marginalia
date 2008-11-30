@@ -147,7 +147,7 @@
     $refUrl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
     // Check whether the annotation show/hide preference is set;  if not, set it (need to do this because the AJAX
     // service lacks permission to set unknown preferences)
-    $meta = marginaliaHeaderHtml( $refUrl, true );
+    $meta = marginaliaHeaderHtml( $refUrl );
     // I'm perverting the meta argument here, but there's no way provided to do this otherwise that I 
     // can see #GEOF#
 	

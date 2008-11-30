@@ -9,25 +9,25 @@ class AnnotationSummaryQuery
 	var $url;			// The url GET parameter
 	var $username;		// The user GET parameter
 	var $searchQuery;	// The q GET parameter
-	var $searchUser;	// The u GET parameter (i.e. the user to whom the annotations belong)
+	var $searchUserId;	// The u GET parameter (i.e. the user to whom the annotations belong)
 	var $searchOf;		// The search-of (i.e. the user to whom the annotated content belongs)
 	var $sql;			// The result SQL query
 	var $handler;		// URL handlers (implements much of this class's behavior)
 	var $error;			// Any error encountered by the constructor
 	
 	/** Construct an immutable summary query */
-	function AnnotationSummaryQuery( $url, $searchUser, $searchOf, $searchQuery, $exactMatch=False, $all=False )
+	function AnnotationSummaryQuery( $url, $searchUserId, $searchOf, $searchQuery, $exactMatch=False, $all=False )
 	{
 		global $CFG, $USER;
 		
 		$this->url = $url;
-		$this->searchUser = $searchUser;
+		$this->searchUserId = $searchUserId;
 		$this->searchOf = $searchOf;
 		$this->searchQuery = $searchQuery;
 		$this->exactMatch = $exactMatch;
 		$this->accessAll = $all;	// get access beyond normal privacy limitations (admin only)
 		
-		if ( '' == $this->searchUser )
+		if ( '' == $this->searchUserId )
 			$this->username = null;
 		if ( '' == $this->searchOf )
 			$this->searchOf = null;
@@ -97,14 +97,14 @@ class AnnotationSummaryQuery
 		$a->title = ( null == $title ) ? $this->handler->title : $title;
 		
 		// Access restrictions.  Need to look up actual user names in DB.
-		if ( null == $this->searchUser )
+		if ( null == $this->searchUserId )
 			$a->who = 'anyone';
-		elseif ( '*students' == $this->searchUser )
+		elseif ( '*students' == $this->searchUserId )
 			$a->who = 'students';
-		elseif ( '*teachers' == $this->searchUser )
+		elseif ( '*teachers' == $this->searchUserId )
 			$a->who = 'teachers';
 		else
-			$a->who = $this->searchUser;
+			$a->who = $this->searchUserId;
 		
 		$a->author = $this->searchOf;
 		$a->search = $this->searchQuery;
@@ -133,7 +133,7 @@ class AnnotationSummaryQuery
 		// Show link to parent search
 		if ( null != $this->parentSummaryTitle( ) )
 		{
-			$url = $this->getSummaryUrl( $this->parentSummaryUrl( ), $this->searchUser, $this->searchOf, $this->searchQuery, $this->exactMatch );
+			$url = $this->getSummaryUrl( $this->parentSummaryUrl( ), $this->searchUserId, $this->searchOf, $this->searchQuery, $this->exactMatch );
 			$a->title = '<a class="opt-link" href="'.htmlspecialchars($url)
 				. '" title="'.htmlspecialchars( get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ) ).'">'
 				. '<span class="current">'.htmlspecialchars($title).'</span>'
@@ -141,17 +141,17 @@ class AnnotationSummaryQuery
 		}
 		
 		// Access restrictions.  Need to look up actual user names in DB.
-		if ( ! $this->searchUser )
+		if ( ! $this->searchUserId )
 			$a->who = 'anyone';
 		else
 		{
 			$url = $this->getSummaryUrl( $this->url, '', $this->searchOf, $this->searchQuery, $this->exactMatch );
-			if ( '*students' == $this->searchUser )
+			if ( '*students' == $this->searchUserId )
 				$s = 'students';
-			elseif ( '*teachers' == $this->searchUser )
+			elseif ( '*teachers' == $this->searchUserId )
 				$s = 'teachers';
 			else
-				$s = $this->searchUser;
+				$s = $this->searchUserId;
 			$a->who = '<a class="opt-link" href="'.htmlspecialchars($url)
 				.'" title="'.htmlspecialchars( get_string( 'unzoom_user_hover', ANNOTATION_STRINGS ) )
 				.'"><span class="current">'.htmlspecialchars($s).'</span><span class="alt">'
@@ -160,7 +160,7 @@ class AnnotationSummaryQuery
 		
 		if ( $this->searchOf )
 		{
-			$url = $this->getSummaryUrl( $this->url, $this->searchUser, '', $this->searchQuery, $this->exactMatch );
+			$url = $this->getSummaryUrl( $this->url, $this->searchUserId, '', $this->searchQuery, $this->exactMatch );
 			$a->author = '<a class="opt-link" href="'.htmlspecialchars($url)
 				.'" title="'.htmlspecialchars( get_string( 'unzoom_author_hover', ANNOTATION_STRINGS ) )
 				.'"><span class="current">'.htmlspecialchars($this->searchOf).'</span><span class="alt">'
@@ -171,7 +171,7 @@ class AnnotationSummaryQuery
 		
 		$a->search = $this->searchQuery;
 		
-		$url = $this->getSummaryUrl( $this->url, $this->searchUser, '', $this->searchQuery, ! $this->exactMatch );
+		$url = $this->getSummaryUrl( $this->url, $this->searchUserId, '', $this->searchQuery, ! $this->exactMatch );
 		$hover = get_string( $this->exactMatch ? 'unzoom_match_hover' : 'zoom_match_hover', ANNOTATION_STRINGS );
 		$m1 = get_string( $this->exactMatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		$m2 = get_string( $this->exactMatch ? 'containing' : 'matching', ANNOTATION_STRINGS );
@@ -234,16 +234,16 @@ class AnnotationSummaryQuery
 		// Filter annotations according to their owners
 		
 		// Admin only (used especially for research): transcend usual privacy limitations
-		if ( null == $this->searchUser )
+		if ( null == $this->searchUserId )
 			$access_cond = " ($access_visible) ";
-		elseif ( '*students' == $this->searchUser )
+		elseif ( '*students' == $this->searchUserId )
 		{
 			$access_cond = " ($access_visible) AND a.userid in ("
 				. "SELECT stu.username FROM mdl_user stu "
 				. "INNER JOIN mdl_user_students AS sts ON stu.id=sts.userid "
 				. "WHERE sts.course=".$handler->courseId.")";
 		}
-		elseif ( '*teachers' == $this->searchUser )
+		elseif ( '*teachers' == $this->searchUserId )
 		{
 			$access_cond = " ($access_visible) AND a.userid in ("
 				. "SELECT teu.username FROM mdl_user AS teu "
@@ -252,11 +252,11 @@ class AnnotationSummaryQuery
 		}
 		else
 		{
-			if ( ! array_key_exists( 'username', $USER ) || $USER->username != $this->searchUser )
+			if ( ! array_key_exists( 'username', $USER ) || $USER->username != $this->searchUserId )
 				$access_cond = "($access_visible)";
 			if ( $access_cond )
 				$access_cond .= ' AND ';
-			$access_cond .= "a.userid='".addslashes($this->searchUser)."'";
+			$access_cond .= "a.userid='".addslashes($this->searchUserId)."'";
 		}
 
 	
@@ -278,11 +278,11 @@ class AnnotationSummaryQuery
 		. "a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char, "
 		. "a.link AS link, a.link_title AS link_title, a.action AS action, "
 		. "a.access AS access, a.created, a.modified $range"
-		. ",\n concat(u.firstname, ' ', u.lastname) AS note_author"
+		. ",\n concat(u.firstname, ' ', u.lastname) AS username"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
 		. ",\n a.note note, a.quote, a.quote_title AS quote_title"
 		. ",\n a.quote_author AS quote_author_id"
-		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author"
+		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author_name"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) AS quote_author_url";
 		
 		// Standard tables apply to all (but note the outer join of user, which if gone
@@ -328,7 +328,7 @@ class AnnotationSummaryQuery
 	function listUsersSql( )
 	{
 		global $CFG;
-		return "SELECT u.firstname, u.lastname, u.username "
+		return "SELECT u.firstname, u.lastname, u.username AS userid "
 			. "\nFROM {$CFG->prefix}user u "
 			. "\nINNER JOIN {$CFG->prefix}annotation a ON a.userid=u.username "
 			. $this->handler->getTables( )
@@ -336,14 +336,14 @@ class AnnotationSummaryQuery
 	}
 	
 	/** Generate a summary URL corresponding to this query */
-	function getSummaryUrl( $url, $searchUser, $searchOf, $searchQuery, $exactMatch=false )
+	function getSummaryUrl( $url, $searchUserId, $searchOf, $searchQuery, $exactMatch=false )
 	{
 		global $CFG;
 		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($url);
 		if ( null != $searchQuery && '' != $searchQuery )
 			$s .= '&q='.urlencode($searchQuery);
-		if ( null != $searchUser && '' != $searchUser )
-			$s .= '&u='.urlencode($searchUser);
+		if ( null != $searchUserId && '' != $searchUserId )
+			$s .= '&u='.urlencode($searchUserId);
 		if ( null != $searchOf && '' != $searchOf )
 			$s .= '&search-of='.urlencode($searchOf);
 		if ( $exactMatch )
@@ -353,8 +353,8 @@ class AnnotationSummaryQuery
 		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($this->url);
 		if ( null != $this->searchQuery && '' != $this->searchQuery )
 			$s .= '&q='.urlencode($this->searchQuery);
-		if ( null != $this->searchUser && '' != $this->searchUser )
-			$s .= '&user='.urlencode($this->searchUser);
+		if ( null != $this->searchUserId && '' != $this->searchUserId )
+			$s .= '&user='.urlencode($this->searchUserId);
 		if ( null != $this->searchOf && '' != $this->searchOf )
 			$s .= '&search-of='.urlencode($this->searchOf);
 		return $s;
@@ -363,7 +363,7 @@ class AnnotationSummaryQuery
 	/** Generate a feed URL corresponding to this query */
 	function getFeedUrl( $format )
 	{
-		return $this->getSummaryUrl( $this->url, $this->searchUser, $this->searchOf, $this->searchQuery )
+		return $this->getSummaryUrl( $this->url, $this->searchUserId, $this->searchOf, $this->searchQuery )
 			. '&format=atom';
 	}
 }
