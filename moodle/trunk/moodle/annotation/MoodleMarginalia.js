@@ -65,6 +65,7 @@ MoodleMarginalia.prototype.onload = function( )
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
+			displayNote: MoodleMarginalia.displayNote,
 			editors: {
 				link: null,
 				'default':  Marginalia.newEditorFunc( YuiAutocompleteNoteEditor )
@@ -100,6 +101,23 @@ MoodleMarginalia.prototype.onload = function( )
 	}
 };
 
+
+MoodleMarginalia.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
+{
+	params.customButtons = [
+		{
+			owner: true,
+			others: true,
+			params: {
+				className: 'quote',
+				title: 'share',
+				content: '@',
+				onclick: function( ) { MoodleMarginalia.onAnnotationSmartquote( marginalia, annotation ); }
+			}
+		}
+	];
+	return Marginalia.defaultDisplayNote( marginalia, annotation, noteElement, params, isEditing );
+}
 
 /**
  * Return a function for handling a smartquote button click
@@ -151,7 +169,7 @@ MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
 	{
 		leadIn = '<p>' + ( post.getAuthorName( ) ? domutil.htmlEncode( post.getAuthorName( ) ) : 'Someone' )
 			+ ( post.getUrl( ) ? ' <a href="' + domutil.htmlEncode( post.getUrl( ) ) + '">wrote</a>' : 'wrote' )
-			+ ",</p>";
+			+ ":</p>";
 	}
 	var pub = leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
 	
@@ -159,7 +177,34 @@ MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
 	bus.publish( pub );
 }
 
-
+MoodleMarginalia.onAnnotationSmartquote = function( marginalia, annotation )
+{
+	var quoteAuthor = annotation.getQuoteAuthorName( );
+	var pub = '<p>' + ( quoteAuthor ? domutil.htmlEncode( quoteAuthor ) : 'Someone' )
+		+ ' <a href="' + domutil.htmlEncode( annotation.getUrl( ) ) + '">wrote:</a>'
+		+ '</p><blockquote><p>' + domutil.htmlEncode( annotation.getQuote( ) ) + '</p></blockquote>';
+	if ( marginalia.loginUserId == annotation.getUserId( ) )
+	{
+		if ( annotation.getNote( ) )
+			pub += '<p>' + domutil.htmlEncode( annotation.getNote( ) ) + '</p>';
+	}
+	else
+	{
+		var noteAuthor = annotation.getUserName( );
+		if ( annotation.getNote( ) )
+		{
+			pub += '<p>' + domutil.htmlEncode( noteAuthor ) + ' noted:</p>'
+				+ '<blockquote><p>' + domutil.htmlEncode( annotation.getNote( ) ) + '</p></blockquote>';
+		}
+		else
+			pub += '<p>(Via an annotation by ' + domutil.htmlEncode( noteAuthor ) + '.)</p>';
+	}
+	
+	var bus = new CookieBus( 'smartquote' );
+	bus.publish( pub );
+}
+	
+	
 MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 {
 	this.hideSplash( );
