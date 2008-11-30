@@ -46,7 +46,7 @@ class AnnotationUserSummary
 				$this->editUsers[ $userid ] = array_key_exists( $userid, $this->editUsers ) ? $this->editUsers[ $userid ] + 1 : 1;
 			else
 				$this->noteUsers[ $userid ] = array_key_exists( $userid, $this->noteUsers ) ? $this->noteUsers[ $userid ] + 1 : 1;
-			$this->allUsers[ $userid ] = true;
+			$this->allUsers[ $userid ] = $annotation->getUserName( );
 		}
 	}
 	
@@ -56,12 +56,12 @@ class AnnotationUserSummary
 		
 		foreach ( array_keys( $this->allUsers ) as $user )
 		{
-			$s .= "\t<user ";
+			$s .= "\t<user id='" . htmlspecialchars( $user ) . "'";
 			if ( $this->noteUsers[ $user ] )
 				$s .= ' notes="'.$this->noteUsers[ $user ].'"';
 			if ( $this->editUsers[ $user ] )
 				$s .= ' edits="'.$this->editUsers[ $user ].'"';
-			$s .= ">".htmlspecialchars( $user )."</user>\n";
+			$s .= ">".htmlspecialchars( $this->allUsers[ $user ] )."</user>\n";
 		}
 		
 		$s .= "</annotation-summary>\n";

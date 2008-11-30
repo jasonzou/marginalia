@@ -45,6 +45,7 @@ class Annotation
 		$this->id = null;
 		$this->url = null;
 		$this->userId = null;
+		$this->userName = null;
 		$this->sequenceRange = null;
 		$this->xpathRange = null;
 		$this->note = null;
@@ -52,7 +53,8 @@ class Annotation
 		$this->action = null;
 		$this->quote = null;
 		$this->quoteTitle = null;
-		$this->quoteAuthor = null;
+		$this->quoteAuthorId = null;
+		$this->quoteAuthorName = null;
 		$this->link = null;
 		$this->linkTitle = null;
 		$this->created = null;
@@ -91,6 +93,12 @@ class Annotation
 	
 	function getUserId( )
 	{ return $this->userId; }
+	
+	function setUserName( $name )
+	{ $this->userName = $name; }
+	
+	function getUserName( )
+	{ return $this->userName; }
 	
 	function setSequenceRange( &$range )
 	{ $this->sequenceRange = $range; }
@@ -140,11 +148,17 @@ class Annotation
 	function getQuoteTitle( )
 	{ return $this->quoteTitle; }
 	
-	function setQuoteAuthor( $quoteAuthor )
-	{ $this->quoteAuthor = $quoteAuthor; }
+	function setQuoteAuthorId( $quoteAuthorId )
+	{ $this->quoteAuthorId = $quoteAuthorId; }
 	
-	function getQuoteAuthor( )
-	{ return $this->quoteAuthor; }
+	function getQuoteAuthorId( )
+	{ return $this->quoteAuthorId; }
+	
+	function setQuoteAuthorName( $quoteAuthorName )
+	{ $this->quoteAuthorName = $quoteAuthorName; }
+	
+	function getQuoteAuthorName( )
+	{ return $this->quoteAuthorName; }
 	
 	function setLink( $link )
 	{

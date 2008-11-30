@@ -283,7 +283,7 @@ class AnnotationService
 	{
 		$format = $this->getQueryParam( 'format', 'atom' );
 		$url = $this->getQueryParam( 'url', null );
-		$username = $this->getQueryParam( 'user', null );
+		$userid = $this->getQueryParam( 'user', null );
 		$block = $this->getQueryParam( 'block', null );
 		$block = $block ? new SequencePoint( $block ) : null;
 		$all = $this->getQueryParam( 'all', 'no' ) == 'yes' ? true : false;
@@ -292,7 +292,7 @@ class AnnotationService
 			$this->httpError( 400, 'Bad Request', 'Bad URL' );
 		else
 		{
-*/			$annotations = $this->doListAnnotations( $url, $username, $block, $all );
+*/			$annotations = $this->doListAnnotations( $url, $userid, $block, $all );
 			
 			if ( null === $annotations )
 				$this->httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
@@ -301,8 +301,8 @@ class AnnotationService
 				$feedUrl = '';
 				if ( $url )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'url=' . urlencode($url);
-				if ( $username )
-					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'user=' . urlencode( $username );
+				if ( $userid )
+					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'user=' . urlencode( $userid );
 				if ( $format )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'format=' . urlencode( $format );
 				if ( $block )

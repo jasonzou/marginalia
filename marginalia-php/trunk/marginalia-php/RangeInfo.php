@@ -79,16 +79,16 @@ class RangeInfo
 				$editUsers[ $userid ] = array_key_exists( $userid, $editUsers ) ? $editUsers[ $userid ] + 1 : 1;
 			else
 				$noteUsers[ $userid ] = array_key_exists( $userid, $noteUsers ) ? $noteUsers[ $userid ] + 1 : 1;
-			$allUsers[ $userid ] = true;
+			$allUsers[ $userid ] = $annotation->getUserName( );
 		}
 		foreach ( array_keys( $allUsers ) as $user )
 		{
-			$s .= "\t\t<user";
+			$s .= "\t\t<user id='".htmlspecialchars( $user )."'";
 			if ( array_key_exists( $user, $noteUsers ) )
 				$s .= ' notes="'.$noteUsers[ $user ].'"';
 			if ( array_key_exists( $user, $editUsers ) )
 				$s .= ' edits="'.$editUsers[ $user ].'"';
-			$s .= '>'.htmlspecialchars( $user )."</user>\n";
+			$s .= '>'.htmlspecialchars( $allUsers[ $user ] )."</user>\n";
 		}
 		$s .= "\t</range-info>\n";
 		return $s;

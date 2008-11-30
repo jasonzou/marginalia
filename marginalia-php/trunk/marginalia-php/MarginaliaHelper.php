@@ -62,6 +62,13 @@ class MarginaliaHelper
 			$annotation->setUserId( $userid );
 		}
 
+		// UserName
+		if ( array_key_exists( 'username', $params ) )
+		{
+			$userName = $params[ 'username' ];
+			$annotation->setUserName( $userName );
+		}
+		
 		// Sequence Range
 		if ( array_key_exists( 'sequence-range', $params ) )
 		{
@@ -187,7 +194,7 @@ class MarginaliaHelper
 		$NS_ATOM = 'http://www.w3.org/2005/Atom';
 		
 		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.6'";
+		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.7'";
 		if ( $baseUrl )
 			echo " xml:base='".htmlspecialchars($baseUrl)."'";
 		echo ">\n";
@@ -221,12 +228,14 @@ class MarginaliaHelper
 		$NS_XHTML = 'http://www.w3.org/1999/xhtml';
 	
 		$sUserId = htmlspecialchars( $annotation->getUserId() );
+		$sUserName = htmlspecialchars( $annotation->getUserName() );
 		$sNote = htmlspecialchars( $annotation->getNote() );
 		$sQuote = htmlspecialchars( $annotation->getQuote() );
 		$sUrl = htmlspecialchars( $annotation->getUrl() );
 		$sLink = htmlspecialchars( $annotation->getLink() );
 		$sQuoteTitle = htmlspecialchars( $annotation->getQuoteTitle() );
-		$sQuoteAuthor = htmlspecialchars( $annotation->getQuoteAuthor() );
+		$sQuoteAuthorId = htmlspecialchars( $annotation->getQuoteAuthorId() );
+		$sQuoteAuthorName = htmlspecialchars( $annotation->getQuoteAuthorName() );
 		$sAccess = htmlspecialchars( $annotation->getAccess() );
 		$sAction = htmlspecialchars( $annotation->getAction() );
 		
@@ -277,11 +286,13 @@ class MarginaliaHelper
 		//echo "  <summary>$summary</summary>\n";
 		// Author of the annotation
 		$s .= "  <author>\n"
-			. "   <name>$sUserId</name>\n"
+			. "   <name>$sUserName</name>\n"
+			. "   <ptr:userid>$sUserId</ptr:userid>\n"
 			. "  </author>\n";
 		// Contributor is the sources of the selected text
 		$s .= "  <contributor>\n"
-			. "   <name>$sQuoteAuthor</name>\n"
+			. "   <name>$sQuoteAuthorName</name>\n"
+			. "   <ptr:userid>$sQuoteAuthorId</ptr:userid>\n"
 			. "  </contributor>\n";
 	
 		// Content area
@@ -315,7 +326,7 @@ class MarginaliaHelper
 	
 		$s .= "  <content type='xhtml'>\n" 
 			. "   <div xmlns='$NS_XHTML' class='annotation'>\n"
-			. "<p class='quote'>$sQuote &#x2015; <span class='quoteAuthor'>$sQuoteAuthor</span> in "
+			. "<p class='quote'>$sQuote &#x2015; <span class='quoteAuthor' title='$sQuoteAuthorId'>$sQuoteAuthorName</span> in "
 			.   "<cite><a href=\"$sUrl\">$sQuoteTitle</a></cite></p>\n"
 			. "<p class='note'>$sNote</p>\n"
 			. $link

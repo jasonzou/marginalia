@@ -57,7 +57,6 @@ function listMarginaliaJavascript( )
 		,"link-ui-clicktolink.js"
 		,"linkable.js"
 	
-		,"smartcopy.js"
 		,"RangeInfo.js"
 		,"rest-annotate.js"
 		,"rest-prefs.js"
