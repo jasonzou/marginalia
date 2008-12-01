@@ -85,11 +85,11 @@ MoodleMarginalia.prototype.onload = function( )
 		var posts = marginalia.listPosts( ).getAllPosts( );
 		for ( var i = 0;  i < posts.length;  ++i )
 		{
-			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', marginalia._skipContent );
+			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', marginalia.skipContent );
 			if ( button )
 			{
 				var content = posts[ i ].getContentElement( );
-				button.onclick = this.getOnSmartquoteHandler( marginalia, content );
+				button.onclick = function( ) { Smartquote.quotePostMicro( content, marginalia.skipContent ); };
 			}
 		}
 		
@@ -112,99 +112,13 @@ MoodleMarginalia.displayNote = function( marginalia, annotation, noteElement, pa
 				className: 'quote',
 				title: 'share',
 				content: '@',
-				onclick: function( ) { MoodleMarginalia.onAnnotationSmartquote( marginalia, annotation ); }
+				onclick: function( ) { Smartquote.quoteAnnotation( annotation, marginalia.loginUserId ); }
 			}
 		}
 	];
 	return Marginalia.defaultDisplayNote( marginalia, annotation, noteElement, params, isEditing );
 }
 
-/**
- * Return a function for handling a smartquote button click
- */
-MoodleMarginalia.prototype.getOnSmartquoteHandler = function( marginalia, content )
-{
-	var moodleMarginalia = this;
-	return function( ) { moodleMarginalia.onSmartquote( marginalia, content ); };
-}
-
-MoodleMarginalia.prototype.onSmartquote = function( marginalia, content )
-{
-	// Test for selection support (W3C or IE)
-	if ( ( ! window.getSelection || null == window.getSelection().rangeCount )
-		&& null == document.selection )
-	{
-		if ( warn )
-			alert( getLocalized( 'browser support of W3C range required for smartquote' ) );
-		return false;
-	}
-		
-	var textRange0 = getPortableSelectionRange();
-	if ( null == textRange0 )
-	{
-		if ( warn )
-			alert( getLocalized( 'select text to quote' ) );
-		return false;
-	}
-	
-	// Strip off leading and trailing whitespace and preprocess so that
-	// conversion to WordRange will go smoothly.
-	var textRange = TextRange.fromW3C( textRange0 );
-	textRange = textRange.shrinkwrap( marginalia.skipContent );
-	if ( ! textRange )
-	{
-		// this happens if the shrinkwrapped range has no non-whitespace text in it
-		if ( warn )
-			alert( getLocalized( 'select text to quote' ) );
-		return false;
-	}
-	
-	var quote = getTextRangeContent( textRange, marginalia.skipContent );
-	quote = quote.replace( /(\s|\u00a0)+/g, ' ' );
-	
-	var postInfo = PostPageInfo.getPostPageInfo( document );
-	var post = postInfo.getPostMicro( textRange.startContainer );
-	var leadIn = '';
-	if ( post )
-	{
-		leadIn = '<p>' + ( post.getAuthorName( ) ? domutil.htmlEncode( post.getAuthorName( ) ) : 'Someone' )
-			+ ( post.getUrl( ) ? ' <a href="' + domutil.htmlEncode( post.getUrl( ) ) + '">wrote</a>' : 'wrote' )
-			+ ":</p>";
-	}
-	var pub = leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
-	
-	var bus = new CookieBus( 'smartquote' );
-	bus.publish( pub );
-}
-
-MoodleMarginalia.onAnnotationSmartquote = function( marginalia, annotation )
-{
-	var quoteAuthor = annotation.getQuoteAuthorName( );
-	var pub = '<p>' + ( quoteAuthor ? domutil.htmlEncode( quoteAuthor ) : 'Someone' )
-		+ ' <a href="' + domutil.htmlEncode( annotation.getUrl( ) ) + '">wrote:</a>'
-		+ '</p><blockquote><p>' + domutil.htmlEncode( annotation.getQuote( ) ) + '</p></blockquote>';
-	if ( marginalia.loginUserId == annotation.getUserId( ) )
-	{
-		if ( annotation.getNote( ) )
-			pub += '<p>' + domutil.htmlEncode( annotation.getNote( ) ) + '</p>';
-	}
-	else
-	{
-		var noteAuthor = annotation.getUserName( );
-		if ( annotation.getNote( ) )
-		{
-			pub += '<p>' + domutil.htmlEncode( noteAuthor ) + ' noted:</p>'
-				+ '<blockquote><p>' + domutil.htmlEncode( annotation.getNote( ) ) + '</p></blockquote>';
-		}
-		else
-			pub += '<p>(Via an annotation by ' + domutil.htmlEncode( noteAuthor ) + '.)</p>';
-	}
-	
-	var bus = new CookieBus( 'smartquote' );
-	bus.publish( pub );
-}
-	
-	
 MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 {
 	this.hideSplash( );

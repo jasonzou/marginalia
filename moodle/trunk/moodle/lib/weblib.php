@@ -4917,8 +4917,8 @@ function use_html_editor($name='', $editorhidebuttons='', $id='') {
         echo "\nvar HTML_editor = $editor;";
     }
 	
-	echo "if ( subscribeSmartquoteHtmlArea )\n"
-		. "subscribeSmartquoteHtmlArea( $editor );\n";
+	echo "if ( Smartquote && Smartquote.subscribeHtmlArea )\n"
+		. "Smartquote.subscribeHtmlArea( $editor );\n";
     echo '//]]>'."\n";
     echo '</script>'."\n";
 }

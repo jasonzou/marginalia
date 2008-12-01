@@ -29,10 +29,10 @@
 AN_SUN_SYMBOL = '\u25cb'; //'\u263c';
 AN_MOON_SYMBOL = '\u25c6'; //'\u2641';	
 
-function AnnotationSummary( annotationService, username, urlsExcludeHost )
+function AnnotationSummary( annotationService, loginUserId, urlsExcludeHost )
 {
 	this.annotationService = annotationService;
-	this.username = username;
+	this.loginUserId = loginUserId;
 	this.urlsExcludeHost = urlsExcludeHost;
 }
 
@@ -76,7 +76,7 @@ AnnotationSummary.prototype.onSearchAnnotationsChange = function( )
 	var userElement = document.getElementById( 'user' );
 	if ( 'my annotations' == searchElement.value )
 	{
-		userElement.value = this.username;
+		userElement.value = this.loginUserId;
 		accessElement.value = '';
 	}
 	else
@@ -84,6 +84,63 @@ AnnotationSummary.prototype.onSearchAnnotationsChange = function( )
 		userElement.value = '';
 		accessElement.value = 'public';
 	}
+}
+
+AnnotationSummary.skipZoom = function( node )
+{
+	if ( ELEMENT_NODE == node.nodeType )
+	{
+		if ( domutil.hasClass( node, 'zoom' ) )
+			return true;
+	}
+	return false;
+}
+
+AnnotationSummary.prototype.quote = function( id )
+{
+	var element = document.getElementById( id );
+	var row = domutil.parentByTagClass( element, 'tr', null );
+	var annotation = this.annotationFromRow( row );
+	Smartquote.quoteAnnotation( annotation, this.loginUserId );
+}
+
+AnnotationSummary.prototype.annotationFromRow = function( row )
+{
+	var node = domutil.childByTagClass( row, null, 'quote' );
+	var quote = domutil.getNodeText( node, AnnotationSummary.skipZoom );
+	
+	node = domutil.childByTagClass( row, null, 'note' );
+	var note = domutil.getNodeText( node, AnnotationSummary.skipZoom );
+	
+	node = domutil.childByTagClass( row, null, 'user-name' );
+	var userName = domutil.getNodeText( node, AnnotationSummary.skipZoom );
+
+	// This one is tricky because of rowspan
+	for ( var prevrow = row;  prevrow;  prevrow = prevrow.precedingSibling )
+	{
+		node = domutil.childByTagClass( prevrow, null, 'quote-author' );
+		if ( node )
+			break;
+	}
+	var quoteAuthorName = node ? domutil.getNodeText( node, AnnotationSummary.skipZoom ) : '';
+	
+	for ( var prevrow = row;  prevrow;  prevrow = prevrow.precedingSibling )
+	{
+		node = domutil.childByTagClass( prevrow, null, 'url' );
+		if ( node )
+			break;
+	}
+	var url = node ? node.getAttribute( 'href' ) : '';
+	
+	var annotation = new Annotation( {
+		url: url,
+		quote: quote,
+		note: note,
+		userName: userName,
+		quoteAuthorName: quoteAuthorName
+	} );
+	
+	return annotation;
 }
 
 function setAnnotationUser( user )

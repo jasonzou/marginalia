@@ -155,6 +155,7 @@ function marginaliaHeaderHtml( $refUrl )
 		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anScripts[$i]."'></script>\n";	
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-config.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-strings.js'></script>\n";
+	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/MoodleMarginalia.js'></script>\n";
 
 	// Bits of YUI

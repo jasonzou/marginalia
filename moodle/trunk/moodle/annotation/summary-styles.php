@@ -130,15 +130,6 @@ table.annotations tbody td.quote-author {
 	width: 10em;
 }
 
-/*
-table.annotations tbody td.quote-author:before {
-	content: '(';
-}
-table.annotations tbody td.quote-author:after {
-	content: ')';
-}
-*/
-
 table.annotations tbody td.quote {
 	background: white ;
 	width: 40%;
@@ -149,13 +140,12 @@ table.annotations tbody td.note {
 	width: 30%;
 }
 
-table.annotations tbody td.controls {
+table.annotations tbody td.user {
 	font-size: 80%;
-	white-space: nowrap;
 }
 
-table.annotations tbody td.anuser {
-	font-size: 80%;
+table.annotations tbody td.user.isloginuser .user-name {
+	display: none;
 }
 
 table.annotations tbody tr:hover td.quote,

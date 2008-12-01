@@ -41,6 +41,23 @@ table td#annotation-controls {
 	vertical-align: top;
 }
 
+.forumpost .commands button.smartquote {
+	display: inline;
+	background: none;
+	border: none;
+	padding: 0;
+	margin: 0;
+	font-family: inherit;
+	font-size: inherit;
+	color: blue;
+	cursor: pointer;
+}
+
+.forumpost .commands button.smartquote:hover span {
+	text-decoration: underline;
+	color: red;
+}
+
 /* hack button to allow for annotation creation, a result of problems with Moz positioning */
 /* it has to be a button, otherwise clicking it loses the selection */
 td.control-margin {

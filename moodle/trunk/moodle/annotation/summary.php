@@ -39,7 +39,8 @@ class AnnotationSummaryPage
 			. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-prefs.js'></script>\n"
 			. "<script language='JavaScript' type='text/javascript' src='marginalia/annotation.js'></script>\n"
 			. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='$sWwwroot/annotation/rest-prefs.js'></script>\n"
+			. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-prefs.js'></script>\n"
+			. "<script language='JavaScript' type='text/javascript' src='smartquote.js'></script>\n"
 			. "<script language='JavaScript' type='text/javascript' src='summary.js'></script>\n"
 			. "<script language='JavaScript' type='text/javascript'>\n"
 			. "var annotationService = new RestAnnotationService('$sWwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
@@ -79,9 +80,6 @@ class AnnotationSummaryPage
 	{
 		$this->errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
 		$this->summaryUrl = $_GET[ 'url' ];
-		$excludeFields = array_key_exists( 'exclude', $_GET ) ? $_GET[ 'exclude' ] : '';
-		$this->excludeFields = $excludeFields ? split( ' ', $excludeFields ) : array( );
-		$this->possibleExcludeFields = array( 'quote', 'note', 'source', 'user', 'controls' );
 		
 		$this->searchQuery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
 		$this->searchUserId = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
@@ -142,8 +140,6 @@ class AnnotationSummaryPage
 	function showHtml( $query, $annotations )
 	{
 		global $CFG, $USER;
-		
-		$excludeFields = array( );
 		
 		// Get the course.  This can't be passed as a GET parameter because this URL could be via the
 		// Atom feed, and the Atom feed is generated exclusively by annotation code which doesn't know
@@ -236,14 +232,16 @@ class AnnotationSummaryPage
 			foreach ( $annotations as $annotation )
 				$annotationa[ ] = $annotation;
 				
-			$nCols = 6 - count( array_intersect( $this->excludeFields, $this->possibleExcludeFields) );
+			$nCols = 6;
 	
 			echo "<table cellspacing='0' class='annotations'>";
 			for ( $annotation_i = 0;  $annotation_i < count( $annotationa );  ++$annotation_i )
 			{
 				$annotation = $annotationa[ $annotation_i ];
+				
 				// Display a heading for each new section URL
-				if ( $annotation->section_type != $curSectionType || $annotation->section_url != $curSection ) {
+				if ( $annotation->section_type != $curSectionType || $annotation->section_url != $curSection )
+				{
 					if ( $curSection != null )
 						echo "</tbody>\n";
 					echo "<thead><tr><th colspan='$nCols'>";
@@ -270,157 +268,149 @@ class AnnotationSummaryPage
 					$curUser = $annotation->userid;
 
 					echo "<tr class='fragment first'>";
-					if ( ! $excludeFields || ! in_array( 'source', $excludeFields ) )
+					// Figure out how many rows this source will span
+					$nRows = 1;
+					for ( $j = $annotation_i + 1;  $j < count( $annotationa );  ++$j )
 					{
-						// Figure out how many rows this source will span
-						$nRows = 1;
-						for ( $j = $annotation_i + 1;  $j < count( $annotationa );  ++$j )
+						if ( $annotationa[ $j ]->url != $curUrl )
 						{
-							if ( $annotationa[ $j ]->url != $curUrl )
-							{
 //								echo $annotationa[$j]->url . "!=" . $curUrl;
-								break;
-							}
-							$nRows += 1;
+							break;
 						}
-						
-						// Only prefix the URL with the site root if it doesn't already have a scheme
-						// Only check for http and https schemes to prevent obscure attacks
-						$url = $annotation->url;
-						if ( ! ( str_startswith( $url, 'http://' ) || str_startswith( $url, 'https://' ) ) ) 
-							$url = $CFG->wwwroot.$annotation->url;
-						
-						echo "<th rowspan='$nRows'>";
-						if ( MarginaliaHelper::isUrlSafe( $url ) )
-						{
-							$a->row_type = htmlspecialchars( $annotation->row_type );
-							$a->author = htmlspecialchars( $annotation->quote_author_name );
-							echo "<a href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
-							echo htmlspecialchars( $annotation->quote_title ) . '</a>';
-							if ( ! in_array( 'quote-author', $excludeFields ) )
-							{
-								echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author_name );
-								// Link to filter only annotations by this user
-								if ( $annotation->quote_author_id != $query->searchOf )
-								{
-									$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
-									echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
-								}
-								echo "</span>\n";
-							}
-						}
-						echo "</th>\n";
-/*						if ( ! in_array( 'quote-author', $excludeFields ) )
-							echo "<td rowspan='$nRows' class='quote-author'>".htmlspecialchars( $annotation->quote_author )."</td>\n";
-*/					}
-				}
-				else
-				{
-					echo "<tr>";
-/*					if ( ! in_array( 'source', $excludeFields ) )
-					{
-						if ( ! in_array( 'quote-author', $excludeFields ) )
-							echo "<td colspan='2' class='fragment'></td>\n";
-						else
-							echo "<td class='fragment'></td>\n";
-					}
-*/				}
-				
-				// Show the quoted text
-				if ( ! in_array( 'quote', $excludeFields ) )
-				{
-					echo "<td class='quote'>";
-					echo htmlspecialchars( $annotation->quote );
-					echo "</td>\n";
-				}
-				
-				// Show the note
-				if ( ! in_array( 'note', $excludeFields ) )
-				{
-					echo "<td class='note'>";
-					if ( ! $annotation->note )
-						echo '&#160;';
-					else
-						echo htmlspecialchars( $annotation->note );
-
-					if ( ! $this->exactMatch && $keywordHash[ $annotation->note ] )
-					{
-						$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $query->searchOf, $annotation->note, true );
-						echo "<a class='zoom' title='"
-							.htmlspecialchars(get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
-							."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
-					}
-					echo "</td>\n";
-				}
-
-				// Show edit controls or the user who created the annotation
-				if ( ! in_array( 'controls', $excludeFields ) || ! in_array( 'user', $excludeFields ) )
-				{
-					if ( ( ! in_array( 'controls', $excludeFields ) ) && $annotation->userid == $USER->username )
-					{
-						echo "<td class='controls'>";
-						$AN_SUN_SYMBOL = '&#9675;';
-						$AN_MOON_SYMBOL = '&#9670;';
-						echo "<button class='share-button access-{$annotation->access}' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
-							.('public' == $annotation->access ? $AN_SUN_SYMBOL : $AN_MOON_SYMBOL )."</button>";
-						/* The following code supports additional access modes, but has been disabled
-						 * for now:
-						echo "<select onchange='shareAnnotation(this,$annotation->id)'>\n";
-						echo "<option value='private'".('private'==$annotation->access?"selected='selected'":'').'>'.get_string( 'private', ANNOTATION_STRINGS )."</option>\n";
-						echo "<option value='author'".('author'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author', ANNOTATION_STRINGS )."</option>\n";
-						echo "<option value='teacher'".('teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'teacher', ANNOTATION_STRINGS )."</option>\n";
-						echo "<option value='author teacher'".('author teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author+teacher', ANNOTATION_STRINGS )."</option>\n";
-						echo "<option value='public'".('public'==$annotation->access?"selected='selected'":'').'>'.get_string( 'public', ANNOTATION_STRINGS )."</option>\n";
-						echo "</select>\n";
-						*/
-						echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>";
-					}
-					else if ( ! in_array( 'user', $excludeFields ) )
-					{
-						echo "<td class='anuser'>";
-						$url = $CFG->wwwroot.$annotation->url;
-						//if ( $annotation->userid && $annotation->userid != $USER->username )
-						//	$url .= "&anuser=".$annotation->userid;
-						if ( MarginaliaHelper::isUrlSafe( $url ) )
-						{
-							echo "<a onclick='setAnnotationUser(\"".htmlspecialchars($annotation->userid)."\")' href='".htmlspecialchars($url)."'>"
-								.htmlspecialchars($annotation->username)."</a>";
-						}
+						$nRows += 1;
 					}
 					
-					// Link to filter only annotations by this user
-					if ( $annotation->userid != $query->searchUserId )
+					// Only prefix the URL with the site root if it doesn't already have a scheme
+					// Only check for http and https schemes to prevent obscure attacks
+					$url = $annotation->url;
+					if ( ! ( str_startswith( $url, 'http://' ) || str_startswith( $url, 'https://' ) ) ) 
+						$url = $CFG->wwwroot.$annotation->url;
+					
+					echo "<th rowspan='$nRows'>";
+					if ( MarginaliaHelper::isUrlSafe( $url ) )
 					{
-						$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery, $query->exactMatch );
-						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+						$a->row_type = htmlspecialchars( $annotation->row_type );
+						$a->author = htmlspecialchars( $annotation->quote_author_name );
+						echo "<a class='url' href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
+						echo htmlspecialchars( $annotation->quote_title ) . '</a>';
+
+						echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author_name )."</span>\n";
+						// Link to filter only annotations by this user
+						if ( $annotation->quote_author_id != $query->searchOf )
+						{
+							$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
+							echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
+						}
 					}
-					echo "</td>\n";
+					echo "</th>\n";
 				}
+				else
+					echo "<tr>";
+				
+					
+				// Show the quoted text
+				echo "<td class='quote'>";
+				echo htmlspecialchars( $annotation->quote );
+				echo "</td>\n";
+				
+				
+				// Show the note
+				echo "<td class='note'>";
+				if ( ! $annotation->note )
+					echo '&#160;';
+				else
+					echo htmlspecialchars( $annotation->note );
+
+				if ( ! $this->exactMatch && $keywordHash[ $annotation->note ] )
+				{
+					$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $query->searchOf, $annotation->note, true );
+					echo "<a class='zoom' title='"
+						.htmlspecialchars(get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
+						."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+				}
+				echo "</td>\n";
+
+				
+				// Show edit controls or the user who created the annotation
+				echo "<td class='user".( $annotation->userid == $USER->username ? ' isloginuser' : '')."'>\n";
+
+				// Smartquote button
+				$sqid = htmlspecialchars( 'sq'.$annotation->id );
+				echo "<button class='smartquote' id='$sqid'>@</button>\n";
+				
+				// Controls for current user
+				if ( $annotation->userid == $USER->username )
+				{
+					$AN_SUN_SYMBOL = '&#9675;';
+					$AN_MOON_SYMBOL = '&#9670;';
+					echo "<button class='share-button access-{$annotation->access}' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
+						.('public' == $annotation->access ? $AN_SUN_SYMBOL : $AN_MOON_SYMBOL )."</button>";
+					/* The following code supports additional access modes, but has been disabled
+					 * for now:
+					echo "<select onchange='shareAnnotation(this,$annotation->id)'>\n";
+					echo "<option value='private'".('private'==$annotation->access?"selected='selected'":'').'>'.get_string( 'private', ANNOTATION_STRINGS )."</option>\n";
+					echo "<option value='author'".('author'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author', ANNOTATION_STRINGS )."</option>\n";
+					echo "<option value='teacher'".('teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'teacher', ANNOTATION_STRINGS )."</option>\n";
+					echo "<option value='author teacher'".('author teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author+teacher', ANNOTATION_STRINGS )."</option>\n";
+					echo "<option value='public'".('public'==$annotation->access?"selected='selected'":'').'>'.get_string( 'public', ANNOTATION_STRINGS )."</option>\n";
+					echo "</select>\n";
+					*/
+					echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>\n";
+				}
+				
+				// User name (or "me" for current user)
+				$displayUserName = htmlspecialchars( $annotation->username );
+				$hiddenUserName = '';
+				$class = 'user-name';
+				
+				if ( $annotation->userid == $USER->username )
+				{
+					$hiddenUserName = "<span class='user-name'>$displayUserName</span>\n";
+					$displayUserName = htmlspecialchars( get_string( 'me', ANNOTATION_STRINGS, null ) );
+					$class = '';
+				}
+					
+				$url = $CFG->wwwroot.$annotation->url;
+				if ( MarginaliaHelper::isUrlSafe( $url ) )
+					echo "<a class='$class' onclick='setAnnotationUser(\"".htmlspecialchars($annotation->userid)."\")' href='".htmlspecialchars($url)."'>"
+						."$displayUserName</a>\n";
+				else
+					echo "<span class='$class'>$displayUserName</span>\n";
+				echo $hiddenUserName;
+
+				// Link to filter only annotations by this user
+				if ( $annotation->userid != $query->searchUserId )
+				{
+					$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery, $query->exactMatch );
+					echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+				}
+				echo "</td>\n";
+				
 				
 				echo "</tr>\n";
 			}
+			
+			// Build scripts for individual buttons
+			echo "<script type='text/javascript'>\n";
+			for ( $annotation_i = 0;  $annotation_i < count( $annotationa );  ++$annotation_i )
+			{
+				$annotation = $annotationa[ $annotation_i ];
+				$sqid = htmlspecialchars( 'sq'.$annotation->id );
+				echo "  addEvent(document.getElementById('$sqid'),'click',function() {"
+					."    window.annotationSummary.quote('$sqid'); } );";
+			}
+			echo "</script>\n";
+			
 			if ( $curUrl != null )
 				echo "</tbody>\n";
-			echo "<thead class='labels'>\n";
-			if ( ! in_array( 'source', $excludeFields ) )
-			{
-				if ( in_array( 'quote-author', $excludeFields ) )
-					echo "\t<th>Author</th>\n";
-				else
-					echo "\t<th>Source &amp; Author</th>\n";
-			}
-			if ( ! in_array( 'quote', $excludeFields ) )
-				echo "\t<th>Highlighted Text</th>\n";
-			if ( ! in_array( 'note', $excludeFields ) )
-				echo "\t<th>Margin Note</th>\n";
-			if ( ! in_array( 'user', $excludeFields ) )
-				echo "\t<th>User</th>\n";
-			echo "</thead>\n";
-			echo "</table>\n";
+			echo "<thead class='labels'>\n"
+				."  <th>Source &amp; Author</th>\n"
+				."  <th>Highlighted Text</th>\n"
+				."  <th>Margin Note</th>\n"
+				."  <th>User</th>\n"
+				."</thead>\n"
+				."</table>\n";
 			// print the page content
-		
-	//		echo "<p><a href='summary.php?course=$courseId'>Show all of my annotations for this course</a></p>\n";
-		
 		}
 	
 		//$moodlePath = getMoodlePath( );
