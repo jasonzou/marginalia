@@ -9,22 +9,20 @@ Smartquote = {
 		return function( ) { moodleMarginalia.onSmartquote( content ); };
 	},
 
-	quotePostMicro: function( content, skipContent )
+	quotePostMicro: function( content, skipContent, wwwroot, postId )
 	{
 		// Test for selection support (W3C or IE)
 		if ( ( ! window.getSelection || null == window.getSelection().rangeCount )
 			&& null == document.selection )
 		{
-			if ( warn )
-				alert( getLocalized( 'browser support of W3C range required for smartquote' ) );
+			alert( getLocalized( 'browser support of W3C range required for smartquote' ) );
 			return false;
 		}
 			
 		var textRange0 = getPortableSelectionRange();
 		if ( null == textRange0 )
 		{
-			if ( warn )
-				alert( getLocalized( 'select text to quote' ) );
+			alert( getLocalized( 'select text to quote' ) );
 			return false;
 		}
 		
@@ -37,8 +35,7 @@ Smartquote = {
 		if ( ! textRange )
 		{
 			// this happens if the shrinkwrapped range has no non-whitespace text in it
-			if ( warn )
-				alert( getLocalized( 'select text to quote' ) );
+			alert( getLocalized( 'select text to quote' ) );
 			return false;
 		}
 		
@@ -57,11 +54,17 @@ Smartquote = {
 		var pub = leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
 		
 		var bus = new CookieBus( 'smartquote' );
-		bus.publish( pub );
+		if ( bus.getSubscriberCount( ) > 0 )
+			bus.publish( pub );
+		else if ( wwwroot && postId )
+		{
+			window.location = wwwroot + '/mod/forum/post.php?reply=' + postId
+				+ '&message=' + encodeURIParameter( pub );
+		}
 	},
 	
 	
-	quoteAnnotation: function( annotation, loginUserId )
+	quoteAnnotation: function( annotation, loginUserId, wwwroot, postId )
 	{
 		var quoteAuthor = annotation.getQuoteAuthorName( );
 		var url = annotation.getUrl( );
@@ -94,7 +97,14 @@ Smartquote = {
 		}
 		
 		var bus = new CookieBus( 'smartquote' );
-		bus.publish( pub );
+		
+		if ( bus.getSubscriberCount( ) > 0 )
+			bus.publish( pub );
+		else if ( wwwroot && postId )
+		{
+			window.location = wwwroot + '/mod/forum/post.php?reply=' + postId
+				+ '&message=' + encodeURIParameter( pub );
+		}
 	},
 	
 	
@@ -131,6 +141,7 @@ Smartquote = {
 			}
 			editor.insertHTML( pub.value + ' ' + '<br/>');
 		} );
+		return bus;
 	}
 };
 

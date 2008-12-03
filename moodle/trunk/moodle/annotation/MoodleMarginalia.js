@@ -89,7 +89,9 @@ MoodleMarginalia.prototype.onload = function( )
 			if ( button )
 			{
 				var content = posts[ i ].getContentElement( );
-				button.onclick = function( ) { Smartquote.quotePostMicro( content, marginalia.skipContent ); };
+				var wwwroot = this.moodleRoot;
+				var postId = MoodleMarginalia.postIdFromUrl( posts[ i ].getUrl( ) );
+				button.onclick = function( ) { Smartquote.quotePostMicro( content, marginalia.skipContent, wwwroot, postId ); };
 			}
 		}
 		
@@ -102,8 +104,18 @@ MoodleMarginalia.prototype.onload = function( )
 };
 
 
+MoodleMarginalia.postIdFromUrl = function( url )
+{
+	var matches = url.match( /^.*\/mod\/forum\/permalink\.php\?p=(\d+)/ );
+	if ( matches )
+		return Number( matches[ 1 ] );
+	else
+		return 0;
+};
+
 MoodleMarginalia.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
 {
+	var wwwroot = this.moodleRoot;
 	params.customButtons = [
 		{
 			owner: true,
@@ -111,13 +123,19 @@ MoodleMarginalia.displayNote = function( marginalia, annotation, noteElement, pa
 			params: {
 				className: 'quote',
 				title: 'share',
-				content: '@',
-				onclick: function( ) { Smartquote.quoteAnnotation( annotation, marginalia.loginUserId ); }
+				content: '\u267a',
+				onclick: function( ) { 
+					Smartquote.quoteAnnotation(
+						annotation,
+						marginalia.loginUserId,
+						wwwroot,
+						MoodleMarginalia.postIdFromUrl( annotation.getUrl( ) ) );
+				}
 			}
 		}
 	];
 	return Marginalia.defaultDisplayNote( marginalia, annotation, noteElement, params, isEditing );
-}
+};
 
 MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 {

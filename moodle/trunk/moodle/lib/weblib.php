@@ -4918,7 +4918,10 @@ function use_html_editor($name='', $editorhidebuttons='', $id='') {
     }
 	
 	echo "if ( Smartquote && Smartquote.subscribeHtmlArea )\n"
-		. "Smartquote.subscribeHtmlArea( $editor );\n";
+		. "{\n"
+		. "  var bus = Smartquote.subscribeHtmlArea( $editor );\n"
+		. "  addEvent(window,'unload', function(){ bus.unsubscribe(); });\n"
+		. "}\n";
     echo '//]]>'."\n";
     echo '</script>'."\n";
 }

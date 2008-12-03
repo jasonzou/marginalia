@@ -5,6 +5,10 @@
     require_once('../../config.php');
     require_once('lib.php');
     require_once('post_form.php');
+    require_once("../../annotation/marginalia-php/embed.php");
+    require_once("../../annotation/AnnotationSummaryQuery.php");
+    require_once('../../annotation/AnnotationGlobals.php');
+    require_once('../../annotation/lib.php');
 
     $reply   = optional_param('reply', 0, PARAM_INT);
     $forum   = optional_param('forum', 0, PARAM_INT);
@@ -13,6 +17,9 @@
     $prune   = optional_param('prune', 0, PARAM_INT);
     $name    = optional_param('name', '', PARAM_CLEAN);
     $confirm = optional_param('confirm', 0, PARAM_INT);
+	
+	// #geof#
+	$messageInit = optional_param('message',0,PARAM_CLEANHTML);
 
 
     //these page_params will be passed as hidden variables later in the form.
@@ -56,8 +63,11 @@
             require_login();
         }
 
+		$refUrl = "/mod/forum/discuss.php?d=$d";
+		$meta = marginaliaHeaderHtml( $refUrl );
+
         $navigation = build_navigation('', $cm);
-        print_header($course->shortname, $course->fullname, $navigation, '' , '', true, "", navmenu($course, $cm));
+        print_header($course->shortname, $course->fullname, $navigation, '' , $meta, true, "", navmenu($course, $cm));
 
         notice_yesno(get_string('noguestpost', 'forum').'<br /><br />'.get_string('liketologin'),
                      $wwwroot, get_referer(false));
@@ -174,7 +184,7 @@
         $post->parent      = $parent->id;
         $post->subject     = $parent->subject;
         $post->userid      = $USER->id;
-        $post->message     = '';
+        $post->message     = $messageInit ? $messageInit : '';	// #geof#
 
         $strre = get_string('re', 'forum');
         if (!(substr($post->subject, 0, strlen($strre)) == $strre)) {
@@ -451,15 +461,7 @@
             $errordestination = $SESSION->fromurl;
         }
 
-		// Strip out any smartcopy class names.  This is necessary so that content that has been
-		// smartcopied will not be hidden by the stylesheet, which includes .smart-copy{display:none}
-		// Also, something is escaping quotes in this string with backslashes, so this case must be
-		// accepted by the substitution.  Furthermore, by the time an hrefs get here, the path will
-		// have been stripped if they don't include the protocol and host name!  I guess I can't
-		// complain about invisible magic since that's what I'm using too, but !@#$!#
-		// #geof#
-		$expr = '/(<[^>]+\sclass=[\\\\]?[\'\"][^>\'\"]*\b)smart-copy(\b[^>\'\"]*[\\\\]?[\'\"])/';
-		$post->message = preg_replace( $expr, '$1$2', $post->message );
+		// Strip out any annotation class names.
 		$expr = '/(<[^>]+\s)class=[\\\\]?[\'\"][^>\'\"]*\bannotation\b[^>\'\"]*[\\\\]?[\'\"]/';
 		$post->message = preg_replace( $expr, '$1', $post->message );
 		// It would be good to also strip out annotation highlighting, but that's tricky.
@@ -666,10 +668,10 @@
     // The Javascript is required for smart copy to work.  #geof#
     $meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
     $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/log.js'></script>\n";
+    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/3rd-party.js'></script>\n";
     $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/domutil.js'></script>\n";
     $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/post-micro.js'></script>\n";
-    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/smartcopy.js'></script>\n";	
-    $meta .= "<script language='JavaScript' type='text/javascript'>smartcopyInit();</script>\n";
+    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n";
 
 	$navlinks = array();
     if ($post->parent) {
