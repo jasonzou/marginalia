@@ -117,11 +117,18 @@ class MarginaliaHelper
 			$annotation->setQuoteTitle( $quoteTitle );
 		}
 		
-		// QuoteAuthor
-		if ( array_key_exists( 'quote_author', $params ) )
+		// QuoteAuthorId
+		if ( array_key_exists( 'quote_author_id', $params ) )
 		{
-			$quoteAuthor = $params[ 'quote_author' ];
-			$annotation->setQuoteAuthor( $quoteAuthor );
+			$quoteAuthorId = $params[ 'quote_author_id' ];
+			$annotation->setQuoteAuthorId( $quoteAuthorId );
+		}
+		
+		// QuoteAuthorName
+		if ( array_key_exists( 'quote_author_name', $params ) )
+		{
+			$quoteAuthorName = $params[ 'quote_author_name' ];
+			$annotation->setQuoteAuthorName( $quoteAuthorName );
 		}
 		
 		// Access
