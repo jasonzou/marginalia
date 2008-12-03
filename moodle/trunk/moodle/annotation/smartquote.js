@@ -9,6 +9,15 @@ Smartquote = {
 		return function( ) { moodleMarginalia.onSmartquote( content ); };
 	},
 
+	postIdFromUrl: function( url )
+	{
+		var matches = url.match( /^.*\/mod\/forum\/permalink\.php\?p=(\d+)/ );
+		if ( matches )
+			return Number( matches[ 1 ] );
+		else
+			return 0;
+	},
+	
 	quotePostMicro: function( content, skipContent, wwwroot, postId )
 	{
 		// Test for selection support (W3C or IE)
@@ -76,7 +85,7 @@ Smartquote = {
 		quote = quote.replace( /\u00a0/g, ' ' );
 
 		var pub = '<p>' + ( quoteAuthor ? domutil.htmlEncode( quoteAuthor ) : 'Someone' )
-			+ ( url ? '<a href="' + domutil.htmlEncode( url ) + '">wrote,</a>' : 'wrote' )
+			+ ( url ? ' <a href="' + domutil.htmlEncode( url ) + '">wrote,</a>' : ' wrote' )
 			+ '</p><blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
 		if ( loginUserId == annotation.getUserId( ) )
 		{
@@ -97,7 +106,6 @@ Smartquote = {
 		}
 		
 		var bus = new CookieBus( 'smartquote' );
-		
 		if ( bus.getSubscriberCount( ) > 0 )
 			bus.publish( pub );
 		else if ( wwwroot && postId )
@@ -140,8 +148,23 @@ Smartquote = {
 				}
 			}
 			editor.insertHTML( pub.value + ' ' + '<br/>');
+			
+			// Collapse range to the end of the document
+			// Otherwise the editor ends up selecting the first paragraph of the
+			// last paste, which will be stomped by subsequent pastes
+			// Mozilla only (sorry IE - for now)
+			if ( ! HTMLArea.is_ie )
+			{
+				var textRange = editor._doc.createRange( );
+				textRange.selectNode( editor._doc.body.lastChild );
+				var selection = editor._iframe.contentWindow.getSelection();
+				selection.addRange( textRange );
+				selection.collapseToEnd( );
+			}
 		} );
 		return bus;
 	}
 };
+
+
 

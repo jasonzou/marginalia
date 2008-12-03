@@ -29,11 +29,11 @@
 AN_SUN_SYMBOL = '\u25cb'; //'\u263c';
 AN_MOON_SYMBOL = '\u25c6'; //'\u2641';	
 
-function AnnotationSummary( annotationService, loginUserId, urlsExcludeHost )
+function AnnotationSummary( annotationService, wwwroot, loginUserId )
 {
 	this.annotationService = annotationService;
+	this.wwwroot = wwwroot;
 	this.loginUserId = loginUserId;
-	this.urlsExcludeHost = urlsExcludeHost;
 }
 
 AnnotationSummary.prototype.deleteAnnotation = function( id )
@@ -96,15 +96,16 @@ AnnotationSummary.skipZoom = function( node )
 	return false;
 }
 
-AnnotationSummary.prototype.quote = function( id )
+AnnotationSummary.prototype.quote = function( id, userid, postId )
 {
 	var element = document.getElementById( id );
 	var row = domutil.parentByTagClass( element, 'tr', null );
-	var annotation = this.annotationFromRow( row );
-	Smartquote.quoteAnnotation( annotation, this.loginUserId );
+	var annotation = this.annotationFromRow( row, userid );
+	var postId = Smartquote.postIdFromUrl( annotation.getUrl( ) );
+	Smartquote.quoteAnnotation( annotation, this.loginUserId, this.wwwroot, postId );
 }
 
-AnnotationSummary.prototype.annotationFromRow = function( row )
+AnnotationSummary.prototype.annotationFromRow = function( row, userid )
 {
 	var node = domutil.childByTagClass( row, null, 'quote' );
 	var quote = domutil.getNodeText( node, AnnotationSummary.skipZoom );
@@ -133,6 +134,7 @@ AnnotationSummary.prototype.annotationFromRow = function( row )
 	var url = node ? node.getAttribute( 'href' ) : '';
 	
 	var annotation = new Annotation( {
+		userid: userid,
 		url: url,
 		quote: quote,
 		note: note,

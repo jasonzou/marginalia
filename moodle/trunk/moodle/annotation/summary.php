@@ -160,7 +160,7 @@ class AnnotationSummaryPage
 		}
 
 		// Keep for debugging:
-		//echo "<h2>Query</h2><pre>".$query->sql( 'a.id' )."</pre>";
+		// echo "<h2>Query</h2><pre>".$query->sql( 'a.id' )."</pre>";
 		
 		// Show header
 		$sWwwroot = htmlspecialchars( $CFG->wwwroot );
@@ -287,20 +287,19 @@ class AnnotationSummaryPage
 						$url = $CFG->wwwroot.$annotation->url;
 					
 					echo "<th rowspan='$nRows'>";
-					if ( MarginaliaHelper::isUrlSafe( $url ) )
-					{
-						$a->row_type = htmlspecialchars( $annotation->row_type );
-						$a->author = htmlspecialchars( $annotation->quote_author_name );
-						echo "<a class='url' href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
-						echo htmlspecialchars( $annotation->quote_title ) . '</a>';
+					$url = MarginaliaHelper::isUrlSafe( $url ) ? $url : '';
+					$a->row_type = htmlspecialchars( $annotation->row_type );
+					$a->author = htmlspecialchars( $annotation->quote_author_name );
+					echo "<a class='url' href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
+					echo htmlspecialchars( $annotation->quote_title ) . '</a>';
 
-						echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author_name )."</span>\n";
-						// Link to filter only annotations by this user
-						if ( $annotation->quote_author_id != $query->searchOf )
-						{
-							$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
-							echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
-						}
+					echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author_name )."</span>\n";
+					
+					// Link to filter only annotations by this user
+					if ( $annotation->quote_author_id != $query->searchOf )
+					{
+						$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
+						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
 					}
 					echo "</th>\n";
 				}
@@ -335,8 +334,10 @@ class AnnotationSummaryPage
 				echo "<td class='user".( $annotation->userid == $USER->username ? ' isloginuser' : '')."'>\n";
 
 				// Smartquote button
+				$SMARTQUOTE_SYMBOL = '&#9850;';
 				$sqid = htmlspecialchars( 'sq'.$annotation->id );
-				echo "<button class='smartquote' id='$sqid'>@</button>\n";
+				$sqtitle = htmlspecialchars( get_string( 'smartquote_annotation', ANNOTATION_STRINGS ) );
+				echo "<button class='smartquote' id='$sqid' title='$sqtitle'>$SMARTQUOTE_SYMBOL</button>\n";
 				
 				// Controls for current user
 				if ( $annotation->userid == $USER->username )
@@ -396,8 +397,9 @@ class AnnotationSummaryPage
 			{
 				$annotation = $annotationa[ $annotation_i ];
 				$sqid = htmlspecialchars( 'sq'.$annotation->id );
+				$tuserid = htmlspecialchars( $annotation->userid );
 				echo "  addEvent(document.getElementById('$sqid'),'click',function() {"
-					."    window.annotationSummary.quote('$sqid'); } );";
+					."    window.annotationSummary.quote('$sqid','$tuserid'); } );";
 			}
 			echo "</script>\n";
 			

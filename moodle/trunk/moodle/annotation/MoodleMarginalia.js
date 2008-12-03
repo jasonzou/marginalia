@@ -57,6 +57,7 @@ MoodleMarginalia.prototype.onload = function( )
 			csrfCookie: 'MoodleSessionTest' } );
 		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
 		keywordService.init( null, true );
+		var moodleMarginalia = this;
 		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.displayUserId == '*' ? '' : this.displayUserId, {
 			preferences: this.preferences,
 			keywordService: keywordService,
@@ -65,7 +66,7 @@ MoodleMarginalia.prototype.onload = function( )
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
-			displayNote: MoodleMarginalia.displayNote,
+			displayNote: function(m,a,e,p,i) { moodleMarginalia.displayNote(m,a,e,p,i); },
 			editors: {
 				link: null,
 				'default':  Marginalia.newEditorFunc( YuiAutocompleteNoteEditor )
@@ -90,7 +91,7 @@ MoodleMarginalia.prototype.onload = function( )
 			{
 				var content = posts[ i ].getContentElement( );
 				var wwwroot = this.moodleRoot;
-				var postId = MoodleMarginalia.postIdFromUrl( posts[ i ].getUrl( ) );
+				var postId = Smartquote.postIdFromUrl( posts[ i ].getUrl( ) );
 				button.onclick = function( ) { Smartquote.quotePostMicro( content, marginalia.skipContent, wwwroot, postId ); };
 			}
 		}
@@ -104,16 +105,7 @@ MoodleMarginalia.prototype.onload = function( )
 };
 
 
-MoodleMarginalia.postIdFromUrl = function( url )
-{
-	var matches = url.match( /^.*\/mod\/forum\/permalink\.php\?p=(\d+)/ );
-	if ( matches )
-		return Number( matches[ 1 ] );
-	else
-		return 0;
-};
-
-MoodleMarginalia.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
+MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
 {
 	var wwwroot = this.moodleRoot;
 	params.customButtons = [
@@ -129,7 +121,7 @@ MoodleMarginalia.displayNote = function( marginalia, annotation, noteElement, pa
 						annotation,
 						marginalia.loginUserId,
 						wwwroot,
-						MoodleMarginalia.postIdFromUrl( annotation.getUrl( ) ) );
+						Smartquote.postIdFromUrl( annotation.getUrl( ) ) );
 				}
 			}
 		}

@@ -141,8 +141,7 @@ class AnnotationGlobals
 		$record->note = addslashes( $annotation->getNote( ) );
 		$record->quote = addslashes( $annotation->getQuote( ) );
 		$record->quote_title = addslashes( $annotation->getQuoteTitle( ) );
-		$record->quote_author_id = addslashes( $annotation->getQuoteAuthorId( ) );
-		$record->quote_author_name = addslashes( $annotation->getQuoteAuthorName( ) );
+		$record->quote_author = addslashes( $annotation->getQuoteAuthorId( ) );
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
 		if ( ! $forUpdate )
