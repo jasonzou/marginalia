@@ -1,5 +1,24 @@
 
 Smartquote = {
+	enableSmartquote: function( wwwroot, postPageInfo, skipContent )
+	{
+		if ( ! postPageInfo )
+			postPageInfo = PostPageInfo.getPostPageInfo( document );
+
+		// Enable smartquote buttons
+		var posts = postPageInfo.getAllPosts( );
+		for ( var i = 0;  i < posts.length;  ++i )
+		{
+			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', skipContent );
+			if ( button )
+			{
+				var content = posts[ i ].getContentElement( );
+				var postId = Smartquote.postIdFromUrl( posts[ i ].getUrl( ) );
+				button.onclick = function( ) { Smartquote.quotePostMicro( content, skipContent, wwwroot, postId ); };
+			}
+		}
+	},
+	
 	/**
 	 * Return a function for handling a smartquote button click
 	 */
@@ -18,7 +37,7 @@ Smartquote = {
 			return 0;
 	},
 	
-	quotePostMicro: function( content, skipContent, wwwroot, postId )
+	getPostMicroQuote: function( content, skipContent, wwwroot, postId )
 	{
 		// Test for selection support (W3C or IE)
 		if ( ( ! window.getSelection || null == window.getSelection().rangeCount )
@@ -60,11 +79,19 @@ Smartquote = {
 				+ ( post.getUrl( ) ? ' <a href="' + domutil.htmlEncode( post.getUrl( ) ) + '">wrote</a>' : 'wrote' )
 				+ ",</p>";
 		}
-		var pub = leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
-		
+		return leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
+	},
+	
+	quotePostMicro: function( content, skipContent, wwwroot, postId )
+	{
+		console.log( 'quote' );
+		var pub = Smartquote.getPostMicroQuote( content, skipContent, wwwroot, postId );
 		var bus = new CookieBus( 'smartquote' );
 		if ( bus.getSubscriberCount( ) > 0 )
+		{
+			console.log( 'publish: ' + pub );
 			bus.publish( pub );
+		}
 		else if ( wwwroot && postId )
 		{
 			window.location = wwwroot + '/mod/forum/post.php?reply=' + postId
@@ -115,7 +142,7 @@ Smartquote = {
 		}
 	},
 	
-	
+
 	/**
 	 * Subscribe an HTMLArea control to receive smartquote publish events
 	 */

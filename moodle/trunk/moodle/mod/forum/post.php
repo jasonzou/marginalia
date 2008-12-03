@@ -666,12 +666,19 @@
     $forcefocus = empty($reply) ? NULL : 'message';
 
     // The Javascript is required for smart copy to work.  #geof#
-    $meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
-    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/log.js'></script>\n";
-    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/3rd-party.js'></script>\n";
-    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/domutil.js'></script>\n";
-    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/post-micro.js'></script>\n";
-    $meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n";
+	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/log.js'></script>\n"
+    	."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/3rd-party.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/domutil.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/ranges.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/post-micro.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript'>\n"
+		."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwwroot."'); } );\n"
+		."</script>\n";
+	// It is incredibly inefficient to use the CookieBus to send this quote.  However... avoiding that means finding
+	// the editor object, which has been given a random name by the library.  *That* would mean heavier modification
+	// to other Moodle code, which would make Marginalia harder to integrate and maintain.  So.  This is it.
 
 	$navlinks = array();
     if ($post->parent) {

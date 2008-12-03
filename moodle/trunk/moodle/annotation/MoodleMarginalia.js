@@ -82,19 +82,7 @@ MoodleMarginalia.prototype.onload = function( )
 			this.fixControlMarginIE();
 		}
 		
-		// Enable smartquote buttons
-		var posts = marginalia.listPosts( ).getAllPosts( );
-		for ( var i = 0;  i < posts.length;  ++i )
-		{
-			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', marginalia.skipContent );
-			if ( button )
-			{
-				var content = posts[ i ].getContentElement( );
-				var wwwroot = this.moodleRoot;
-				var postId = Smartquote.postIdFromUrl( posts[ i ].getUrl( ) );
-				button.onclick = function( ) { Smartquote.quotePostMicro( content, marginalia.skipContent, wwwroot, postId ); };
-			}
-		}
+		Smartquote.enableSmartquote( this.moodleRoot, marginalia.listPosts( ), marginalia.skipContent );
 		
 //		var marginaliaDirect = new MarginaliaDirect( annotationService );
 //		marginaliaDirect.init( );
@@ -103,7 +91,6 @@ MoodleMarginalia.prototype.onload = function( )
 			this.showSplash( );
 	}
 };
-
 
 MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
 {
