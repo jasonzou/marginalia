@@ -35,27 +35,24 @@ if ($mode) {
 $displaymode = get_user_preferences("forum_displaymode", $CFG->forum_displaymode);
 */
 
-$urlString = $_SERVER[ 'REQUEST_URI' ];
+$urlstring = $_SERVER[ 'REQUEST_URI' ];
 
-if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )
-{
+if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET')  {
 	header( 'HTTP/1.1 405 Method Not Allowed' );
 	header( 'Allow: GET' );
 }
-elseif ( ! AN_EDITABLEKEYWORDS )
-{
+elseif ( ! AN_EDITABLEKEYWORDS )  {
 	header( 'HTTP/1.1 501 Not Implemented' );
 	echo "This Moodle installation does not support keywords";
 }
-else
-{
-	$errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
-	$courseId = required_param( 'course' );
+else  {
+	$errorpage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
+	$courseid = required_param( 'course' );
 
-    if (! $course = get_record('course', 'id', $courseId ) )
-        error("Course ID $courseId is incorrect - discussion is faulty");
+    if (! $course = get_record('course', 'id', $courseid ) )
+        error("Course ID $courseid is incorrect - discussion is faulty");
 
-	$keywords = AnnotationKeywordsDB::listKeywords( $USER->username );
+	$keywords = annotation_keywords_db::list_keywords( $USER->username );
 	
 	$meta
 		= "<link type='text/css' rel='stylesheet' href='edit-keywords.css'/>\n"
@@ -75,16 +72,13 @@ else
 	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
 		$course->fullname, "$navtail", "", $meta, true, "", null);
 		
-	if ( $keywords && $courseId )
-	{
-		echo "<p>You have used following notes multiple times.  Click"
-			. " on a link to view a summary of annotations with that note.</p>\n";
+	if ( $keywords && $courseid )  {
+		echo '<p>'.htmlspecialchars(get_string( 'tag_list_prompt', ANNOTATION_STRINGS ))."</p>\n";
 		echo "<ul id='keywords'>\n";
-		for ( $i = 0;  $i < count( $keywords );  ++$i )
-		{
+		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
 			$keyword = $keywords[ $i ];
 			$url = 'summary.php?url='
-				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseId" )
+				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseid" )
 				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name).'&match=exact';
 			echo '<li><a href="'.htmlspecialchars( $url ).'">'.urlencode($keyword->name)."</a></li>\n";
 		}
@@ -101,9 +95,9 @@ else
 	
 	print_footer(null);
 
-	$logUrl = $_SERVER[ 'REQUEST_URI' ];
-	$urlParts = parse_url( $logUrl );
-	$logUrl = array_key_exists( 'query', $urlParts ) ? $urlParts[ 'query' ] : null;
+	$logurl = $_SERVER[ 'REQUEST_URI' ];
+	$urlparts = parse_url( $logurl );
+	$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
 	add_to_log( null, 'annotation', 'summary', 'edit-keywords.php' );
 }
 

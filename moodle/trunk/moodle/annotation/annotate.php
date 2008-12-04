@@ -11,14 +11,14 @@ if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
    require_login();
 
  
-class MoodleAnnotation extends Annotation
+class moodle_annotation extends Annotation
 {
-	function isActionValid( $action )
+	function is_action_valid( $action )
 	{
 		return null === $action || '' === $action;
 	}
 	
-	function isAccessValid( $access )
+	function is_access_valid( $access )
 	{
 		return ! $access || 'public' == $access || 'private' == $access
 			|| 'author' == $access || 'teacher' == $access
@@ -26,56 +26,53 @@ class MoodleAnnotation extends Annotation
 	}	
 }
 
-class MoodleAnnotationService extends AnnotationService
+class moodle_annotation_service extends AnnotationService
 {
-	function MoodleAnnotationService( $userid )
+	function moodle_annotation_service( $userid )
 	{
 		global $CFG;
 
 		// Note: Cross-site request forgery protection requires cookies, so it will not be
 		// activated if $CFG->usesid=true
-		$csrfProtect = ! empty( $CFG->usesid ) && $CFG->usesid;
+		$csrfprotect = ! empty( $CFG->usesid ) && $CFG->usesid;
 		
 		AnnotationService::AnnotationService( 
-			AnnotationGlobals::getHost(),
-			AnnotationGlobals::getServicePath(),
-			AnnotationGlobals::getInstallDate(),
+			annotation_globals::get_host(),
+			annotation_globals::get_service_path(),
+			annotation_globals::get_install_date(),
 			$userid,
 			array(
 				'baseUrl' => $CFG->wwwroot,
-				'csrfCookie' => $csrfProtect ? null : 'MoodleSessionTest',
-				'csrfCookieValue' => $csrfProtect ? null : $_SESSION['SESSION']->session_test )
+				'csrfCookie' => $csrfprotect ? null : 'MoodleSessionTest',
+				'csrfCookieValue' => $csrfprotect ? null : $_SESSION['SESSION']->session_test )
 			);
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
 	function doListAnnotations( $url, $userid, $block, $all )
 	{
-		$query = new AnnotationSummaryQuery( $url, $userid, null, null );
-		if ( $query->error )
-		{
+		$query = new annotation_summary_query( $url, $userid, null, null );
+		if ( $query->error )  {
 			$this->httpError( 400, 'Bad Request', 'Bad URL 1' );
 			return null;
 		}
-		elseif ( isguest() && ANNOTATION_REQUIRE_USER )
-		{
+		elseif ( isguest() && ANNOTATION_REQUIRE_USER )  {
 			$this->httpError( 403, 'Forbidden', 'Anonymous listing not allowed' );
 			return null;
 		}
 		else
 		{
-			$querySql = $query->sql( 'section_type, section_name, quote_title, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
-			$annotationSet = get_records_sql( $querySql );
+			$querysql = $query->sql( 'section_type, section_name, quote_title, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
+			$annotation_set = get_records_sql( $querysql );
 			$annotations = Array( );
-			if ( $annotationSet )
-			{
+			if ( $annotation_set )  {
 				$i = 0;
-				foreach ( $annotationSet as $r )
-					$annotations[ $i++ ] = AnnotationGlobals::recordToAnnotation( $r );
+				foreach ( $annotation_set as $r )
+					$annotations[ $i++ ] = annotation_globals::record_to_annotation( $r );
 			}
 			$format = $this->getQueryParam( 'format', 'atom' );
-			$logUrl = 'annotate.php?format='.$format.($userid ? '&user='.$userid : '').'&url='.$url;
-			add_to_log( $query->handler->courseId, 'annotation', 'list', $logUrl );
+			$logurl = 'annotate.php?format='.$format.($userid ? '&user='.$userid : '').'&url='.$url;
+			add_to_log( $query->handler->courseid, 'annotation', 'list', $logurl );
 			return $annotations;
 		}
 	}
@@ -86,9 +83,9 @@ class MoodleAnnotationService extends AnnotationService
 	
 		// Check whether the range column exists (for backwards compatibility)
 		$range = '';
-		if ( column_type( $this->tablePrefix.'annotation', 'range' ) )
+/*		if ( column_type( $this->tablePrefix.'annotation', 'range' ) )
 			$range = ', a.range AS range ';
-		
+*/		
 		// Caller should ensure that id is numeric
 		$query = "SELECT a.id, a.userid, a.url,
 			  a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char,
@@ -98,10 +95,9 @@ class MoodleAnnotationService extends AnnotationService
 			  a.created, a.modified $range
 			  FROM {$this->tablePrefix}annotation AS a
 			WHERE a.id = $id";
-		$resultSet = get_record_sql( $query );
-		if ( $resultSet && count( $resultSet ) != 0 )
-		{
-			$annotation = AnnotationGlobals::recordToAnnotation( $resultSet );
+		$resultset = get_record_sql( $query );
+		if ( $resultset && count( $resultset ) != 0 )  {
+			$annotation = annotation_globals::record_to_annotation( $resultset );
 			return $annotation;
 		}
 		else
@@ -116,7 +112,7 @@ class MoodleAnnotationService extends AnnotationService
 			$this->httpError( 400, 'Bad Request', 'Quote too long' );
 		else
 		{
-			$record = AnnotationGlobals::annotationToRecord( $annotation );
+			$record = annotation_globals::annotation_to_record( $annotation );
 			
 			// Figure out the object type and ID from the url
 			// Doing this here avoids infecting the caller with application-specific mumbo-jumbo
@@ -135,9 +131,9 @@ class MoodleAnnotationService extends AnnotationService
 			if ( $id )
 			{
 				// TODO: fill in queryStr for the log
-				$urlQueryStr = '';
-				$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
-				add_to_log( null, 'annotation', 'create', $logUrl, "$id" );
+				$urlquerystr = '';
+				$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
+				add_to_log( null, 'annotation', 'create', $logurl, "$id" );
 				return $id;
 			}
 		}
@@ -146,18 +142,18 @@ class MoodleAnnotationService extends AnnotationService
 	
 	function doUpdateAnnotation( $annotation )
 	{
-		$urlQueryStr = '';
-		$record = AnnotationGlobals::annotationToRecord( $annotation, True );
-		$logUrl = 'annotate.php' . ( $urlQueryStr ? '?'.$urlQueryStr : '' );
-		add_to_log( null, 'annotation', 'update', $logUrl, "{$annotation->id}" );
+		$urlquerystr = '';
+		$record = annotation_globals::annotation_to_record( $annotation, True );
+		$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
+		add_to_log( null, 'annotation', 'update', $logurl, "{$annotation->id}" );
 		return update_record( 'annotation', $record );
 	}
 	
-	function doBulkUpdate( $oldNote, $newNote )
+	function doBulkUpdate( $oldnote, $newnote )
 	{
 		global $CFG, $USER;
 		
-		$where = "userid='".addslashes($USER->username)."' AND note='".addslashes($oldNote)."'";
+		$where = "userid='".addslashes($USER->username)."' AND note='".addslashes($oldnote)."'";
 
 		// Count how many replacements will be made
 		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix."annotation WHERE $where";
@@ -167,7 +163,7 @@ class MoodleAnnotationService extends AnnotationService
 		if ( $n )
 		{
 			// Do the replacements
-			$query = 'UPDATE '.$CFG->prefix."annotation set note='".addslashes($newNote)."' WHERE $where";
+			$query = 'UPDATE '.$CFG->prefix."annotation set note='".addslashes($newnote)."' WHERE $where";
 			execute_sql( $query, false );
 		}
 		header( 'Content-type: text/plain' );
@@ -177,8 +173,8 @@ class MoodleAnnotationService extends AnnotationService
 	function doDeleteAnnotation( $id )
 	{
 		delete_records( 'annotation', 'id', $id );
-		$logUrl = "annotate.php?id=$id";
-		add_to_log( null, 'annotation', 'delete', $logUrl, "$id" );
+		$logurl = "annotate.php?id=$id";
+		add_to_log( null, 'annotation', 'delete', $logurl, "$id" );
 		return True;
 	}
 
@@ -189,7 +185,7 @@ class MoodleAnnotationService extends AnnotationService
 	}
 }
 
-$service = new MoodleAnnotationService( isguest() ? null : $USER->username );
+$service = new moodle_annotation_service( isguest() ? null : $USER->username );
 $service->dispatch( );
 
 ?>

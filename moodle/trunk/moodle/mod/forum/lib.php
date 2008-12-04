@@ -2453,14 +2453,14 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     // If Moodle displayed these values, the fields wouldn'n need to be hidden.
     $rootpath = $CFG->wwwroot; //parse_url( $CFG->wwwroot );
     //$rootpath = $rootpath[ 'path' ];
-    $refUrl = "$rootpath/mod/forum/permalink.php?p=$post->id";
-    $discussUrl = "$rootpath/mod/forum/discuss.php?d=$post->discussion"; // used for summary link
+    $refurl = "$rootpath/mod/forum/permalink.php?p=$post->id";
+    $discussurl = "$rootpath/mod/forum/discuss.php?d=$post->discussion"; // used for summary link
 	// This class author, used by Marginalia, must preceed the one below, used by Moodle.
 	// Unfortunately I can't use that one - it's marked author but it is not, in fact, the author
 	// - it also includes "by", the date, etc.  (grrr) #geof#
     echo "<span style='display:none' class='" . PM_AUTHOR_CLASS . "' title='".htmlspecialchars( $post->username )."'>" . htmlspecialchars($post->firstname.' '.$post->lastname) . "</span>\n";
     echo "<abbr style='display:none' class='" . PM_DATE_CLASS . "' title='" . date( 'Ymd', $post->modified ) . 'T' . date( 'HiO', $post->modified ) . "'></abbr>\n";
-    echo "<a style='display:none' rel='" . PM_URL_REL . "' href='$refUrl'></a>\n";
+    echo "<a style='display:none' rel='" . PM_URL_REL . "' href='$refurl'></a>\n";
 
 	echo '<div class="author">';
     $fullname = fullname($postuser, $cm->cache->caps['moodle/site:viewfullnames']);
@@ -2680,7 +2680,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 			." onclick='window.moodleMarginalia.createAnnotation(event,\"m$post->id\")'><span>&gt;</span></button></div></td>\n";
 		echo "<td class='".AN_NOTES_CLASS."' valign='top'><div>";
 		echo "<ol></ol>\n";
-		$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($USER->username)."&url=".urlencode( $discussUrl );
+		$summaryurl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($USER->username)."&url=".urlencode( $discussurl );
 //		if ( ANNOTATION_LOGUSER_URLS )
 //			$summaryUrl .= "&loguser=".urlencode($USER->username);
 //		echo "<a class='annotation-summary' href='".htmlspecialchars($summaryUrl)."'>";

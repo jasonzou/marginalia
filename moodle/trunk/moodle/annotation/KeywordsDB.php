@@ -1,8 +1,8 @@
 <?php
 
-class AnnotationKeywordsDB
+class annotation_keywords_db
 {
-	function listKeywords( $userid )
+	function list_keywords( $userid )
 	{
 		global $CFG;
 		// A keyword is a note that occurs more than once
@@ -18,13 +18,12 @@ class AnnotationKeywordsDB
 			. ' AND b.m > 1'
 			. ' GROUP BY a.note'
 			. ' ORDER BY a.note';
-		$keywordSet = get_records_sql( $query );
+		$keywordset = get_records_sql( $query );
 		$keywords = array( );
-		if ( $keywordSet )
-		{
+		if ( $keywordset )  {
 			$i = 0;
-			foreach ( $keywordSet as $r )
-				$keywords[ $i++ ] = AnnotationGlobals::recordToKeyword( $r );
+			foreach ( $keywordset as $r )
+				$keywords[ $i++ ] = annotation_globals::record_to_keyword( $r );
 		}
 		return $keywords;
 	}

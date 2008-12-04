@@ -39,14 +39,14 @@ require_once( 'AnnotationGlobals.php' );
 
 require_login();
 
-class MoodleKeywordService extends KeywordService
+class moodle_keyword_service extends KeywordService
 {
-	function MoodleKeywordService( $username )
+	function moodle_keyword_service( $username )
 	{
 		global $CFG;
 		KeywordService::KeywordService( 
-			AnnotationGlobals::getHost(),
-			AnnotationGlobals::getKeywordServicePath(),
+			annotation_globals::get_host(),
+			annotation_globals::get_keyword_service_path(),
 			$username,
 			$CFG->wwwroot );
 		$this->tablePrefix = $CFG->prefix;
@@ -55,9 +55,9 @@ class MoodleKeywordService extends KeywordService
 	function doListKeywords( )
 	{
 		global $USER;
-		$keywords = AnnotationKeywordsDB::listKeywords( $this->currentUserId );
-		$logUrl = 'keywords.php';
-		add_to_log( null, 'annotation', 'list', $logUrl );
+		$keywords = annotation_keywords_db::list_keywords( $this->currentUserId );
+		$logurl = 'keywords.php';
+		add_to_log( null, 'annotation', 'list', $logurl );
 		return $keywords;
 	}
 	
@@ -95,13 +95,11 @@ class MoodleKeywordService extends KeywordService
 	}
 }
 
-if ( AN_EDITABLEKEYWORDS )
-{
-	$service = new MoodleKeywordService( isguest() ? null : $USER->username );
+if ( AN_EDITABLEKEYWORDS )  {
+	$service = new moodle_keyword_service( isguest() ? null : $USER->username );
 	$service->dispatch( );
 }
-else
-{
+else  {
 	header( 'HTTP/1.1 501 Not Implemented' );
 	echo "This Moodle installation does not support keywords";
 }

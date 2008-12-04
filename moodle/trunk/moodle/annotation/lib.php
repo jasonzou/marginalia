@@ -8,11 +8,10 @@ require_once( $CFG->dirroot.'/annotation/AnnotationGlobals.php' );
  * so that the Javascript client will have permission to set it later (to prevent
  * client creation of random preferences, only existing preferences can be set)
  */
-function getAnnotationsPref( $name, $default )
+function get_annotations_pref( $name, $default )
 {
 	$value = get_user_preferences( $name, null );
-	if ( null == $value )
-	{
+	if ( null == $value ) {
 		$value = $default;
 		set_user_preference( $name, $default );
 	}
@@ -23,80 +22,74 @@ function getAnnotationsPref( $name, $default )
  * Gets all annotation preferences as an associative array and sets them to defaults
  * in the database if not already present.
  */
-function getAllAnnotationPrefs( )
+function get_all_annotation_prefs( )
 {
 	return array(
-		AN_USER_PREF => getAnnotationUserId( ),
-		AN_SHOWANNOTATIONS_PREF => getAnnotationsPref( AN_SHOWANNOTATIONS_PREF, 'false' ),
-		AN_NOTEEDITMODE_PREF => getAnnotationsPref( AN_NOTEEDITMODE_PREF, 'freeform' ),
-		AN_SPLASH_PREF => getAnnotationsPref( AN_SPLASH_PREF, 'true' )
+		AN_USER_PREF => get_annotation_userid( ),
+		AN_SHOWANNOTATIONS_PREF => get_annotations_pref( AN_SHOWANNOTATIONS_PREF, 'false' ),
+		AN_NOTEEDITMODE_PREF => get_annotations_pref( AN_NOTEEDITMODE_PREF, 'freeform' ),
+		AN_SPLASH_PREF => get_annotations_pref( AN_SPLASH_PREF, 'true' )
 	);
 		
 }
 
-function getAnnotationUserId( )
+function get_annotation_userid( )
 {
 	global $USER;
 	// Get the users whose annotations are to be shown
-	$annotationUser = get_user_preferences( AN_USER_PREF, null );
-	if ( null == $annotationUser )
-	{
-		$annotationUser = isguest() ? null : $USER->username;
-		set_user_preference( AN_USER_PREF, $annotationUser );
+	$annotationuser = get_user_preferences( AN_USER_PREF, null );
+	if ( null == $annotationuser )  {
+		$annotationuser = isguest() ? null : $USER->username;
+		set_user_preference( AN_USER_PREF, $annotationuser );
 	}
-	return $annotationUser;
+	return $annotationuser;
 }
 
-function getShowAnnotationsPref( )
+function get_show_annotations_pref( )
 {
-	return getAnnotationsPref( AN_SHOWANNOTATIONS_PREF, 'false' );
+	return get_annotations_pref( AN_SHOWANNOTATIONS_PREF, 'false' );
 }
 
 
-function showMarginaliaHelp( $module )
+function show_marginalia_help( $module )
 {
 	global $CFG;
-	$helpTitle = 'Help with Annotations';
-    $linkobject = '<span class="helplink"><img class="iconhelp" alt="'.$helpTitle.'" src="'.$CFG->pixpath .'/help.gif" /></span>';
-    echo link_to_popup_window ('/help.php?module='.htmlspecialchars($module).'&amp;file=annotate.html&amp;forcelang=', 'popup',
-                                     $linkobject, 400, 500, $helpTitle, 'none', true);
+	$helptitle = 'Help with Annotations';
+    $linkobject = '<span class="helplink"><img class="iconhelp" alt="'.$helptitle.'" src="'.$CFG->pixpath .'/help.gif" /></span>';
+    echo link_to_popup_window ('/help.php?module='.s($module).'&amp;file=annotate.html&amp;forcelang=', 'popup',
+                                     $linkobject, 400, 500, $helptitle, 'none', true);
 }
 
-function showMarginaliaUserDropdown( $refUrl )
+function show_marginalia_user_dropdown( $refurl )
 {
 	global $USER;
-	$summaryQuery = new AnnotationSummaryQuery( $refUrl, null, null, null );
-	$userList = get_records_sql( $summaryQuery->listUsersSql( ) );
-	$annotationUserId = getAnnotationUserId( );
-	$showAnnotationsPref = getShowAnnotationsPref( ) == 'true';
+	$summaryquery = new annotation_summary_query( $refurl, null, null, null );
+	$userlist = get_records_sql( $summaryquery->list_users_sql( ) );
+	$annotationuserid = get_annotation_userid( );
+	$showannotationspref = get_show_annotations_pref( ) == 'true';
 	
-	echo "<select name='anuser' id='anuser' onchange='window.moodleMarginalia.changeAnnotationUser(this,\"$refUrl\");'>\n";
-	$selected = $showAnnotationsPref ? '' : " selected='selected' ";
+	echo "<select name='anuser' id='anuser' onchange='window.moodleMarginalia.changeAnnotationUser(this,\"$refurl\");'>\n";
+	$selected = $showannotationspref ? '' : " selected='selected' ";
 	echo " <option $selected value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
-	if ( ! isguest() )
-	{
-		$selected = ( $showAnnotationsPref && ( $USER->username == $annotationUserId ? "selected='selected' " : '' ) )
+	if ( ! isguest() )  {
+		$selected = ( $showannotationspref && ( $USER->username == $annotationuserid ? "selected='selected' " : '' ) )
 			? " selected='selected' " : '';
 		echo " <option $selected"
-			."value='".htmlspecialchars($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
+			."value='".s($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
 	}
-	if ( $userList )
-	{
-		foreach ( $userList as $user )
-		{
-			if ( $user->userid != $USER->username )
-			{
-				$selected = ( $showAnnotationsPref && ( $user->userid == $annotationUserId ? "selected='selected' ":'' ) )
+	if ( $userlist )  {
+		foreach ( $userlist as $user )  {
+			if ( $user->userid != $USER->username )  {
+				$selected = ( $showAnnotationspref && ( $user->userid == $annotationuserid ? "selected='selected' ":'' ) )
 					? " selected='selected' " : '';
 				echo " <option $selected"
-					."value='".htmlspecialchars($user->userid)."'>".htmlspecialchars($user->firstname.' '.$user->lastname)."</option>\n";
+					."value='".s($user->userid)."'>".s($user->firstname.' '.$user->lastname)."</option>\n";
 			}
 		}
 	}
 	// Show item for all users
-	if ( true )
-	{
-		$selected = ( $showAnnotationsPref && ( '*' == $annotationUserId ? "selected='selected' ":'' ) )
+	if ( true )  {
+		$selected = ( $showannotationspref && ( '*' == $annotationuserid ? "selected='selected' ":'' ) )
 			? " selected='selected' " : '';
 		echo " <option $selected value='*'>".get_string('all_annotations',ANNOTATION_STRINGS)."</option>\n";
 	}
@@ -104,17 +97,17 @@ function showMarginaliaUserDropdown( $refUrl )
 }
 
 
-function showMarginaliaSummaryLink( $refUrl, $userId )
+function show_marginalia_summary_link( $refurl, $userid )
 {
 	global $CFG, $course;
-	$summaryUrl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($userId)
-		."&url=".urlencode( $refUrl );
-	echo " <a id='annotation-summary-link' href='".htmlspecialchars($summaryUrl)."'"
-		. " title='".htmlspecialchars(get_string('summary_link_title',ANNOTATION_STRINGS))
-		."'>".htmlspecialchars(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
+	$summaryurl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($userid)
+		."&url=".urlencode( $refurl );
+	echo " <a id='annotation-summary-link' href='".s($summaryurl)."'"
+		. " title='".s(get_string('summary_link_title',ANNOTATION_STRINGS))
+		."'>".s(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
 
 	echo "<a id='annotation-editkeywords-link' href='".$CFG->wwwroot."/annotation/edit-keywords.php?course=".$course->id."'"
-		. " title='".htmlspecialchars(get_string( 'edit_keywords_link', ANNOTATION_STRINGS ))
+		. " title='".s(get_string( 'edit_keywords_link', ANNOTATION_STRINGS ))
 		."'>Tags</a>\n";
 }
 
@@ -124,35 +117,35 @@ function showMarginaliaSummaryLink( $refUrl, $userId )
  * and initialize Marginalia.  If necessary, also creates relevant user preferences 
  * (necessary for Marginalia to function correctly).
  */
-function marginaliaHeaderHtml( $refUrl )
+function marginalia_header_html( $refurl )
 {
 	global $CFG, $USER;
 	
-	$prefs = getAllAnnotationPrefs( );
+	$prefs = get_all_annotation_prefs( );
 	
-	$showAnnotationsPref = $prefs[ AN_SHOWANNOTATIONS_PREF ];
-	$annotationUser = $prefs[ AN_USER_PREF ];
-	$showSplashPref = $prefs[ AN_SPLASH_PREF ];
+	$showannotationspref = $prefs[ AN_SHOWANNOTATIONS_PREF ];
+	$annotationuser = $prefs[ AN_USER_PREF ];
+	$showsplashpref = $prefs[ AN_SPLASH_PREF ];
 	
 	// Build a string of initial preference values for passing to Marginalia
 	$first = true;
-	$sPrefs = '';
+	$sprefs = '';
 	foreach ( array_keys( $prefs ) as $name )
 	{
 		$value = $prefs[ $name ];
 		if ( $first )
 			$first = false;
 		else
-			$sPrefs .= "\n, ";
-		$sPrefs .= "'".htmlspecialchars( $name )."': '".htmlspecialchars( $prefs[ $name ] )."'";
+			$sprefs .= "\n, ";
+		$sprefs .= "'".s( $name )."': '".s( $prefs[ $name ] )."'";
 	}
-	$sPrefs = '{ '.$sPrefs.' }';;
+	$sprefs = '{ '.$sprefs.' }';;
 	
 	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/marginalia/marginalia.css'/>\n"
 		. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
-	$anScripts = listMarginaliaJavascript( );
-	for ( $i = 0;  $i < count( $anScripts );  ++$i )
-		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anScripts[$i]."'></script>\n";	
+	$anscripts = listMarginaliaJavascript( );
+	for ( $i = 0;  $i < count( $anscripts );  ++$i )
+		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anscripts[$i]."'></script>\n";	
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-config.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-strings.js'></script>\n";
 	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n";
@@ -166,12 +159,12 @@ function marginaliaHeaderHtml( $refUrl )
 	
 	$meta .= "<script language='JavaScript' type='text/javascript'>\n";
 	$meta .= "function myOnload() {\n";
-	$meta .= " var moodleRoot = '".htmlspecialchars($CFG->wwwroot)."';\n";
-	$meta .= " var url = '".htmlspecialchars($refUrl)."';\n";
-	$meta .= ' var userId = \''.htmlspecialchars($USER->username)."';\n";
-	$meta .= ' moodleMarginalia = new MoodleMarginalia( url, moodleRoot, userId, '.$sPrefs.', {'."\n";
-	if ( $showSplashPref == 'true' )
-		$meta .= '  splash: \''.htmlspecialchars(get_string('splash',ANNOTATION_STRINGS)).'\'';
+	$meta .= " var moodleRoot = '".s($CFG->wwwroot)."';\n";
+	$meta .= " var url = '".s($refurl)."';\n";
+	$meta .= ' var userId = \''.s($USER->username)."';\n";
+	$meta .= ' moodleMarginalia = new MoodleMarginalia( url, moodleRoot, userId, '.$sprefs.', {'."\n";
+	if ( $showsplashpref == 'true' )
+		$meta .= '  splash: \''.s(get_string('splash',ANNOTATION_STRINGS)).'\'';
 	$meta .= '  } );'."\n";
 	$meta .= " moodleMarginalia.onload();\n";
 	$meta .= "}\n";
@@ -190,9 +183,9 @@ function marginaliaHeaderHtml( $refUrl )
  * @param int $username the name of the user (note, the username, *not* the userid!)
  * @return boolean
  */
-function annotations_delete_user( $userId )
+function annotations_delete_user( $userid )
 {
-	return delete_records( 'annotation', 'userid', $userId );
+	return delete_records( 'annotation', 'userid', $userid );
 }
 
 /**
@@ -215,5 +208,4 @@ function annotations_update_username( $oldname, $newname )
 	else
 		return false;
 }
- 
 ?>

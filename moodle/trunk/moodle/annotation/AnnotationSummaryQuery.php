@@ -4,66 +4,60 @@
  * This isn't really the best use of a class, but I'm in a rush to fix a bug.
  * Objects of this class are (or should be considered) immutable.
  */
-class AnnotationSummaryQuery
+class annotation_summary_query
 {
 	var $url;			// The url GET parameter
 	var $username;		// The user GET parameter
-	var $searchQuery;	// The q GET parameter
-	var $searchUserId;	// The u GET parameter (i.e. the user to whom the annotations belong)
-	var $searchOf;		// The search-of (i.e. the user to whom the annotated content belongs)
+	var $searchquery;	// The q GET parameter
+	var $searchuserid;	// The u GET parameter (i.e. the user to whom the annotations belong)
+	var $searchof;		// The search-of (i.e. the user to whom the annotated content belongs)
 	var $sql;			// The result SQL query
 	var $handler;		// URL handlers (implements much of this class's behavior)
 	var $error;			// Any error encountered by the constructor
 	
 	/** Construct an immutable summary query */
-	function AnnotationSummaryQuery( $url, $searchUserId, $searchOf, $searchQuery, $exactMatch=False, $all=False )
+	function annotation_summary_query( $url, $searchuserid, $searchof, $searchquery, $exactmatch=False, $all=False )
 	{
 		global $CFG, $USER;
 		
 		$this->url = $url;
-		$this->searchUserId = $searchUserId;
-		$this->searchOf = $searchOf;
-		$this->searchQuery = $searchQuery;
-		$this->exactMatch = $exactMatch;
-		$this->accessAll = $all;	// get access beyond normal privacy limitations (admin only)
+		$this->searchuserid = $searchuserid;
+		$this->searchof = $searchof;
+		$this->searchquery = $searchquery;
+		$this->exactmatch = $exactmatch;
+		$this->accessall = $all;	// get access beyond normal privacy limitations (admin only)
 		
-		if ( '' == $this->searchUserId )
+		if ( '' == $this->searchuserid )
 			$this->username = null;
-		if ( '' == $this->searchOf )
-			$this->searchOf = null;
+		if ( '' == $this->searchof )
+			$this->searchof = null;
 		
 		// A course or something *must* be specified
-		if ( ! $url )
-		{
+		if ( ! $url )  {
 			$this->error = "Bad handler URL";
 			return null;
 		}
 		// All annotations for a course
-		elseif ( preg_match( '/^.*\/course\/view\.php\?id=(\d+)/', $url, $matches ) )
-		{
-			$this->handler = new CourseAnnotationUrlHandler( $matches[ 1 ], $searchOf );
+		elseif ( preg_match( '/^.*\/course\/view\.php\?id=(\d+)/', $url, $matches ) )  {
+			$this->handler = new course_annotation_url_handler( $matches[ 1 ], $searchof );
 		}
 		// All annotations far a single forum
-		elseif ( preg_match( '/^.*\/mod\/forum\/view\.php\?id=(\d+)/', $url, $matches ) )
-		{
+		elseif ( preg_match( '/^.*\/mod\/forum\/view\.php\?id=(\d+)/', $url, $matches ) )  {
 			$f = (int) $matches[ 1 ];
-			$this->handler = new ForumAnnotationUrlHandler( $f, $searchOf );
+			$this->handler = new forum_annotation_url_handler( $f, $searchof );
 		}
 		// Annotations for a single discussion
-		elseif ( preg_match( '/^.*\/mod\/forum\/discuss\.php\?d=(\d+)/', $url, $matches ) )
-		{
+		elseif ( preg_match( '/^.*\/mod\/forum\/discuss\.php\?d=(\d+)/', $url, $matches ) )  {
 			$d = (int) $matches[ 1 ];
-			$this->handler = new DiscussionAnnotationUrlHandler( $d, $searchOf );
+			$this->handler = new discussion_annotation_url_handler( $d, $searchof );
 		}
 		
 		// Annotations for a single post
-		elseif ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $url, $matches ) )
-		{
-			$postId = (int) $matches[ 1 ];
-			$this->handler = new PostAnnotationUrHandler( $postId, $searchOf );
+		elseif ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $url, $matches ) )  {
+			$postid = (int) $matches[ 1 ];
+			$this->handler = new post_annotatoin_url_handler( $postid, $searchof );
 		}
-		else
-		{
+		else  {
 			$this->error = "Bad handler URL";
 			return null;
 		}
@@ -71,20 +65,20 @@ class AnnotationSummaryQuery
 
 	function title( )
 	{
-		$this->handler->fetchMetadata( );
+		$this->handler->fetch_metadata( );
 		return $this->handler->title;
 	}
 	
-	function parentSummaryUrl( )
+	function parent_summary_url( )
 	{
-		$this->handler->fetchMetadata( );
-		return $this->handler->parentUrl;
+		$this->handler->fetch_metadata( );
+		return $this->handler->parenturl;
 	}
 	
-	function parentSummaryTitle( )
+	function parent_summary_title( )
 	{
-		$this->handler->fetchMetadata( );
-		return $this->handler->parentTitle;
+		$this->handler->fetch_metadata( );
+		return $this->handler->parenttitle;
 	}
 	
 	/** Produce a natural language description of a query */
@@ -92,29 +86,29 @@ class AnnotationSummaryQuery
 	{
 		global $USER;
 		
-		$this->handler->fetchMetadata( );
+		$this->handler->fetch_metadata( );
 		
 		$a->title = ( null == $title ) ? $this->handler->title : $title;
 		
 		// Access restrictions.  Need to look up actual user names in DB.
-		if ( null == $this->searchUserId )
+		if ( null == $this->searchuserid )
 			$a->who = 'anyone';
-		elseif ( '*students' == $this->searchUserId )
+		elseif ( '*students' == $this->searchuserid )
 			$a->who = 'students';
-		elseif ( '*teachers' == $this->searchUserId )
+		elseif ( '*teachers' == $this->searchuserid )
 			$a->who = 'teachers';
 		else
-			$a->who = $this->searchUserId;
+			$a->who = $this->searchuserid;
 		
-		$a->author = $this->searchOf;
-		$a->search = $this->searchQuery;
+		$a->author = $this->searchof;
+		$a->search = $this->searchquery;
 		
-		$a->match = get_string( $this->exactMatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
+		$a->match = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		
-		if ( null != $this->searchQuery && '' != $this->searchQuery )
-			$s = ( null != $this->searchOf ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
+		if ( null != $this->searchquery && '' != $this->searchquery )
+			$s = ( null != $this->searchof ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
 		else
-			$s = ( null != $this->searchOf ) ? 'annotation_desc_author' : 'annotation_desc';
+			$s = ( null != $this->searchof ) ? 'annotation_desc_author' : 'annotation_desc';
 			
 		return get_string( $s, ANNOTATION_STRINGS, $a );
 		
@@ -122,68 +116,65 @@ class AnnotationSummaryQuery
 	}
 	
 	/** A natural language description, with elements as links to more general queries */
-	function descWithLinks( $title )
+	function desc_with_links( $title )
 	{
 		global $USER;
 		
-		$this->handler->fetchMetadata( );
+		$this->handler->fetch_metadata( );
 		$title = ( null == $title ) ? $this->handler->title : $title;
 		$a->title = $title;
 		
 		// Show link to parent search
-		if ( null != $this->parentSummaryTitle( ) )
-		{
-			$url = $this->getSummaryUrl( $this->parentSummaryUrl( ), $this->searchUserId, $this->searchOf, $this->searchQuery, $this->exactMatch );
-			$a->title = '<a class="opt-link" href="'.htmlspecialchars($url)
-				. '" title="'.htmlspecialchars( get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ) ).'">'
-				. '<span class="current">'.htmlspecialchars($title).'</span>'
-				. '<span class="alt">'.htmlspecialchars($this->parentSummaryTitle( )).'</span></a>';
+		if ( null != $this->parent_summary_title( ) )  {
+			$url = $this->get_summary_url( $this->parent_summary_url( ), $this->searchuserid, $this->searchof, $this->searchquery, $this->exactmatch );
+			$a->title = '<a class="opt-link" href="'.s($url)
+				. '" title="'.s( get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ) ).'">'
+				. '<span class="current">'.s($title).'</span>'
+				. '<span class="alt">'.s($this->parent_summary_title( )).'</span></a>';
 		}
 		
 		// Access restrictions.  Need to look up actual user names in DB.
-		if ( ! $this->searchUserId )
+		if ( ! $this->searchuserid )
 			$a->who = 'anyone';
-		else
-		{
-			$url = $this->getSummaryUrl( $this->url, '', $this->searchOf, $this->searchQuery, $this->exactMatch );
-			if ( '*students' == $this->searchUserId )
+		else  {
+			$url = $this->get_summary_url( $this->url, '', $this->searchof, $this->searchquery, $this->exactmatch );
+			if ( '*students' == $this->searchuserid )
 				$s = 'students';
-			elseif ( '*teachers' == $this->searchUserId )
+			elseif ( '*teachers' == $this->searchuserid )
 				$s = 'teachers';
 			else
-				$s = $this->searchUserId;
-			$a->who = '<a class="opt-link" href="'.htmlspecialchars($url)
-				.'" title="'.htmlspecialchars( get_string( 'unzoom_user_hover', ANNOTATION_STRINGS ) )
-				.'"><span class="current">'.htmlspecialchars($s).'</span><span class="alt">'
-				.htmlspecialchars( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</a></a>';
+				$s = $this->searchuserid;
+			$a->who = '<a class="opt-link" href="'.s($url)
+				.'" title="'.s( get_string( 'unzoom_user_hover', ANNOTATION_STRINGS ) )
+				.'"><span class="current">'.s($s).'</span><span class="alt">'
+				.s( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</a></a>';
 		}
 		
-		if ( $this->searchOf )
-		{
-			$url = $this->getSummaryUrl( $this->url, $this->searchUserId, '', $this->searchQuery, $this->exactMatch );
-			$a->author = '<a class="opt-link" href="'.htmlspecialchars($url)
-				.'" title="'.htmlspecialchars( get_string( 'unzoom_author_hover', ANNOTATION_STRINGS ) )
-				.'"><span class="current">'.htmlspecialchars($this->searchOf).'</span><span class="alt">'
-				.htmlspecialchars( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</span></a>';
+		if ( $this->searchof )  {
+			$url = $this->get_summary_url( $this->url, $this->searchuserid, '', $this->searchquery, $this->exactmatch );
+			$a->author = '<a class="opt-link" href="'.s($url)
+				.'" title="'.s( get_string( 'unzoom_author_hover', ANNOTATION_STRINGS ) )
+				.'"><span class="current">'.s($this->searchof).'</span><span class="alt">'
+				.s( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</span></a>';
 		}
 		else
 			$a->author = null;
 		
-		$a->search = $this->searchQuery;
+		$a->search = $this->searchquery;
 		
-		$url = $this->getSummaryUrl( $this->url, $this->searchUserId, '', $this->searchQuery, ! $this->exactMatch );
-		$hover = get_string( $this->exactMatch ? 'unzoom_match_hover' : 'zoom_match_hover', ANNOTATION_STRINGS );
-		$m1 = get_string( $this->exactMatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
-		$m2 = get_string( $this->exactMatch ? 'containing' : 'matching', ANNOTATION_STRINGS );
-		$a->match = '<a class="opt-link" href="'.htmlspecialchars($url)
-			.'" title="'.htmlspecialchars( $hover )
-			.'"><span class="current">'.htmlspecialchars( $m1 )
-			.'</span><span class="alt">'.htmlspecialchars( $m2 ).'</span></a>';
+		$url = $this->get_summary_url( $this->url, $this->searchuserid, '', $this->searchquery, ! $this->exactmatch );
+		$hover = get_string( $this->exactmatch ? 'unzoom_match_hover' : 'zoom_match_hover', ANNOTATION_STRINGS );
+		$m1 = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
+		$m2 = get_string( $this->exactmatch ? 'containing' : 'matching', ANNOTATION_STRINGS );
+		$a->match = '<a class="opt-link" href="'.s($url)
+			.'" title="'.s( $hover )
+			.'"><span class="current">'.s( $m1 )
+			.'</span><span class="alt">'.s( $m2 ).'</span></a>';
 
-		if ( null != $this->searchQuery && '' != $this->searchQuery )
-			$s = ( null != $this->searchOf ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
+		if ( null != $this->searchquery && '' != $this->searchquery )
+			$s = ( null != $this->searchof ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
 		else
-			$s = ( null != $this->searchOf ) ? 'annotation_desc_author' : 'annotation_desc';
+			$s = ( null != $this->searchof ) ? 'annotation_desc_author' : 'annotation_desc';
 			
 		return get_string( $s, ANNOTATION_STRINGS, $a );
 		
@@ -210,8 +201,8 @@ class AnnotationSummaryQuery
 		// Users can only see their own annotations or the public annotations of others
 		// This is an awfully complex combination of conditions.  I'm wondering if that's
 		// a design flaw.
-		$access_cond = null;
-		$desc_users = '';
+		$accesscond = null;
+		$descusers = '';
 		
 		// this was originally intended to allow more than one handler to respond to a request.
 		// That may still be necessary someday, but perhaps a compound handler would be the
@@ -219,12 +210,11 @@ class AnnotationSummaryQuery
 		$handler = $this->handler;
 
 		// Conditions under which someone else's annotation would be visible to this user
-		$access_visible = "a.access='public'";
-		if ( array_key_exists( 'username', $USER ) )
-		{
-			$access_visible .= " OR a.userid='".addslashes($USER->username)."'"
+		$accessvisible = "a.access='public'";
+		if ( array_key_exists( 'username', $USER ) )  {
+			$accessvisible .= " OR a.userid='".addslashes($USER->username)."'"
 				. " OR a.access like '%author%' AND a.quote_author='".addslashes($USER->username)."'";
-			$handler->fetchMetadata( );
+			$handler->fetch_metadata( );
 			
 			// Don't know how this should work due to changes between Moodle 1.6 and Moodle 1.8:
 			//if ( $USER->teacher[ $handler->courseId ] )
@@ -234,34 +224,31 @@ class AnnotationSummaryQuery
 		// Filter annotations according to their owners
 		
 		// Admin only (used especially for research): transcend usual privacy limitations
-		if ( null == $this->searchUserId )
-			$access_cond = " ($access_visible) ";
-		elseif ( '*students' == $this->searchUserId )
-		{
-			$access_cond = " ($access_visible) AND a.userid in ("
+		if ( null == $this->searchuserid )
+			$accesscond = " ($accessvisible) ";
+		elseif ( '*students' == $this->searchuserid )  {
+			$accesscond = " ($accessvisible) AND a.userid in ("
 				. "SELECT stu.username FROM mdl_user stu "
 				. "INNER JOIN mdl_user_students AS sts ON stu.id=sts.userid "
 				. "WHERE sts.course=".$handler->courseId.")";
 		}
-		elseif ( '*teachers' == $this->searchUserId )
-		{
-			$access_cond = " ($access_visible) AND a.userid in ("
-				. "SELECT teu.username FROM mdl_user AS teu "
+		elseif ( '*teachers' == $this->searchuserid )  {
+			$accesscond = " ($accessvisible) AND a.userid in ("
+				. "SELECT teu.username FROM mdl_user teu "
 				. "INNER JOIN mdl_user_teachers tet ON teu.id=tet.userid "
 				. "WHERE tet.course=".$handler->courseId.")";
 		}
-		else
-		{
-			if ( ! array_key_exists( 'username', $USER ) || $USER->username != $this->searchUserId )
-				$access_cond = "($access_visible)";
-			if ( $access_cond )
-				$access_cond .= ' AND ';
-			$access_cond .= "a.userid='".addslashes($this->searchUserId)."'";
+		else  {
+			if ( ! array_key_exists( 'username', $USER ) || $USER->username != $this->searchuserid )
+				$accesscond = "($accessvisible)";
+			if ( $accesscond )
+				$accesscond .= ' AND ';
+			$accesscond .= "a.userid='".addslashes($this->searchuserid)."'";
 		}
 
 	
 		// These are the fields to use for a search;  specific annotations may add more fields
-		$std_search_fields = array( 'a.note', 'a.quote', 'u.firstname', 'u.lastname' );
+		$stdsearchfields = array( 'a.note', 'a.quote', 'u.firstname', 'u.lastname' );
 		
 		$prefix = $CFG->prefix;
 		
@@ -269,11 +256,11 @@ class AnnotationSummaryQuery
 
 		// Check whether the range column exists (for backwards compatibility)
 		$range = '';
-		if ( column_type( $CFG->prefix.'annotation', 'range' ) )
+/*		if ( column_type( 'annotation', 'range' ) )
 			$range = ', a.range AS range ';
-
+*/
 		// These that follow are standard fields, for which no page type exceptions can apply
-		$q_std_select = "SELECT a.id AS id, a.url AS url, a.userid AS userid, "
+		$qstdselect = "SELECT a.id AS id, a.url AS url, a.userid AS userid, "
 		. "a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char, "
 		. "a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char, "
 		. "a.link AS link, a.link_title AS link_title, a.action AS action, "
@@ -287,114 +274,103 @@ class AnnotationSummaryQuery
 		
 		// Standard tables apply to all (but note the outer join of user, which if gone
 		// should not steal the annotation from its owner):
-		$q_std_from = "\nFROM {$prefix}annotation AS a"
+		$qstdfrom = "\nFROM {$prefix}annotation a"
 			. "\n INNER JOIN {$prefix}user u ON u.username=a.userid"
 			. "\n LEFT OUTER JOIN {$prefix}user qu on qu.username=a.quote_author";
 		
 		// This search is always limited by access
-		$q_std_where = "\nWHERE ($access_cond)";
+		$qstdwhere = "\nWHERE ($accesscond)";
 
 		// Searching limits also;  fields searched are not alone those of the annotation:
 		// add to them also those a page of this type might use.
-		if ( null != $this->searchQuery && '' != $this->searchQuery )
-		{
-			if ( $this->exactMatch )
-				$q_std_where .= "\n   AND a.note='".addslashes($this->searchQuery)."'";
-			else
-			{
-				$search_cond = '';
-				$add_search_fields = $handler->getSearchFields( );
-				$search_cond = '';
-				$queryWords = split( ' ', $this->searchQuery );
-				foreach ( $queryWords as $word )
+		if ( null != $this->searchquery && '' != $this->searchquery )  {
+			if ( $this->exactmatch )
+				$qstdwhere .= "\n   AND a.note='".addslashes($this->searchquery)."'";
+			else  {
+				$searchcond = '';
+				$addsearchfields = $handler->get_search_fields( );
+				$searchcond = '';
+				$querywords = split( ' ', $this->searchquery );
+				foreach ( $querywords as $word )
 				{
-					$sWord = addslashes( $word );
-					foreach ( $std_search_fields as $field )
-						$search_cond .= ( $search_cond == '' ) ? "$field LIKE '%$sWord%'" : " OR $field LIKE '%$sWord%'";
-					foreach ( $add_search_fields as $field )
-						$search_cond .= " OR $field LIKE '%$sWord%'";
+					$sword = addslashes( $word );
+					foreach ( $stdsearchfields as $field )
+						$searchcond .= ( $searchcond == '' ) ? "$field LIKE '%$sword%'" : " OR $field LIKE '%$sword%'";
+					foreach ( $addsearchfields as $field )
+						$searchcond .= " OR $field LIKE '%$sword%'";
 				}
-				$q_std_where .= "\n   AND ($search_cond)";
+				$qstdwhere .= "\n   AND ($searchcond)";
 			}
 		}
 		
 		// The handler must construct the query, which might be a single SELECT or a UNION of multiple SELECTs
-		$q = $handler->getSql( $q_std_select, $q_std_from, $q_std_where, $orderby );
+		$q = $handler->get_sql( $qstdselect, $qstdfrom, $qstdwhere, $orderby );
 		
 		return $q;
 	}
 	
 	/** Get query to list users with public annotations on this discussion */
-	function listUsersSql( )
+	function list_users_sql( )
 	{
 		global $CFG;
 		return "SELECT u.firstname, u.lastname, u.username AS userid "
 			. "\nFROM {$CFG->prefix}user u "
 			. "\nINNER JOIN {$CFG->prefix}annotation a ON a.userid=u.username "
-			. $this->handler->getTables( )
+			. $this->handler->get_tables( )
 			. "\nWHERE a.access='public'";
 	}
 	
 	/** Generate a summary URL corresponding to this query */
-	function getSummaryUrl( $url, $searchUserId, $searchOf, $searchQuery, $exactMatch=false )
+	function get_summary_url( $url, $searchuserid, $searchof, $searchquery, $exactmatch=false )
 	{
 		global $CFG;
 		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($url);
-		if ( null != $searchQuery && '' != $searchQuery )
-			$s .= '&q='.urlencode($searchQuery);
-		if ( null != $searchUserId && '' != $searchUserId )
-			$s .= '&u='.urlencode($searchUserId);
-		if ( null != $searchOf && '' != $searchOf )
-			$s .= '&search-of='.urlencode($searchOf);
-		if ( $exactMatch )
+		if ( null != $searchquery && '' != $searchquery )
+			$s .= '&q='.urlencode($searchquery);
+		if ( null != $searchuserid && '' != $searchuserid )
+			$s .= '&u='.urlencode($searchuserid);
+		if ( null != $searchof && '' != $searchof )
+			$s .= '&search-of='.urlencode($searchof);
+		if ( $exactmatch )
 			$s .= '&match=exact';
 		return $s;
-/*		global $CFG;
-		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($this->url);
-		if ( null != $this->searchQuery && '' != $this->searchQuery )
-			$s .= '&q='.urlencode($this->searchQuery);
-		if ( null != $this->searchUserId && '' != $this->searchUserId )
-			$s .= '&user='.urlencode($this->searchUserId);
-		if ( null != $this->searchOf && '' != $this->searchOf )
-			$s .= '&search-of='.urlencode($this->searchOf);
-		return $s;
-*/	}
+	}
 	
 	/** Generate a feed URL corresponding to this query */
-	function getFeedUrl( $format )
+	function get_feed_url( $format )
 	{
-		return $this->getSummaryUrl( $this->url, $this->searchUserId, $this->searchOf, $this->searchQuery )
+		return $this->get_summary_url( $this->url, $this->searchuserid, $this->searchof, $this->searchquery )
 			. '&format=atom';
 	}
 }
 
 
-class AnnotationUrlHandler
+class annotation_url_handler
 {
-	var $searchOf;
+	var $searchof;
 	
-	function AnnotationUrlHandler( $searchOf )
+	function annotation_url_handler( $searchof )
 	{
-		$this->searchOf = $searchOf;
+		$this->searchof = $searchof;
 	}
 	
 	// This pulls together the query from the standard portions (which are passed in)
 	// and from the handler-specific portions.  Some handlers may override this, e.g. in order
 	// to construct a UNION.
-	function getSql( $q_std_select, $q_std_from, $q_std_where, $orderby )
+	function get_sql( $qstdselect, $qstdfrom, $qstdwhere, $orderby )
 	{
-		$q = $q_std_select
-			. $this->getFields( )
-			. "\n" . $q_std_from
-			. $this->getTables( )
-			. "\n" . $q_std_where
-			. $this->getConds( );
+		$q = $qstdselect
+			. $this->get_fields( )
+			. "\n" . $qstdfrom
+			. $this->get_tables( )
+			. "\n" . $qstdwhere
+			. $this->get_conds( );
 		if ( $orderby )
 			$q .= "\nORDER BY $orderby";
 		return $q;
 	}
 			
-	function getSearchFields( )
+	function get_search_fields( )
 	{
 		return array( );
 	}
@@ -411,24 +387,24 @@ class AnnotationUrlHandler
  I think adding an optional courseId parameter to ForumAnnotationHandler may be a better option, though
  it will look like a bit of a hack.
 */
-class CourseAnnotationUrlHandler extends AnnotationUrlHandler
+class course_annotation_url_handler extends annotation_url_handler
 {
-	var $courseId;
+	var $courseid;
 	var $title;
-	var $parentUrl;
-	var $parentTitle;
+	var $parenturl;
+	var $parenttitle;
 	
-	function CourseAnnotationUrlHandler( $courseId, $searchOf )
+	function course_annotation_url_handler( $courseid, $searchof )
 	{
-		$this->AnnotationUrlHandler( $searchOf );
-		$this->courseId = $courseId;
+		$this->annotation_url_handler( $searchof );
+		$this->courseid = $courseid;
 		$this->title = null;
 	}
 	
 	/** Internal function to fetch title etc. setting the following fields:
-	 *  title, parentUrl, parentTitle, courseId.  Will used cached results in preference
+	 *  title, parenturl, parenttitle, courseid.  Will used cached results in preference
 	 *  to querying the database. */
-	function fetchMetadata( )
+	function fetch_metadata( )
 	{
 		global $CFG;
 		
@@ -441,33 +417,33 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 			$this->title = $row->fullname;
 		else
 			$this->title = get_string( 'unknown course', ANNOTATION_STRINGS );
-		$this->parentUrl = null;
-		$this->parentTitle = null; 
+		$this->parenturl = null;
+		$this->parenttitle = null; 
 	}
 	
 	// Override the default implementation of getSql.  This must construct a UNION of multiple queries.
 	
-	function getSql( $q_std_select, $q_std_from, $q_std_where, $orderby )
+	function get_sql( $qstdselect, $qstdfrom, $qstdwhere, $orderby )
 	{
 		global $CFG;
 		$q = '';
 		
 		// Conditions
 		$cond = "\n  AND a.object_type='post'";
-		if ( $searchOf )
-			$cond .= " AND p.userid='".addSlashes( $searchOf )."'";
+		if ( $searchof )
+			$cond .= " AND p.userid='".addSlashes( $searchof )."'";
 
 		// First section:  discussion posts
-		$q = $q_std_select
+		$q = $qstdselect
 			 . ",\n 'forum' section_type, 'content' row_type"
 			 . ",\n f.name section_name"
 			 . ",\n concat('{$CFG->wwwroot}/mod/forum/view.php?id=',f.id) section_url"
-			. $q_std_from
-			 . "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseId.' '
+			. $qstdfrom
+			 . "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseid.' '
 			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type='post' AND p.id=a.object_id "
 			 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
-			. $q_std_where
-			. $this->getConds( $searchOf );
+			. $qstdwhere
+			. $this->getConds( $searchof );
 		
 		if ( $orderby )
 			$q .= "\nORDER BY $orderby";
@@ -478,27 +454,27 @@ class CourseAnnotationUrlHandler extends AnnotationUrlHandler
 		return $q;
 	}
 
-	function getConds( )
+	function get_conds( )
 	{
 		$cond = "\n  AND a.object_type='post'";
-		if ( $this->searchOf )
-			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		if ( $this->searchof )
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchof )."'";
 		return $cond;
 	}
 }
 
 
-class ForumAnnotationUrlHandler extends AnnotationUrlHandler
+class forum_annotation_url_handler extends annotation_url_handler
 {
 	var $f;
 	var $title;
-	var $parentUrl;
-	var $parentTitle;
-	var $courseId;
+	var $parenturl;
+	var $parenttitle;
+	var $courseid;
 	
-	function ForumAnnotationUrlHandler( $f, $searchOf )
+	function forum_annotation_url_handler( $f, $searchof )
 	{
-		$this->AnnotationUrlHandler( $searchOf );
+		$this->annotation_url_handler( $searchof );
 		$this->f = $f;
 		$this->title = null;
 	}
@@ -506,33 +482,32 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 	/** Internal function to fetch title etc. setting the following fields:
 	 *  title, parentUrl, parentTitle, courseId.  Will used cached results in preference
 	 *  to querying the database. */
-	function fetchMetadata( )
+	function fetch_metadata( )
 	{
 		global $CFG;
 		
 		if ( null != $this->title )
 			return;
-		else
-		{
+		else  {
 			$query = "SELECT id, name, course FROM {$CFG->prefix}forum WHERE id={$this->f}";
 			$row = get_record_sql( $query );
 			if ( False !== $row )
 			{
 				$a->name = $row->name;
 				$this->title = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
-				$this->courseId = (int) $row->course;
+				$this->courseid = (int) $row->course;
 			}
 			else
 			{
 				$this->title = get_string( 'unknown_forum', ANNOTATION_STRINGS );
-				$this->courseId = null;
+				$this->courseid = null;
 			}
-			$this->parentUrl = '/course/view.php?id='.$this->courseId;
-			$this->parentTitle = get_string( 'whole_course', ANNOTATION_STRINGS ); 
+			$this->parenturl = '/course/view.php?id='.$this->courseid;
+			$this->parenttitle = get_string( 'whole_course', ANNOTATION_STRINGS ); 
 		}
 	}
 	
-	function getFields( )
+	function get_fields( )
 	{
 		global $CFG;
 		return ",\n 'discussion' section_type, 'post' row_type"
@@ -540,7 +515,7 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url";
 	}
 	
-	function getTables( )
+	function get_tables( )
 	{
 		global $CFG;
 		if ( null == $this->f )
@@ -551,33 +526,33 @@ class ForumAnnotationUrlHandler extends AnnotationUrlHandler
 				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
 	}
 	
-	function getConds( )
+	function get_conds( )
 	{
 		$cond = "\n  AND a.object_type='post'";
-		if ( $this->searchOf )
-			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		if ( $this->searchof )
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchof )."'";
 		return $cond;
 	}
 	
-	function getSearchFields( )
+	function get_search_fields( )
 	{
 		return array( 'd.name' );
 	}
 }
 
 
-class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
+class discussion_annotation_url_handler extends annotation_url_handler
 {
 	var $d;
 	var $title;
-	var $parentUrl;
-	var $parentTitle;
-	var $courseId;
-	var $forumId;
+	var $parenturl;
+	var $parenttitle;
+	var $courseid;
+	var $forumid;
 	
-	function DiscussionAnnotationUrlHandler( $d, $searchOf )
+	function discussion_annotation_url_handler( $d, $searchof )
 	{
-		$this->AnnotationUrlHandler( $searchOf );
+		$this->annotation_url_handler( $searchof );
 		$this->d = $d;
 		$this->title = null;
 	}
@@ -585,48 +560,44 @@ class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
 	/** Internal function to fetch title etc. setting the following fields:
 	 *  title, parentUrl, parentTitle, courseId.  Will used cached results in preference
 	 *  to querying the database. */
-	function fetchMetadata( )
+	function fetch_metadata( )
 	{
 		global $CFG;
 	
 		if ( null != $this->title )
 			return;
-		if ( null == $this->d )
-		{
+		elseif ( null == $this->d )  {
 			$this->title = get_string( 'all_discussions', ANNOTATION_STRINGS );
-			$this->parentUrl = null;
-			$this->parentTitle = null;
-			$this->courseId = null;
+			$this->parenturl = null;
+			$this->parenttitle = null;
+			$this->courseid = null;
 		}
-		else
-		{
+		else  {
 			$query = "SELECT d.id AS id, d.name AS name, d.course AS course, d.forum AS forum, f.name AS forum_name"
 				. " FROM {$CFG->prefix}forum_discussions d "
 				. " INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
 				. " WHERE d.id={$this->d}";
 			$row = get_record_sql( $query );
-			$forumName = 'unknown';
-			if ( False !== $row )
-			{
+			$forumname = 'unknown';
+			if ( False !== $row )  {
 				$a->name = $row->name;
 				$this->title = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
-				$this->courseId = (int) $row->course;
-				$this->forumId = (int) $row->forum;
-				$forumName = $row->forum_name;
+				$this->courseid = (int) $row->course;
+				$this->forumid = (int) $row->forum;
+				$forumname = $row->forum_name;
 			}
-			else
-			{
+			else  {
 				$this->title = get_string( 'unknown_discussion', ANNOTATION_STRINGS );
-				$this->courseId = null;
-				$this->forumId = null;
+				$this->courseid = null;
+				$this->forumid = null;
 			}
-			$this->parentUrl = '/mod/forum/view.php?id='.$this->forumId;
-			$a->name = $forumName;
-			$this->parentTitle = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
+			$this->parenturl = '/mod/forum/view.php?id='.$this->forumid;
+			$a->name = $forumname;
+			$this->parenttitle = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
 		}
 	}
 	
-	function getFields( )
+	function get_fields( )
 	{
 		global $CFG;
 		return ",\n 'discussion' section_type, 'post' row_type"
@@ -634,7 +605,7 @@ class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
 			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url";
 	}
 	
-	function getTables( )
+	function get_tables( )
 	{
 		global $CFG;
 		if ( null == $this->d )
@@ -645,35 +616,35 @@ class DiscussionAnnotationUrlHandler extends AnnotationUrlHandler
 				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
 	}
 	
-	function getConds( )
+	function get_conds( )
 	{
 		$cond = "\n  AND a.object_type='post'";
-		if ( $this->searchOf )
-			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		if ( $this->searchof )
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchof )."'";
 		return $cond;
 	}
 	
-	function getSearchFields( )
+	function get_search_fields( )
 	{
 		return array( 'd.name' );
 	}
 }
 
-class PostAnnotationUrlHandler extends AnnotationUrlHandler
+class post_annotation_url_handler extends annotation_url_handler
 {
 	var $p;
 	var $title;
-	var $parentTitle;
-	var $courseId;
+	var $parenttitle;
+	var $courseid;
 	
-	function PostAnnotationUrlHandler( $p, $searchOf )
+	function post_annotation_url_handler( $p, $searchof )
 	{
-		$this->AnnotationUrlHandler( $searchOf );
+		$this->annotation_url_handler( $searchof );
 		$this->p = $p;
 		$this->title = null;
 	}
 	
-	function fetchMetadata( )
+	function fetch_metadata( )
 	{
 		global $CFG;
 		
@@ -685,25 +656,23 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 			. " INNER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
 			. " WHERE p.id=$p";
 		$row = get_record_sql( $query );
-		if ( False === $row )
-		{
+		if ( False === $row )  {
 			$this->title = get_string( 'unknown_post', ANNOTATION_STRINGS );
-			$this->parentUrl = null;
-			$this->parentTitle = null;
-			$this->courseId = null;
+			$this->parenturl = null;
+			$this->parenttitle = null;
+			$this->courseid = null;
 		}
-		else
-		{
+		else  {
 			$a->name = $row->pname;
 			$this->title = get_string( 'post_name', ANNOTATION_STRINGS, $a );
-			$this->parentUrl = $CFG->wwwroot.'/mod/forum/discuss.php?d='.$row->did;
+			$this->parenturl = $CFG->wwwroot.'/mod/forum/discuss.php?d='.$row->did;
 			$a->name = $row->dname;
-			$this->parentTitle = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
-			$this->courseId = (int) $row->course;
+			$this->parenttitle = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
+			$this->courseid = (int) $row->course;
 		}
 	}
 
-	function getFields( )
+	function get_fields( )
 	{
 		global $CFG;
 		return ",\n 'post' section_type, 'post' row_type"
@@ -713,20 +682,19 @@ class PostAnnotationUrlHandler extends AnnotationUrlHandler
 			. ",\n p.id object_id";
 	}
 	
-	function getTables( )
+	function get_tables( )
 	{
 		global $CFG;
 		return 	"\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
 			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion";
 	}
 	
-	function getConds( )
+	function get_conds( )
 	{
 		$cond = "\n AND a.object_type='post'";
-		if ( $this->searchOf )
-			$cond .= " AND a.quote_author='".addSlashes( $this->searchOf )."'";
+		if ( $this->searchof )
+			$cond .= " AND a.quote_author='".addSlashes( $this->searchof )."'";
 		return $cond;
 	}
 }
-
 ?>

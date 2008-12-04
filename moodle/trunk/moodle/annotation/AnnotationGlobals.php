@@ -19,23 +19,23 @@ define( 'AN_SPLASH_PREF', 'annotations.splash' );
 define( 'SMARTCOPY_PREF', 'smartcopy' );
 
 
-class AnnotationGlobals
+class annotation_globals
 {
-	function getHost( )
+	function get_host( )
 	{
 		global $CFG;
-		$urlParts = parse_url( $CFG->wwwroot );
-		return $urlParts[ 'host' ];
+		$urlparts = parse_url( $CFG->wwwroot );
+		return $urlparts[ 'host' ];
 	}
 	
-	function getServicePath( )
+	function get_service_path( )
 	{
 		global $CFG;
 		return $CFG->wwwroot . ANNOTATE_SERVICE_PATH;
-//		return AnnotationGlobals::getMoodlePath( ) . ANNOTATE_SERVICE_PATH;
+//		return annotation_globals::getMoodlePath( ) . ANNOTATE_SERVICE_PATH;
 	}
 	
-	FUNCTION getKeywordServicePath( )
+	FUNCTION get_keyword_service_path( )
 	{
 		global $CFG;
 		return $CFG->wwwroot . KEYWORD_SERVICE_PATH;
@@ -43,39 +43,39 @@ class AnnotationGlobals
 	
 	/** Get the moodle path - that is, the path to moodle from the root of the server.  Typically this is 'moodle/'.
 	 * REQUEST_URI starts with this. */
-	function getMoodlePath( )
+	function get_moodle_path( )
 	{
 		global $CFG;
-		$urlParts = parse_url( $CFG->wwwroot );
-		return $urlParts[ 'path' ];
+		$urlparts = parse_url( $CFG->wwwroot );
+		return $urlparts[ 'path' ];
 	}
 	
 	/**
 	 * Get the sever part of the moodle path.
 	 * This is the absolute path, with the getMoodlePath( ) portion chopped off.
 	 * Useful, because appending a REQUEST_URI to it produces an absolute URI. */
-	function getMoodleServer( )
+	function get_moodle_server( )
 	{
 		global $CFG;
-		$urlParts = parse_url( $CFG->wwwroot );
-		if ( $urlParts[ 'path' ] == '/' )
+		$urlparts = parse_url( $CFG->wwwroot );
+		if ( $urlparts[ 'path' ] == '/' )
 			return $CFG->wwwroot;
 		else
-			return substr( $CFG->wwwroot, 0, strpos( $CFG->wwwroot, $urlParts[ 'path' ] ) );
+			return substr( $CFG->wwwroot, 0, strpos( $CFG->wwwroot, $urlparts[ 'path' ] ) );
 	}
 
-	function getInstallDate( )
+	function get_install_date( )
 	{
 		// Hardcoded because I'm not aware of Moodle recording an install date anywhere
 		return strtotime( '2005-07-20' );
 	}
 	
-	function getFeedTagUri( )
+	function get_feed_tag_uri( )
 	{
-		return "tag:" . AnnotationGlobals::getHost() . ',' . date( 'Y-m-d', AnnotationGlobals::getInstallDate() ) . ":annotation";
+		return "tag:" . annotation_globals::get_host() . ',' . date( 'Y-m-d', annotation_globals::get_install_date() ) . ":annotation";
 	}
 	
-	function recordToAnnotation( $r )
+	function record_to_annotation( $r )
 	{
 		$annotation = new Annotation( );
 		
@@ -103,23 +103,20 @@ class AnnotationGlobals
 		$annotation->setCreated( $r->created );
 		$annotation->setModified( $r->modified );
 		
-		if ( $r->start_block !== null )
-		{
+		if ( $r->start_block !== null )  {
 			$range = new SequenceRange( );
 			$range->setStart( new SequencePoint( $r->start_block, $r->start_line, $r->start_word, $r->start_char ) );
 			$range->setEnd( new SequencePoint( $r->end_block, $r->end_line, $r->end_word, $r->end_char ) );
 			$annotation->setSequenceRange( $range );
 		}
 		// Older versions used a range string column.  Check and translate that field here:
-		else if ( ! empty( $r->range ) )
-		{
+		else if ( ! empty( $r->range ) )  {
 			$range = new SequenceRange( );
 			$range->fromString( $r->range );
 			$annotation->setSequenceRange( $range );
 		}
 		
-		if ( $r->start_xpath !== null )
-		{
+		if ( $r->start_xpath !== null )  {
 			$range = new XPathRange( );
 			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_line, $r->start_word, $r->start_char ) );
 			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_line, $r->end_word, $r->end_char ) );
@@ -129,7 +126,7 @@ class AnnotationGlobals
 		return $annotation;
 	}
 		
-	function annotationToRecord( $annotation, $forUpdate=False )
+	function annotation_to_record( $annotation, $forupdate=False )
 	{
 		$id = $annotation->getAnnotationId( );
 		if ( $id )
@@ -144,7 +141,7 @@ class AnnotationGlobals
 		$record->quote_author = addslashes( $annotation->getQuoteAuthorId( ) );
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
-		if ( ! $forUpdate )
+		if ( ! $forupdate )
 			$record->created = $annotation->getCreated( );
 
 		$sequenceRange = $annotation->getSequenceRange( );
@@ -168,7 +165,7 @@ class AnnotationGlobals
 		return $record;
 	}
 
-	function recordToKeyword( $r )
+	function record_to_keyword( $r )
 	{
 		$keyword = new MarginaliaKeyword( );
 		$keyword->name = $r->name;
@@ -176,7 +173,7 @@ class AnnotationGlobals
 		return $keyword;
 	}
 	
-	function keywordToRecord( $keyword )
+	function keyword_to_record( $keyword )
 	{
 		global $USER;
 		$record->userid = $USER->id;

@@ -21,13 +21,13 @@ if ($CFG->forcelogin) {
 	require_login();
 }
 
-class AnnotationSummaryPage
+class annotation_summary_page
 {
-	function showHeader( )
+	function show_header( )
 	{
 		global $CFG, $USER;
 		
-		$sWwwroot = htmlspecialchars( $CFG->wwwroot );
+		$swwwroot = htmlspecialchars( $CFG->wwwroot );
 		$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
 		$navmiddle = "";
 		$meta
@@ -43,13 +43,13 @@ class AnnotationSummaryPage
 			. "<script language='JavaScript' type='text/javascript' src='smartquote.js'></script>\n"
 			. "<script language='JavaScript' type='text/javascript' src='summary.js'></script>\n"
 			. "<script language='JavaScript' type='text/javascript'>\n"
-			. "var annotationService = new RestAnnotationService('$sWwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
+			. "var annotationService = new RestAnnotationService('$swwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
 			. "window.annotationSummary = new AnnotationSummary(annotationService"
-				.", '$sWwwroot'"
-				.", '".htmlspecialchars($USER->username)."');\n"
-			. "window.preferences = new Preferences( new RestPreferenceService('$sWwwroot/annotation/user-preference.php' ) );\n"
+				.", '$swwwroot'"
+				.", '".s($USER->username)."');\n"
+			. "window.preferences = new Preferences( new RestPreferenceService('$swwwroot/annotation/user-preference.php' ) );\n"
 			. "</script>\n"
-			. "<link rel='stylesheet' type='text/css' href='$sWwwroot/annotation/summary-styles.php'/>\n";
+			. "<link rel='stylesheet' type='text/css' href='$swwwroot/annotation/summary-styles.php'/>\n";
 
 		
 /*		if ( AN_EDITABLEKEYWORDS )
@@ -57,54 +57,45 @@ class AnnotationSummaryPage
 		else
 			$tagsHtml = '';
 */		
-		if ( null != $this->course && $this->course->category)
-		{
+		if ( null != $this->course && $this->course->category)  {
 			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
-				'<a href='.$CFG->wwwroot.'/course/view.php?id='.$course->id.'>'.$course->shortname.'</a> -> '.$navtail,
+				'<a href='.$CFG->wwwroot.'/course/view.php?id='.$this->course->id.'>'.$this->course->shortname.'</a> -> '.$navtail,
 				"", $meta, true, "", navmenu($this->course) );
 		}
-		elseif ( null != $this->course )
-		{
+		elseif ( null != $this->course )  {
 			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
 				$navtail, "", $meta, true, "", navmenu($this->course) );
 		}
 		else
-		{
-			echo 'print_header3';
 			print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null );
-		}
 //		echo $tagsHtml;
 	}
 	
-	function parseParams( )
+	function parse_params( )
 	{
-		$this->errorPage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
-		$this->summaryUrl = $_GET[ 'url' ];
+		$this->errorpage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
+		$this->summaryurl = $_GET[ 'url' ];
 		
-		$this->searchQuery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
-		$this->searchUserId = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
-		$this->searchOf = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
-		$this->exactMatch = array_key_exists( 'match', $_GET ) ? 'exact' == $_GET[ 'match' ] : false;
+		$this->searchquery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
+		$this->searchuserid = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
+		$this->searchof = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
+		$this->exactmatch = array_key_exists( 'match', $_GET ) ? 'exact' == $_GET[ 'match' ] : false;
 	}
 	
 	function show( )
 	{
-		$this->parseParams( );
-		if ( ! MarginaliaHelper::isUrlSafe( $this->summaryUrl ) )
-		{
+		$this->parse_params( );
+		if ( ! MarginaliaHelper::isUrlSafe( $this->summaryurl ) )  {
 			header( 'HTTP/1.1 400 Bad Request' );
 			echo '<h1>400 Bad Request</h1>Bad url parameter';
 		}
-		else
-		{
-			$query = new AnnotationSummaryQuery( $this->summaryUrl, $this->searchUserId, $this->searchOf, $this->searchQuery, $this->exactMatch );
-			if ( $query->error )
-			{
+		else  {
+			$query = new annotation_summary_query( $this->summaryurl, $this->searchuserid, $this->searchof, $this->searchquery, $this->exactmatch );
+			if ( $query->error )  {
 				header( 'HTTP/1.1 400 Bad Request' );
-				echo '<h1>400 Bad Request</h1>'.htmlspecialchars($query->error);
+				echo '<h1>400 Bad Request</h1>'.s($query->error);
 			}
-			else
-			{
+			else  {
 				// Display individual annotations
 				// Dunno if the range sorting is working
 				$sql = $query->sql( 'section_type, section_name, a.url, start_block, start_word, start_char, end_block, end_word, end_char' );
@@ -114,30 +105,30 @@ class AnnotationSummaryPage
 				$format = array_key_exists( 'format', $_GET ) ? $_GET[ 'format' ] : 'html';
 				
 				if ( 'atom' == $format )
-					$this->showAtom( $query, $annotations );
+					$this->show_atom( $query, $annotations );
 				else
-					$this->showHtml( $query, $annotations );
+					$this->show_html( $query, $annotations );
 			}
 		}
 	}
 
-	function showAtom( $query, $annotations )
+	function show_atom( $query, $annotations )
 	{
 		global $CFG;
 		
-		$annotationObjs = array();
-		foreach ( $annotations as $annotationRec )
-			$annotationObjs[ ] = AnnotationGlobals::recordToAnnotation( $annotationRec );
-		MarginaliaHelper::generateAnnotationFeed( $annotationObjs,
-			AnnotationGlobals::getFeedTagUri(),
-			MarginaliaHelper::getLastModified( $annotationObjs, AnnotationGlobals::getInstallDate() ),
-			AnnotationGlobals::getServicePath(),
-			AnnotationGlobals::getHost(),
-			$query->getFeedUrl('atom'),
+		$annotationobjs = array();
+		foreach ( $annotations as $annotationrec )
+			$annotationobjs[ ] = annotation_globals::record_to_annotation( $annotationrec );
+		MarginaliaHelper::generateAnnotationFeed( $annotationobjs,
+			AnnotationGlobals::get_feed_tag_uri(),
+			MarginaliaHelper::getLastModified( $annotationObjs, annotation_globals::get_install_date() ),
+			AnnotationGlobals::get_service_path(),
+			AnnotationGlobals::get_host(),
+			$query->get_feed_url('atom'),
 			$CFG->wwwroot );
 	}
 	
-	function showHtml( $query, $annotations )
+	function show_html( $query, $annotations )
 	{
 		global $CFG, $USER;
 		
@@ -145,34 +136,31 @@ class AnnotationSummaryPage
 		// Atom feed, and the Atom feed is generated exclusively by annotation code which doesn't know
 		// that much about Moodle.  So the handler has to query it based on a discussion ID or the like.
 		$this->course = null;
-		$this->courseId = $query->handler->courseId;
-		if ( null != $this->courseId )
-		{
-			if (! $this->course = get_record( "course", "id", $this->courseId )) {
+		$this->courseid = $query->handler->courseid;
+		if ( null != $this->courseid )  {
+			if (! $this->course = get_record( "course", "id", $this->courseid ) )
 				error( "Course ID is incorrect - discussion is faulty ");
-			}
+
 			// Ok, now this is probably very wrong.  If the user looks for annotations within a course,
 			// it requires a login.  Without the course (i.e. in a more general search), it doesn't!
 			// I would eleminate this, but I don't really know how Moodle security works. #geof#
-			if ($this->course->category) {
-				require_login($this->course->id);
-			}
+			if ( $this->course->category )
+				require_login( $this->course->id );
 		}
 
 		// Keep for debugging:
 		// echo "<h2>Query</h2><pre>".$query->sql( 'a.id' )."</pre>";
 		
 		// Show header
-		$sWwwroot = htmlspecialchars( $CFG->wwwroot );
+		$swwwroot = htmlspecialchars( $CFG->wwwroot );
 		
-		$this->showHeader( );
+		$this->show_header( );
 
-		$keywords = AnnotationKeywordsDB::listKeywords( $USER->username );
-		$keywordHash = array( );
-		for ( $i = 0;  $i < count( $keywords );  ++$i )
-		{
+		$keywords = annotation_keywords_db::list_keywords( $USER->username );
+		$keywordhash = array( );
+		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
 			$keyword = $keywords[ $i ];
-			$keywordHash[ $keyword->name ] = true;
+			$keywordhash[ $keyword->name ] = true;
 		}
 		
 		// print search header
@@ -183,8 +171,8 @@ class AnnotationSummaryPage
 		echo "<form id='annotation-search' method='get' action='summary.php'>\n";
 		echo "<fieldset>\n";
 		echo "<label for='search-of'>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
-		echo "<input type='hidden' name='search-of' id='search-of' value='".$query->searchOf."'/>\n";
-		echo "<input type='hidden' name='u' id='u' value='".$query->searchUserId."'/>\n";
+		echo "<input type='hidden' name='search-of' id='search-of' value='".$query->searchof."'/>\n";
+		echo "<input type='hidden' name='u' id='u' value='".$query->searchuserid."'/>\n";
 /*		if ( isguest() )
 		{
 			echo "<input type='hidden' name='search-of' id='search-of' value='' />\n";
@@ -206,24 +194,25 @@ class AnnotationSummaryPage
 //			echo " <option value='*students'".('*students'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_students', ANNOTATION_STRINGS )."</option>\n";
 		echo "</select>\n";
 		echo "<label for='search-text'>".get_string( 'search_text', ANNOTATION_STRINGS )."</label>\n";
-*/		echo "<input type='text' id='search-text' name='q' value='".htmlspecialchars($query->searchQuery)."'/>\n";
+*/		echo "<input type='text' id='search-text' name='q' value='".s($query->searchquery)."'/>\n";
 		echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
-		echo "<input type='hidden' name='url' value='".htmlspecialchars($query->url)."'/>\n";
+		echo "<input type='hidden' name='url' value='".s($query->url)."'/>\n";
 		echo "</fieldset>\n";
 		echo "</form>";
 		
 		// If this page is an error, explain what it's about
-		if ( 'range-mismatch' == $this->errorPage )
-		{
-			echo "<p class='error'><em class='range-error'>!</em>".get_string( 'summary_range_error', ANNOTATION_STRINGS )."</p>\n";
+		if ( 'range-mismatch' == $this->errorpage ) {
+			echo '<p class="error"><em class="range-error">!</em>'
+				.s( get_string( 'summary_range_error', ANNOTATION_STRINGS ) )."</p>\n";
 		}
 		
-		echo "<p id='query'>".get_string( 'prompt_search_desc', ANNOTATION_STRINGS ).' '.$query->descWithLinks(null).":</p>\n";
+		echo '<p id="query">'.s( get_string( 'prompt_search_desc', ANNOTATION_STRINGS ) )
+			.' '.$query->desc_with_links(null).":</p>\n";
 		
-		$curSection = null;
-		$curSectionType = null;
-		$curUser = null;
-		$curUrl = null;
+		$cursection = null;
+		$cursectiontype = null;
+		$curuser = null;
+		$cururl = null;
 		// make sure some records came back
 		if ( null != $annotations )
 		{
@@ -232,51 +221,44 @@ class AnnotationSummaryPage
 			foreach ( $annotations as $annotation )
 				$annotationa[ ] = $annotation;
 				
-			$nCols = 6;
+			$ncols = 6;
 	
-			echo "<table cellspacing='0' class='annotations'>";
-			for ( $annotation_i = 0;  $annotation_i < count( $annotationa );  ++$annotation_i )
-			{
-				$annotation = $annotationa[ $annotation_i ];
+			echo '<table cellspacing="0" class="annotations">'."\n";
+			for ( $annotationi = 0;  $annotationi < count( $annotationa );  ++$annotationi )  {
+				$annotation = $annotationa[ $annotationi ];
 				
 				// Display a heading for each new section URL
-				if ( $annotation->section_type != $curSectionType || $annotation->section_url != $curSection )
-				{
-					if ( $curSection != null )
+				if ( $annotation->section_type != $cursectiontype || $annotation->section_url != $cursection )  {
+					if ( $cursection != null )
 						echo "</tbody>\n";
-					echo "<thead><tr><th colspan='$nCols'>";
+					echo "<thead><tr><th colspan='$ncols'>";
 					$a->section_type = htmlspecialchars( $annotation->section_type );
-					echo '<h3>'.htmlspecialchars($annotation->section_type).'</h3>: '
-						. "<a href='".htmlspecialchars($annotation->section_url)
-						."' title='".get_string( 'prompt_section', ANNOTATION_STRINGS, $a )."'>" 
-						. htmlspecialchars( $annotation->section_name ) . "</a>";
-					if ( $annotation->section_url != $query->url )
-					{
-						$turl = $query->getSummaryUrl( $annotation->section_url, $query->searchUserId, $query->searchOf, $query->searchQuery, $query->exactMatch );
-						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
+					echo '<h3>'.s( $annotation->section_type ).'</h3>: '
+						. "<a href='".s( $annotation->section_url )
+						."' title='".s( get_string( 'prompt_section', ANNOTATION_STRINGS, $a ) )."'>" 
+						.s( $annotation->section_name ) . "</a>";
+					if ( $annotation->section_url != $query->url )  {
+						$turl = $query->get_summary_url( $annotation->section_url, $query->searchuserid, $query->searchof, $query->searchquery, $query->exactmatch );
+						echo "<a class='zoom' title='".s( get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation ) )."' href='".s( $turl )."'>&#9756;</a>\n";
 					}
-					echo "</th></tr></thead><tbody>\n";
-					$curSection = $annotation->section_url;
-					$curSectionType = $annotation->section_type;
-					$curUser = $annotation->userid;
-					$curUrl = null;
+					echo '</th></tr></thead><tbody>'."\n";
+					$cursection = $annotation->section_url;
+					$cursectiontype = $annotation->section_type;
+					$curuser = $annotation->userid;
+					$cururl = null;
 				}
 				
 				// For each new url, display the title and author
-				if ( $annotation->url != $curUrl ) { //|| $annotation->userid != $curUser ) {
-					$curUrl = $annotation->url;
-					$curUser = $annotation->userid;
+				if ( $annotation->url != $cururl ) { //|| $annotation->userid != $curUser ) {
+					$cururl = $annotation->url;
+					$curuser = $annotation->userid;
 
 					echo "<tr class='fragment first'>";
 					// Figure out how many rows this source will span
-					$nRows = 1;
-					for ( $j = $annotation_i + 1;  $j < count( $annotationa );  ++$j )
-					{
+					$nrows = 1;
+					for ( $j = $annotationi + 1;  $j < count( $annotationa );  ++$j )  {
 						if ( $annotationa[ $j ]->url != $curUrl )
-						{
-//								echo $annotationa[$j]->url . "!=" . $curUrl;
 							break;
-						}
 						$nRows += 1;
 					}
 					
@@ -286,20 +268,19 @@ class AnnotationSummaryPage
 					if ( ! ( str_startswith( $url, 'http://' ) || str_startswith( $url, 'https://' ) ) ) 
 						$url = $CFG->wwwroot.$annotation->url;
 					
-					echo "<th rowspan='$nRows'>";
+					echo "<th rowspan='$nrows'>";
 					$url = MarginaliaHelper::isUrlSafe( $url ) ? $url : '';
-					$a->row_type = htmlspecialchars( $annotation->row_type );
-					$a->author = htmlspecialchars( $annotation->quote_author_name );
-					echo "<a class='url' href='".htmlspecialchars($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
-					echo htmlspecialchars( $annotation->quote_title ) . '</a>';
+					$a->row_type = $annotation->row_type;
+					$a->author = $annotation->quote_author_name;
+					echo "<a class='url' href='".s($url)."' title='".s( get_string( 'prompt_row', ANNOTATION_STRINGS, $a) )."'>";
+					echo s( $annotation->quote_title ) . '</a>';
 
-					echo "<br/>by <span class='quote-author'>".htmlspecialchars( $annotation->quote_author_name )."</span>\n";
+					echo "<br/>by <span class='quote-author'>".s( $annotation->quote_author_name )."</span>\n";
 					
 					// Link to filter only annotations by this user
-					if ( $annotation->quote_author_id != $query->searchOf )
-					{
-						$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $annotation->quote_author_id, $query->searchQuery, $query->exactMatch );
-						echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation))."' href='$turl'>&#9756;</a>\n";
+					if ( $annotation->quote_author_id != $query->searchof )  {
+						$turl = $query->get_summary_url( $query->url, $query->searchuserid, $annotation->quote_author_id, $query->searchquery, $query->exactmatch );
+						echo "<a class='zoom' title='".s( get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s( $turl )."'>&#9756;</a>\n";
 					}
 					echo "</th>\n";
 				}
@@ -309,7 +290,7 @@ class AnnotationSummaryPage
 					
 				// Show the quoted text
 				echo "<td class='quote'>";
-				echo htmlspecialchars( $annotation->quote );
+				p( $annotation->quote );
 				echo "</td>\n";
 				
 				
@@ -318,14 +299,13 @@ class AnnotationSummaryPage
 				if ( ! $annotation->note )
 					echo '&#160;';
 				else
-					echo htmlspecialchars( $annotation->note );
+					p( $annotation->note );
 
-				if ( ! $this->exactMatch && $keywordHash[ $annotation->note ] )
-				{
-					$turl = $query->getSummaryUrl( $query->url, $query->searchUserId, $query->searchOf, $annotation->note, true );
+				if ( ! $this->exactmatch && array_key_exists( $annotation->note, $keywordhash ) )  {
+					$turl = $query->get_summary_url( $query->url, $query->searchuserid, $query->searchof, $annotation->note, true );
 					echo "<a class='zoom' title='"
-						.htmlspecialchars(get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
-						."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+						.s( get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
+						."' href='".s( $turl )."'>&#9756;</a>\n";
 				}
 				echo "</td>\n";
 
@@ -335,13 +315,12 @@ class AnnotationSummaryPage
 
 				// Smartquote button
 				$SMARTQUOTE_SYMBOL = '&#9850;';
-				$sqid = htmlspecialchars( 'sq'.$annotation->id );
-				$sqtitle = htmlspecialchars( get_string( 'smartquote_annotation', ANNOTATION_STRINGS ) );
+				$sqid = s( 'sq'.$annotation->id );
+				$sqtitle = s( get_string( 'smartquote_annotation', ANNOTATION_STRINGS ) );
 				echo "<button class='smartquote' id='$sqid' title='$sqtitle'>$SMARTQUOTE_SYMBOL</button>\n";
 				
 				// Controls for current user
-				if ( $annotation->userid == $USER->username )
-				{
+				if ( $annotation->userid == $USER->username )  {
 					$AN_SUN_SYMBOL = '&#9675;';
 					$AN_MOON_SYMBOL = '&#9670;';
 					echo "<button class='share-button access-{$annotation->access}' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
@@ -360,50 +339,46 @@ class AnnotationSummaryPage
 				}
 				
 				// User name (or "me" for current user)
-				$displayUserName = htmlspecialchars( $annotation->username );
-				$hiddenUserName = '';
+				$displayusername = s( $annotation->username );
+				$hiddenusername = '';
 				$class = 'user-name';
 				
-				if ( $annotation->userid == $USER->username )
-				{
-					$hiddenUserName = "<span class='user-name'>$displayUserName</span>\n";
-					$displayUserName = htmlspecialchars( get_string( 'me', ANNOTATION_STRINGS, null ) );
+				if ( $annotation->userid == $USER->username )  {
+					$hiddenusername = "<span class='user-name'>$displayusername</span>\n";
+					$displayusername = s( get_string( 'me', ANNOTATION_STRINGS, null ) );
 					$class = '';
 				}
 					
 				$url = $CFG->wwwroot.$annotation->url;
 				if ( MarginaliaHelper::isUrlSafe( $url ) )
-					echo "<a class='$class' onclick='setAnnotationUser(\"".htmlspecialchars($annotation->userid)."\")' href='".htmlspecialchars($url)."'>"
-						."$displayUserName</a>\n";
+					echo "<a class='$class' onclick='setAnnotationUser(\"".s($annotation->userid)."\")' href='".s($url)."'>"
+						."$displayusername</a>\n";
 				else
 					echo "<span class='$class'>$displayUserName</span>\n";
-				echo $hiddenUserName;
+				echo $hiddenusername;
 
 				// Link to filter only annotations by this user
-				if ( $annotation->userid != $query->searchUserId )
-				{
-					$turl = $query->getSummaryUrl( $query->url, $annotation->userid, $query->searchOf, $query->searchQuery, $query->exactMatch );
-					echo "<a class='zoom' title='".htmlspecialchars(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".htmlspecialchars($turl)."'>&#9756;</a>\n";
+				if ( $annotation->userid != $query->searchuserid )  {
+					$turl = $query->get_summary_url( $query->url, $annotation->userid, $query->searchof, $query->searchquery, $query->exactmatch );
+					echo "<a class='zoom' title='".s(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s($turl)."'>&#9756;</a>\n";
 				}
 				echo "</td>\n";
-				
 				
 				echo "</tr>\n";
 			}
 			
 			// Build scripts for individual buttons
 			echo "<script type='text/javascript'>\n";
-			for ( $annotation_i = 0;  $annotation_i < count( $annotationa );  ++$annotation_i )
-			{
-				$annotation = $annotationa[ $annotation_i ];
-				$sqid = htmlspecialchars( 'sq'.$annotation->id );
-				$tuserid = htmlspecialchars( $annotation->userid );
+			for ( $annotation_i = 0;  $annotationi < count( $annotationa );  ++$annotationi )  {
+				$annotation = $annotationa[ $annotationi ];
+				$sqid = s( 'sq'.$annotation->id );
+				$tuserid = s( $annotation->userid );
 				echo "  addEvent(document.getElementById('$sqid'),'click',function() {"
 					."    window.annotationSummary.quote('$sqid','$tuserid'); } );";
 			}
 			echo "</script>\n";
 			
-			if ( $curUrl != null )
+			if ( $cururl != null )
 				echo "</tbody>\n";
 			echo "<thead class='labels'>\n"
 				."  <th>Source &amp; Author</th>\n"
@@ -419,28 +394,26 @@ class AnnotationSummaryPage
 		
 		// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
 		// if a login is required I won't include the feature.
-		if ( ! ANNOTATION_REQUIRE_USER )
-		{
-			$turl = $query->getFeedUrl( 'atom' );
-			echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )
-				."'><a href='".htmlspecialchars($turl)."'><img border='0' alt='"
-				.get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='$CFG->wwwroot/pix/i/rss.gif'/>"
-				. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
+		if ( ! ANNOTATION_REQUIRE_USER )  {
+			$turl = $query->get_feed_url( 'atom' );
+			echo "<p class='feed' title='".s( get_string( 'atom_feed', ANNOTATION_STRINGS ) )
+				."'><a href='".s($turl)."'><img border='0' alt='"
+				.s( get_string( 'atom_feed', ANNOTATION_STRINGS ) )."' src='$CFG->wwwroot/pix/i/rss.gif'/>"
+				. '</a> '.s( get_string( 'atom_feed_desc', ANNOTATION_STRINGS ) )."</p>\n";
 		}
 		
 		print_footer($this->course);
 
-		$logUrl = $_SERVER[ 'REQUEST_URI' ];
-		$urlParts = parse_url( $logUrl );
-		$logUrl = array_key_exists( 'query', $urlParts ) ? $urlParts[ 'query' ] : null;
-		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logUrl?'?'.$logUrl:''), $query->desc(null) );
+		$logurl = $_SERVER[ 'REQUEST_URI' ];
+		$urlparts = parse_url( $logurl );
+		$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
+		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $query->desc(null) );
 	}
 	
-	function getSummaryLink( $text, $title, $query, $url, $searchUserId, $searchOf, $searchQuery, $exactMatch )
+	function get_summary_link( $text, $title, $query, $url, $searchuserid, $searchof, $searchquery, $exactmatch )
 	{
-		$turl = $query->getSummaryUrl( $url, $searchUserId, $searchOf, $searchQuery, $exactMatch );
-		return "<a href='".htmlspecialchars($turl)."' title='".htmlspecialchars($title)."'>"
-			. htmlspecialchars($text)."</a>";
+		$turl = $query->get_summary_url( $url, $searchUserId, $searchof, $searchquery, $exactmatch );
+		return '<a href="'.s($turl).'" title="'.s($title).'">'.s( $text ).'</a>';
 	}
 }
 
@@ -471,16 +444,13 @@ function str_startswith( $s1, $s2 )
 	
 $urlString = $_SERVER[ 'REQUEST_URI' ];
 
-if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )
-{
+if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )  {
 	header( 'HTTP/1.1 405 Method Not Allowed' );
 	header( 'Allow: GET' );
 	echo 'grr';
 }
-else
-{
-	$summaryPage = new AnnotationSummaryPage( );
-	$summaryPage->show( );
+else  {
+	$summarypage = new annotation_summary_page( );
+	$summarypage->show( );
 }
-
 ?>

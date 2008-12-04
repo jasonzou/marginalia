@@ -143,11 +143,11 @@
     }
 
     // Begin Annotation Code to set $meta
-    // refUrl is the relative URL to this resource from the server root (i.e., it should start with '/')
-    $refUrl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
+    // refurl is the relative URL to this resource from the server root (i.e., it should start with '/')
+    $refurl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
     // Check whether the annotation show/hide preference is set;  if not, set it (need to do this because the AJAX
     // service lacks permission to set unknown preferences)
-    $meta = marginaliaHeaderHtml( $refUrl );
+    $meta = marginalia_header_html( $refurl );
     // I'm perverting the meta argument here, but there's no way provided to do this otherwise that I 
     // can see #GEOF#
 	
@@ -250,9 +250,9 @@
 	
 	// Annotation controls (help, user dropdown, link to summary page)
 	echo "</td>\n<td id='annotation-controls'>";
-	showMarginaliaHelp( 'forum' );
-	showMarginaliaUserDropdown( $refUrl, true );
-	showMarginaliaSummaryLink( $refUrl, $USER->username );
+	show_marginalia_help( 'forum' );
+	show_marginalia_user_dropdown( $refurl, true );
+	show_marginalia_summary_link( $refurl, $USER->username );
     echo "</td></tr></table>";
 
     if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
