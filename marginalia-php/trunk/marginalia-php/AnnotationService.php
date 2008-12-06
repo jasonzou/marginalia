@@ -57,6 +57,7 @@ class AnnotationService
 	var $errorSent;		// Only send one HTTP error - if this is set, don't send another
 	var $niceUrls;		// True or False
 	var $currentUserId;	// ID (username) of the current user, or null if none
+	var $allowAnyUserPatch;	// Allow any user to submit patch updates
 	
 	function AnnotationService( $host, $servicePath, $installDate, $currentUserId, $args=null )
 	{
@@ -81,6 +82,13 @@ class AnnotationService
 				$value = $args[ $arg ];
 				switch ( $arg )
 				{
+					// Allow any user to submit updates (patches).  Should only
+					// ever be set for the administration user.  The code at
+					// least checks to make sure only range data is affected.
+					case 'allowAnyUserPatch':
+						$this->allowAnyUserPatch = $value;
+						break;
+					
 					// The client will submit relative URLs, with this prefix stripped off
 					// Must also be configured for client
 					case 'baseUrl':
@@ -400,10 +408,21 @@ class AnnotationService
 		$annotation = $this->doGetAnnotation( $id );
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found', 'No such annotation' );
-		elseif ( $this->currentUserId != $annotation->getUserId( ) )
+		elseif ( $this->currentUserId != $annotation->getUserId( ) && ! $this->allowAnyUserPatch )
 			$this->httpError( 403, 'Forbidden', 'Not your annotation' );
 		else
 		{
+			// If this is a patch update by another user, restrict the update to ranges parameters only
+			if ( $this->currentUserId != $annotation->getUserId( ) )
+			{
+				$newParams = array( );
+				if ( array_key_exists( $params[ 'sequence-range' ] ) )
+					$newParams[ 'sequence-range' ] = $params[ 'sequence-range' ];
+				if ( array_key_exists( $params[ 'xpath-range' ] ) )
+					$newParams[ 'xpath-range' ] = $params[ 'xpath-range' ];
+				$params = $newParams;
+			}
+			
 			// Set only the fields that were passed in
 			$error = $annotation->fromArray( $params );
 			if ( $error )
