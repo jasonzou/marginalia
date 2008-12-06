@@ -117,7 +117,33 @@ function show_marginalia_summary_link( $refurl, $userid )
  * and initialize Marginalia.  If necessary, also creates relevant user preferences 
  * (necessary for Marginalia to function correctly).
  */
-function marginalia_header_html( $refurl )
+function marginalia_header_html( )
+{
+	global $CFG, $USER;
+	
+	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/marginalia/marginalia.css'/>\n"
+		. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
+	$anscripts = listMarginaliaJavascript( );
+	for ( $i = 0;  $i < count( $anscripts );  ++$i )
+		require_js( $CFG->wwwroot.'/annotation/marginalia/'.$anscripts[ $i ] );
+	require_js( array(
+		$CFG->wwwroot.'/annotation/marginalia-config.js',
+		$CFG->wwwroot.'/annotation/marginalia-strings.js',
+		$CFG->wwwroot.'/annotation/smartquote.js',
+		$CFG->wwwroot.'/annotation/MoodleMarginalia.js' ) );
+
+	// Bits of YUI
+	$meta .= "<link type='text/css' rel='stylesheet' href='$CFG->wwwroot/lib/yui/autocomplete/assets/skins/sam/autocomplete.css'/>\n";
+	require_js( array(
+		$CFG->wwwroot.'/lib/yui/yahoo-dom-event/yahoo-dom-event.js',
+//		$CFG->wwwroot.'/lib/yui/datasource/datasource-min.js',
+		$CFG->wwwroot.'/lib/yui/autocomplete/autocomplete-min.js' ) );
+	
+	return $meta;
+}
+
+
+function marginalia_init_html( $refurl )
 {
 	global $CFG, $USER;
 	
@@ -141,40 +167,28 @@ function marginalia_header_html( $refurl )
 	}
 	$sprefs = '{ '.$sprefs.' }';;
 	
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/marginalia/marginalia.css'/>\n"
-		. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
-	$anscripts = listMarginaliaJavascript( );
-	for ( $i = 0;  $i < count( $anscripts );  ++$i )
-		$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/".$anscripts[$i]."'></script>\n";	
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-config.js'></script>\n";
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia-strings.js'></script>\n";
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n";
-	$meta .= "<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/MoodleMarginalia.js'></script>\n";
-
-	// Bits of YUI
-	$meta .= "<link type='text/css' rel='stylesheet' href='$CFG->wwwroot/lib/yui/autocomplete/assets/skins/sam/autocomplete.css'/>\n";
-	$meta .= "<script type='text/javascript' src='$CFG->wwwroot/lib/yui/yahoo-dom-event/yahoo-dom-event.js'></script>\n"; 
-	$meta .= "<script type='text/javascript' src='$CFG->wwwroot/lib/yui/datasource/datasource-min.js'></script>\n";
-	$meta .= "<script type='text/javascript' src='$CFG->wwwroot/lib/yui/autocomplete/autocomplete-min.js'></script>\n";
+    $sitecontext = get_context_instance(CONTEXT_SYSTEM);
+    $allowAnyUserPatch = AN_ADMINUPDATE && (
+		has_capability( 'moodle/legacy:admin', $sitecontext ) or has_capability( 'moodle/site:doanything', $sitecontext) );
 	
-	$meta .= "<script language='JavaScript' type='text/javascript'>\n";
-	$meta .= "function myOnload() {\n";
-	$meta .= " var moodleRoot = '".s($CFG->wwwroot)."';\n";
-	$meta .= " var url = '".s($refurl)."';\n";
-	$meta .= ' var userId = \''.s($USER->username)."';\n";
-	$meta .= ' moodleMarginalia = new MoodleMarginalia( url, moodleRoot, userId, '.$sprefs.', {'."\n";
+	$meta = "<script language='JavaScript' type='text/javascript'>\n"
+		."function myOnload() {\n"
+		." var moodleRoot = '".s($CFG->wwwroot)."';\n"
+		." var url = '".s($refurl)."';\n"
+		.' var userId = \''.s($USER->username)."';\n"
+		.' moodleMarginalia = new MoodleMarginalia( url, moodleRoot, userId, '.$sprefs.', {'."\n";
 	if ( $showsplashpref == 'true' )
 		$meta .= '  splash: \''.s(get_string('splash',ANNOTATION_STRINGS)).'\'';
-	$meta .= '  } );'."\n";
-	$meta .= " moodleMarginalia.onload();\n";
-	$meta .= "}\n";
-	$meta .= "addEvent(window,'load',myOnload);\n";
-	$meta .= "</script>\n";
-	
-	return $meta;
+	$meta .= ' useSmartquote: '.s(AN_USESMARTQUOTE)
+		."\n".', allowAnyUserPatch: '.($allowAnyUserPatch ? 'true' : 'false' )
+		.'  } );'."\n"
+		." moodleMarginalia.onload();\n"
+		."}\n"
+		."addEvent(window,'load',myOnload);\n"
+		."</script>\n";
+	return $meta;	
 }
-	
-	
+
 /**
  * Deletes all annotations of a specific user
  * This is here rather than in the annotation code so that not everything will have to
@@ -208,4 +222,3 @@ function annotations_update_username( $oldname, $newname )
 	else
 		return false;
 }
-?>

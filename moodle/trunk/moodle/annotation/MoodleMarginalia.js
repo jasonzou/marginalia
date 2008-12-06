@@ -39,8 +39,9 @@ function MoodleMarginalia( url, moodleRoot, userId, prefs, params )
 	this.displayUserId = prefs[ AN_USER_PREF ];
 	this.showAnnotations = prefs[ AN_SHOWANNOTATIONS_PREF ];
 	this.showAnnotations = this.showAnnotations == 'true';
-	this.enableSmartcopy = prefs[ SMARTCOPY_PREF ] == 'true';
 	this.splash = prefs[ AN_SPLASH_PREF ] == 'true' ? params[ 'splash' ] : null;
+	this.useSmartquote = params.useSmartquote;
+	this.allowAnyUserPatch = params.allowAnyUserPatch;
 }
 
 MoodleMarginalia.prototype.onload = function( )
@@ -66,6 +67,7 @@ MoodleMarginalia.prototype.onload = function( )
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
+			allowAnyUserPatch: this.allowAnyUserPatch ? true : false,
 			displayNote: function(m,a,e,p,i) { moodleMarginalia.displayNote(m,a,e,p,i); },
 			editors: {
 				link: null,
@@ -95,22 +97,26 @@ MoodleMarginalia.prototype.onload = function( )
 MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
 {
 	var wwwroot = this.moodleRoot;
+	buttonParams = this.useSmartquote ?
+		{
+			className: 'quote',
+			title: 'share',
+			content: '\u267a',
+			onclick: function( ) { 
+				Smartquote.quoteAnnotation(
+					annotation,
+					marginalia.loginUserId,
+					wwwroot,
+					Smartquote.postIdFromUrl( annotation.getUrl( ) ) );
+			}
+		}
+		: { };
+
 	params.customButtons = [
 		{
 			owner: true,
 			others: true,
-			params: {
-				className: 'quote',
-				title: 'share',
-				content: '\u267a',
-				onclick: function( ) { 
-					Smartquote.quoteAnnotation(
-						annotation,
-						marginalia.loginUserId,
-						wwwroot,
-						Smartquote.postIdFromUrl( annotation.getUrl( ) ) );
-				}
-			}
+			params: buttonParams
 		}
 	];
 	return Marginalia.defaultDisplayNote( marginalia, annotation, noteElement, params, isEditing );
