@@ -20,4 +20,6 @@ The following changes are Moodle-specific:
 
   * The summary page search interface has been simplified.  The drop-down menus for specifying search criteria are gone.  Instead, you can click a pop-up icon next to the name of a user in the summary results in order to filter by that user.  You can do the same for tags (notes used more than once).  In order to remove filters from the search, click on links in the text description of the search at the top of the page.  Clicking here can also specify that the search should find exact matches of the search string (useful for keywords).
 
+  * All users' existing (public) annotations on a forum page can be fixed automatically when an administrator views them.  This can prevent the display problem mentioned above.  This feature allows admin users to make changes to highlight range locations for other users, so it can be switched off for increased security.
+
   * The Moodle-specific code is being shifted towards Moodle's coding standards.
