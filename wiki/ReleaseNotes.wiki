@@ -16,7 +16,7 @@ The following changes are Moodle-specific:
 
   * Annotations can also be quoted.  If you wish to reply to someone else's annotation, click the quote button.  Or, you can effectively turn one of your own annotations into a forum post.  We found that users tried to conduct discussions within the annotation margin.  This is intended to redirect discussion back to the medium best suited for it - the forum itself.
 
-  * Tags (keywords) have been replaced with a system to make it easy to type frequently used margin notes.  If a note has been used more than once, Marginalia can autocomplete it when you start typing.  This eliminates the +/- control next to each annotation, and removes most of the content of the Tags page.
+  * Tags (keywords) have been replaced with a system to make it easy to type frequently used margin notes.  If a note has been used more than once, Marginalia can autocomplete it when you start typing.  This eliminates the +/- control next to each annotation, and eliminates the need to create tags on the Tags page.
 
   * The summary page search interface has been simplified.  The drop-down menus for specifying search criteria are gone.  Instead, you can click a pop-up icon next to the name of a user in the summary results in order to filter by that user.  You can do the same for tags (notes used more than once).  In order to remove filters from the search, click on links in the text description of the search at the top of the page.  Clicking here can also specify that the search should find exact matches of the search string (useful for keywords).
 
