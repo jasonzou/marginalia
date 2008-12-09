@@ -73,16 +73,14 @@ MoodleMarginalia.prototype.onload = function( )
 				link: null,
 				'default':  Marginalia.newEditorFunc( YuiAutocompleteNoteEditor )
 			},
+			onMarginHeight: function( post ) { moodleMarginalia.fixControlMarginIE( post ); }
 		} );
 		
 		this.cleanUpPostContent( );
 		
 		var url = this.url;
 		if ( this.showAnnotations )
-		{
 			window.marginalia.showAnnotations( url );
-			this.fixControlMarginIE();
-		}
 		
 		Smartquote.enableSmartquote( this.moodleRoot, marginalia.listPosts( ), marginalia.skipContent );
 		
@@ -160,14 +158,16 @@ MoodleMarginalia.prototype.hideSplash = function( )
  * Note:  if the annotated content changes length (e.g. because of many inserted links or edit
  * actions), the button won't resize to match.  Hmmm.
  */
-MoodleMarginalia.prototype.fixControlMarginIE = function( )
+MoodleMarginalia.prototype.fixControlMarginIE = function( post )
 {
-	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null, PostMicro.skipPostContent );
-	for ( var i = 0;  i < controlMargins.length;  ++i )
-	{
-		var button = domutil.childByTagClass( controlMargins[ i ], 'button', null );
-		button.style.height = '' + controlMargins[ i ].offsetHeight + 'px';
-	}
+//	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null, PostMicro.skipPostContent );
+//	for ( var i = 0;  i < controlMargins.length;  ++i )
+//	{
+	var margin = domutil.childByTagClass( post.getElement( ), 'td', 'control-margin', PostMicro.skipPostContent );
+	var button = domutil.childByTagClass( margin, 'button', null );
+	button.style.height = '';
+	button.style.height = '' + margin.offsetHeight + 'px';
+//	}
 };
 
 MoodleMarginalia.prototype.cleanUpPostContent = function( )
