@@ -22,4 +22,6 @@ The following changes are Moodle-specific:
 
   * All users' existing (public) annotations on a forum page can be fixed automatically when an administrator views them.  This can prevent the display problem mentioned above.  This feature allows admin users to make changes to highlight range locations for other users, so it can be switched off for increased security.
 
+  * The height of the button in the margin is set correctly, including when annotations are added, deleted, etc.
+
   * The Moodle-specific code is being shifted towards Moodle's coding standards.
