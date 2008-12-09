@@ -12,7 +12,7 @@ This release is aimed at stabilizing and refining the Moodle version, though con
 
 The following changes are Moodle-specific:
 
-  * Smartcopy (a Firefox-specific hack) has been replaced by Smartquotes.  A "quote" button beneath each forum message allows you to select and quote message content into a reply.  This will start a reply if necessary, or paste into a reply in another window.
+  * Smartcopy is gone.  It was a Firefox-specific hack that was not discoverable and seemed to seldom be used.  Instead, we now have Smartquotes.  A "quote" button beneath each forum message allows you to select and quote message content into a reply.  This will start a reply if necessary, or paste into a reply in another window.
 
   * Annotations can also be quoted.  If you wish to reply to someone else's annotation, click the quote button.  Or, you can effectively turn one of your own annotations into a forum post.  We found that users tried to conduct discussions within the annotation margin.  This is intended to redirect discussion back to the medium best suited for it - the forum itself.
 
