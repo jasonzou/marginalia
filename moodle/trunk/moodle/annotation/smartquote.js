@@ -84,12 +84,12 @@ Smartquote = {
 	
 	quotePostMicro: function( content, skipContent, wwwroot, postId )
 	{
-		console.log( 'quote' );
+//		console.log( 'quote' );
 		var pub = Smartquote.getPostMicroQuote( content, skipContent, wwwroot, postId );
 		var bus = new CookieBus( 'smartquote' );
 		if ( bus.getSubscriberCount( ) > 0 )
 		{
-			console.log( 'publish: ' + pub );
+//			console.log( 'publish: ' + pub );
 			bus.publish( pub );
 		}
 		else if ( wwwroot && postId )
@@ -158,14 +158,17 @@ Smartquote = {
 			// D'oh.  Default range is in HTMLDocument, which of course has
 			// no parent (best way I could think to test for that).  HTMLArea
 			// blows up when an insert is attempted then.
-			if ( ! range.startContainer.parentNode )
+			if ( HTMLArea.is_ie )
 			{
-				if ( HTMLArea.is_ie )
+				if ( 'None' == sel.type && false )
 				{
 					var textRange = editor._doc.body.createTextRange( );
 					textRange.select( );
 				}
-				else
+			}
+			else
+			{
+				if ( ! range.startContainer.parentNode )
 				{
 					var textRange = editor._doc.createRange( );
 					textRange.selectNode( editor._doc.body.lastChild );

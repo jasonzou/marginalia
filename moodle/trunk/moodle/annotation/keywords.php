@@ -95,7 +95,7 @@ class moodle_keyword_service extends KeywordService
 	}
 }
 
-if ( AN_EDITABLEKEYWORDS )  {
+if ( AN_USEKEYWORDS )  {
 	$service = new moodle_keyword_service( isguest() ? null : $USER->username );
 	$service->dispatch( );
 }
