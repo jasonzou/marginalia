@@ -6,7 +6,7 @@ This release is aimed at stabilizing and refining the Moodle version, though con
 
   * IE (version 7) is again supported.  Safari is also now fully supported (thanks to browser improvements by Apple).
 
-  * I found a serious problem that could cause margin notes to be wrongly ordered on pages containing HTML br elements.  Typically, notes would cluster towards the bottom of the margin, not near their highlights.  The fix requires a change in the database.  Fixes to data can only happen when a user logs in and views his or her annotations.  Pages displaying annotations by multiple users may exhibit this kind of incorrect behavior (even when they didn't before) until all users have viewed their annotations on the page in a non-IE browser.
+  * I found a serious problem that could cause margin notes to be wrongly ordered on pages containing HTML br elements.  Typically, notes would cluster towards the bottom of the margin, not near their highlights.  The fix requires a change in the database.  Fixes to data can only happen when a user logs in and views his or her annotations.  Pages displaying annotations by multiple users may exhibit this kind of incorrect behavior (even when they didn't before) until all users have viewed their annotations on the page.  This will fix annotations already experiencing the problem _so long as you visit the page in a non-IE browser_.
 
   * Marginalia previously assumed well-formed HTML, i.e. HTML in which block elements are never nested within inline elements.  Marginalia no longer makes this assumption, although in some cases it might be quite slow on malformed pages.
 
