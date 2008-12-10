@@ -63,11 +63,8 @@
             require_login();
         }
 
-		$refUrl = "/mod/forum/discuss.php?d=$d";
-		$meta = marginaliaHeaderHtml( $refUrl );
-
         $navigation = build_navigation('', $cm);
-        print_header($course->shortname, $course->fullname, $navigation, '' , $meta, true, "", navmenu($course, $cm));
+        print_header($course->shortname, $course->fullname, $navigation, '' , '', true, "", navmenu($course, $cm));
 
         notice_yesno(get_string('noguestpost', 'forum').'<br /><br />'.get_string('liketologin'),
                      $wwwroot, get_referer(false));
@@ -674,7 +671,7 @@
 		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/post-micro.js'></script>\n"
 		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n"
 		."<script language='JavaScript' type='text/javascript'>\n"
-		."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwwroot."'); } );\n"
+		."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwroot."'); } );\n"
 		."</script>\n";
 	// It is incredibly inefficient to use the CookieBus to send this quote.  However... avoiding that means finding
 	// the editor object, which has been given a random name by the library.  *That* would mean heavier modification

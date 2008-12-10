@@ -21,7 +21,7 @@ $string['summary_range_error'] =
 	'You have been directed here because one or more annotations could not'
 	. ' be displayed.  This is probably because the annotated text changed.'
 	. ' This summary includes the annotations which could not be shown.';
-$string['prompt_search_desc'] = 'Show';
+$string['prompt_search_desc'] = 'Showing';
 $string['prompt_section'] = 'Go to $a->section_type';
 $string['prompt_row'] = 'Go to $a->row_type by $a->author';
 $string['private'] = 'private';
@@ -41,9 +41,11 @@ $string['unknown_post'] = 'unknown discussion post';
 $string['post_name'] = 'discussion post "$a->name"';
 
 /* Summary page */
-$string['annotation_desc_authorsearch'] = 'annotations by $a->who of work by $a->author containing \\"$a->search\\" in $a->title';
+$string['containing'] = 'text containing';
+$string['matching'] = 'notes matching';
+$string['annotation_desc_authorsearch'] = 'annotations by $a->who of work by $a->author with $a->match \\"$a->search\\" in $a->title';
 $string['annotation_desc_author'] = 'annotations by $a->who of work by $a->author in $a->title';
-$string['annotation_desc_search'] = 'annotations by $a->who containing \\"$a->search\\" in $a->title';
+$string['annotation_desc_search'] = 'annotations by $a->who with $a->match \\"$a->search\\" in $a->title';
 $string['annotation_desc'] = 'annotations by $a->who in $a->title';
 $string['tip'] = 'Tip';
 $string['smartcopy_help'] = 'The Smartcopy feature automatically includes context information'
@@ -53,7 +55,18 @@ $string['source_th'] = 'Source';
 $string['quote_th'] = 'Highlighted Text';
 $string['note_th'] = 'Margin Note';
 $string['user_th'] = 'User';
-	
+$string['anyone'] = 'anyone';
+$string['me'] = 'Me';
+$string['zoom_user_hover'] = 'Click to show only annotations by $a->username.';
+$string['zoom_author_hover'] = 'Click to show only annotations of work by $a->quote_author_name.';
+$string['zoom_url_hover'] = 'Click to show only annotations in this $a->section_type.';
+$string['zoom_match_hover'] = 'Click to show only notes matching this exact text.';
+$string['unzoom_user_hover'] = 'Click to view annotations by anyone.';
+$string['unzoom_author_hover'] = 'Click to view annotations of any user\'s work.';
+$string['unzoom_url_hover'] = 'Click to broaden the search.';
+$string['unzoom_match_hover'] = 'Click to include all occurrences of this text.';
+$string['smartquote_annotation'] = 'Quote this annotation in a forum post.';
+
 /* Edit Keywords Page */
 $string['edit_keywords_link' ] = 'Tags';
 $string['edit_keywords_title'] = 'Annotation Tags';
@@ -65,4 +78,5 @@ $string['note_replace_old'] = 'Existing note text';
 $string['note_replace_new'] = 'Replacement note text';
 $string['note_replace_button'] = 'Replace Notes';
 $string['note_update_count'] = 'Notes updated: ';
+$string['tag_list_prompt'] = 'You have used the following notes multiple times.  Click on a link to view a summary of annotations with that note.';
 ?>
