@@ -6,14 +6,14 @@
 
  // Display a summary of all annotations for the current user
 
-require_once( "../config.php" );
+require_once( "../../config.php" );
 require_once( "marginalia-php/MarginaliaHelper.php" );
 require_once( 'marginalia-php/Annotation.php' );
 require_once( 'marginalia-php/Keyword.php' );
 require_once( 'config.php' );
-require_once( 'AnnotationGlobals.php' );
-require_once( "AnnotationSummaryQuery.php" );
-require_once( "KeywordsDB.php" );
+require_once( 'annotation_globals.php' );
+require_once( "annotation_summary_query.php" );
+require_once( "keywords_db.php" );
 
 global $CFG;
 
@@ -31,18 +31,18 @@ class annotation_summary_page
 		$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
 		$navmiddle = "";
 		
-		require_js( $CFG->wwwroot.'/annotation/marginalia/3rd-party.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia/log.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia-config.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia/domutil.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia/prefs.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia/rest-prefs.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia/annotation.js' );
-		require_js( $CFG->wwwroot.'/annotation/marginalia/rest-annotate.js' );
-		require_js( $CFG->wwwroot.'/annotation/smartquote.js' );
-		require_js( $CFG->wwwroot.'/annotation/summary.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/3rd-party.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/log.js' );
+		require_js( ANNOTATION_PATH.'/marginalia-config.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/domutil.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/prefs.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/rest-prefs.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/annotation.js' );
+		require_js( ANNOTATION_PATH.'/marginalia/rest-annotate.js' );
+		require_js( ANNOTATION_PATH.'/smartquote.js' );
+		require_js( ANNOTATION_PATH.'/summary.js' );
 
-		$meta = "<link rel='stylesheet' type='text/css' href='$swwwroot/annotation/summary-styles.php'/>\n";
+		$meta = "<link rel='stylesheet' type='text/css' href='".ANNOTATION_PATH."/summary-styles.php'/>\n";
 		
 /*		if ( AN_EDITABLEKEYWORDS )
 			$tagsHtml = "<div class='tags'><a href='edit-keywords.php'>".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )."</a></div>";
@@ -123,10 +123,10 @@ class annotation_summary_page
 		foreach ( $annotations as $annotationrec )
 			$annotationobjs[ ] = annotation_globals::record_to_annotation( $annotationrec );
 		MarginaliaHelper::generateAnnotationFeed( $annotationobjs,
-			AnnotationGlobals::get_feed_tag_uri(),
+			annotation_globals::get_feed_tag_uri(),
 			MarginaliaHelper::getLastModified( $annotationObjs, annotation_globals::get_install_date() ),
-			AnnotationGlobals::get_service_path(),
-			AnnotationGlobals::get_host(),
+			annotation_globals::get_service_path(),
+			annotation_globals::get_host(),
 			$query->get_feed_url('atom'),
 			$CFG->wwwroot );
 	}

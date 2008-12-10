@@ -6,12 +6,12 @@
 
  // Display a summary of all annotations for the current user
 
-require_once( "../config.php" );
+require_once( "../../config.php" );
+require_once( 'config.php' );
 require_once( "marginalia-php/MarginaliaHelper.php" );
 require_once( 'marginalia-php/Keyword.php' );
-require_once( 'config.php' );
-require_once( 'AnnotationGlobals.php' );
-require_once( 'KeywordsDB.php' );
+require_once( 'annotation_globals.php' );
+require_once( 'keywords_db.php' );
 
 global $CFG;
 
@@ -51,7 +51,7 @@ else  {
 	$keywords = annotation_keywords_db::list_keywords( $USER->username );
 	
 	$meta
-		= "<link type='text/css' rel='stylesheet' href='edit-keywords.css'/>\n"
+		= "<link type='text/css' rel='stylesheet' href='tags.css'/>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/3rd-party/cssQuery.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/3rd-party/cssQuery-standard.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/3rd-party.js'></script>\n"
@@ -59,7 +59,7 @@ else  {
 		. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
-		. "<script language='JavaScript' type='text/javascript' src='edit-keywords.js'></script>\n"
+		. "<script language='JavaScript' type='text/javascript' src='tags.js'></script>\n"
 		. "<script language='Javascript' type='text/javascript'>\n"
 		. " var serviceRoot = '".htmlspecialchars($CFG->wwwroot).'/annotation'."';\n"
 		. "</script>\n";

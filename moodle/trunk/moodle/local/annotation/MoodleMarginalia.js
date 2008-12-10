@@ -55,9 +55,9 @@ MoodleMarginalia.prototype.onload = function( )
 	var actualUrl = '' + window.location;
 	if ( this.loginUserId && actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
-		var annotationService = new RestAnnotationService( this.moodleRoot + '/annotation/annotate.php', {
+		var annotationService = new RestAnnotationService( this.moodleRoot + '/local/annotation/annotate.php', {
 			csrfCookie: 'MoodleSessionTest' } );
-		var keywordService = new RestKeywordService( this.moodleRoot + '/annotation/keywords.php');
+		var keywordService = new RestKeywordService( this.moodleRoot + '/local/annotation/keywords.php');
 		keywordService.init( null, true );
 		var moodleMarginalia = this;
 		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.displayUserId == '*' ? '' : this.displayUserId, {

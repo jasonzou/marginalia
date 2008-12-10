@@ -1,8 +1,9 @@
 <?php  // $Id$
 
 require_once($CFG->libdir.'/filelib.php');
-require_once($CFG->dirroot.'/annotation/marginalia-php/marginalia-constants.php');
-require_once($CFG->dirroot.'/annotation/AnnotationGlobals.php');
+require_once( '../../local/annotation/config.php' );
+require_once( ANNOTATION_DIR.'/marginalia-php/marginalia-constants.php' );
+require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 

@@ -5,11 +5,12 @@
 
     require_once('../../config.php');
     require_once('lib.php');
-    require_once("../../annotation/marginalia-php/embed.php");
-    require_once("../../annotation/AnnotationSummaryQuery.php");
-    require_once('../../annotation/AnnotationGlobals.php');
-    require_once('../../annotation/lib.php');
-    // require_once("../../annotation/marginalia-config.php");
+	require_once( '../../local/annotation/config.php' );
+    require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
+    require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
+    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
+    require_once( ANNOTATION_DIR.'/lib.php' );
+    // require_once("../../local/annotation/marginalia-config.php");
 
     $d      = required_param('d', PARAM_INT);                // Discussion ID
     $parent = optional_param('parent', 0, PARAM_INT);        // If set, then display this post and all children.
@@ -143,17 +144,17 @@
     }
 
     // Begin Annotation Code to set $meta
-    // refurl is the relative URL to this resource from the server root (i.e., it should start with '/')
-    $refurl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
-    // Check whether the annotation show/hide preference is set;  if not, set it (need to do this because the AJAX
-    // service lacks permission to set unknown preferences)
-    $meta = marginalia_header_html( $refurl );
-    // I'm perverting the meta argument here, but there's no way provided to do this otherwise that I 
-    // can see #GEOF#
+    $meta = marginalia_header_html(  );
+    // I'm perverting the meta argument here, but I can't figure out how otherwise
+	// to emit a stylesheet link.  #geof#
 	
     $navigation = build_navigation($navlinks, $cm);
     print_header("$course->shortname: ".format_string($discussion->name), $course->fullname,
                      $navigation, "", $meta, true, $searchform, navmenu($course, $cm));
+	
+    // refurl is the relative URL to this resource from the server root (i.e., it should start with '/')
+    $refurl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
+	echo marginalia_init_html( $refurl );
 
 
 /// Check to see if groups are being used in this forum

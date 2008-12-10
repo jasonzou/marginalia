@@ -29,13 +29,13 @@
  * $Id$
  */
 
-require_once( "../config.php" );
+require_once( "../../config.php" );
+require_once( 'config.php' );
 require_once( 'marginalia-php/Keyword.php' );
 require_once( 'marginalia-php/KeywordService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
-require_once( 'config.php' );
-require_once( 'KeywordsDB.php' );
-require_once( 'AnnotationGlobals.php' );
+require_once( 'keywords_db.php' );
+require_once( 'annotation_globals.php' );
 
 require_login();
 

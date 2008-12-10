@@ -5,10 +5,11 @@
     require_once('../../config.php');
     require_once('lib.php');
     require_once('post_form.php');
-    require_once("../../annotation/marginalia-php/embed.php");
-    require_once("../../annotation/AnnotationSummaryQuery.php");
-    require_once('../../annotation/AnnotationGlobals.php');
-    require_once('../../annotation/lib.php');
+    require_once('../../local/annotation/config.php');
+    require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
+    require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
+    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
+    require_once( ANNOTATION_DIR.'/lib.php' );
 
     $reply   = optional_param('reply', 0, PARAM_INT);
     $forum   = optional_param('forum', 0, PARAM_INT);

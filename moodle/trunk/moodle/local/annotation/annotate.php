@@ -1,11 +1,12 @@
 <?php // handles annotation actions
 
-require_once( "../config.php" );
+require_once( "../../config.php" );
+require_once( 'config.php' );
 require_once( 'marginalia-php/Annotation.php' );
 require_once( 'marginalia-php/AnnotationService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
-require_once( 'AnnotationGlobals.php' );
-require_once( 'AnnotationSummaryQuery.php' );
+require_once( 'annotation_globals.php' );
+require_once( 'annotation_summary_query.php' );
 
 if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
    require_login();
@@ -51,7 +52,7 @@ class moodle_annotation_service extends AnnotationService
 	
 	function doListAnnotations( $url, $userid, $block, $all )
 	{
-		$query = new annotation_summary_query( $url, $userid, null, null );
+		$query = new annotation_summary_query( $url, $userid, null, null, false, $all );
 		if ( $query->error )  {
 			$this->httpError( 400, 'Bad Request', 'Bad URL 1' );
 			return null;

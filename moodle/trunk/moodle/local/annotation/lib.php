@@ -1,7 +1,7 @@
 <?php
 
-require_once( $CFG->dirroot.'/annotation/config.php' );
-require_once( $CFG->dirroot.'/annotation/AnnotationGlobals.php' );
+require_once( $CFG->dirroot.'/local/annotation/config.php' );
+require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 
 /**
  * Get an annotations preference value;  if the preference doesn't exist, create it
@@ -100,13 +100,13 @@ function show_marginalia_user_dropdown( $refurl )
 function show_marginalia_summary_link( $refurl, $userid )
 {
 	global $CFG, $course;
-	$summaryurl = $CFG->wwwroot."/annotation/summary.php?user=".urlencode($userid)
+	$summaryurl = ANNOTATION_PATH.'/summary.php?user='.urlencode($userid)
 		."&url=".urlencode( $refurl );
 	echo " <a id='annotation-summary-link' href='".s($summaryurl)."'"
 		. " title='".s(get_string('summary_link_title',ANNOTATION_STRINGS))
 		."'>".s(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n";
 
-	echo "<a id='annotation-editkeywords-link' href='".$CFG->wwwroot."/annotation/edit-keywords.php?course=".$course->id."'"
+	echo "<a id='annotation-editkeywords-link' href='".ANNOTATION_PATH.'/tags.php?course='.$course->id."'"
 		. " title='".s(get_string( 'edit_keywords_link', ANNOTATION_STRINGS ))
 		."'>Tags</a>\n";
 }
@@ -121,16 +121,16 @@ function marginalia_header_html( )
 {
 	global $CFG, $USER;
 	
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/marginalia/marginalia.css'/>\n"
-		. "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n";
+	$meta = "<link rel='stylesheet' type='text/css' href='".ANNOTATION_PATH."/marginalia/marginalia.css'/>\n"
+		. "<link rel='stylesheet' type='text/css' href='".ANNOTATION_PATH."/annotation-styles.php'/>\n";
 	$anscripts = listMarginaliaJavascript( );
 	for ( $i = 0;  $i < count( $anscripts );  ++$i )
-		require_js( $CFG->wwwroot.'/annotation/marginalia/'.$anscripts[ $i ] );
+		require_js( ANNOTATION_PATH.'/marginalia/'.$anscripts[ $i ] );
 	require_js( array(
-		$CFG->wwwroot.'/annotation/marginalia-config.js',
-		$CFG->wwwroot.'/annotation/marginalia-strings.js',
-		$CFG->wwwroot.'/annotation/smartquote.js',
-		$CFG->wwwroot.'/annotation/MoodleMarginalia.js' ) );
+		ANNOTATION_PATH.'/marginalia-config.js',
+		ANNOTATION_PATH.'/marginalia-strings.js',
+		ANNOTATION_PATH.'/smartquote.js',
+		ANNOTATION_PATH.'/MoodleMarginalia.js' ) );
 
 	// Bits of YUI
 	$meta .= "<link type='text/css' rel='stylesheet' href='$CFG->wwwroot/lib/yui/autocomplete/assets/skins/sam/autocomplete.css'/>\n";

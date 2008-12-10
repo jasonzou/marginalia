@@ -6,7 +6,7 @@
     require_once($CFG->dirroot.'/user/editadvanced_form.php');
     require_once($CFG->dirroot.'/user/editlib.php');
     require_once($CFG->dirroot.'/user/profile/lib.php');
-	require_once($CFG->dirroot.'/annotation/lib.php');
+	require_once($CFG->dirroot.'/local/annotation/lib.php');
 
     httpsrequired();
 

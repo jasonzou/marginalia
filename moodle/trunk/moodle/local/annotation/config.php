@@ -1,5 +1,9 @@
 <?php
 
+// Where to find annotation source files, both as a URL and as a directory
+define( 'ANNOTATION_PATH', $CFG->wwwroot.'/local/annotation' );
+define( 'ANNOTATION_DIR', $CFG->dirroot.'/local/annotation' );
+
 // Enable tag (keyword) autocomplete
 define( 'AN_USEKEYWORDS', true );
 
