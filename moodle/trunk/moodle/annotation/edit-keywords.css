@@ -1,12 +1,17 @@
-#keywords td {
-	padding: .5ex 1ex;
-}
-#keywords .name input {
-	width: 16em;
+ul#keywords {
+	list-style-type: none;
+	margin: 1em 2em;
+	padding: 0;
 }
 
-#keywords .description input {
-	width: 24em;
+ul#keywords li {
+	display: inline;
+	margin: 0;
+	padding: 0;
+}
+
+ul#keywords li + li:before {
+	content: ', ';
 }
 
 fieldset {

@@ -41,10 +41,6 @@ if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET')  {
 	header( 'HTTP/1.1 405 Method Not Allowed' );
 	header( 'Allow: GET' );
 }
-elseif ( ! AN_EDITABLEKEYWORDS )  {
-	header( 'HTTP/1.1 501 Not Implemented' );
-	echo "This Moodle installation does not support keywords";
-}
 else  {
 	$errorpage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
 	$courseid = required_param( 'course' );
@@ -68,11 +64,11 @@ else  {
 		. " var serviceRoot = '".htmlspecialchars($CFG->wwwroot).'/annotation'."';\n"
 		. "</script>\n";
 		
-	$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
+	$navtail = get_string( 'edit_keywords_title', ANNOTATION_STRINGS );
 	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
 		$course->fullname, "$navtail", "", $meta, true, "", null);
 		
-	if ( $keywords && $courseid )  {
+	if ( AN_USEKEYWORDS && $keywords && $courseid )  {
 		echo '<p>'.htmlspecialchars(get_string( 'tag_list_prompt', ANNOTATION_STRINGS ))."</p>\n";
 		echo "<ul id='keywords'>\n";
 		for ( $i = 0;  $i < count( $keywords );  ++$i )  {

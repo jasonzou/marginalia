@@ -30,27 +30,19 @@ class annotation_summary_page
 		$swwwroot = htmlspecialchars( $CFG->wwwroot );
 		$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
 		$navmiddle = "";
-		$meta
-			= "<script language='JavaScript' type='text/javascript' src='marginalia/3rd-party.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/prefs.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-prefs.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/annotation.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-prefs.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='smartquote.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript' src='summary.js'></script>\n"
-			. "<script language='JavaScript' type='text/javascript'>\n"
-			. "var annotationService = new RestAnnotationService('$swwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
-			. "window.annotationSummary = new AnnotationSummary(annotationService"
-				.", '$swwwroot'"
-				.", '".s($USER->username)."');\n"
-			. "window.preferences = new Preferences( new RestPreferenceService('$swwwroot/annotation/user-preference.php' ) );\n"
-			. "</script>\n"
-			. "<link rel='stylesheet' type='text/css' href='$swwwroot/annotation/summary-styles.php'/>\n";
+		
+		require_js( $CFG->wwwroot.'/annotation/marginalia/3rd-party.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia/log.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia-config.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia/domutil.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia/prefs.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia/rest-prefs.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia/annotation.js' );
+		require_js( $CFG->wwwroot.'/annotation/marginalia/rest-annotate.js' );
+		require_js( $CFG->wwwroot.'/annotation/smartquote.js' );
+		require_js( $CFG->wwwroot.'/annotation/summary.js' );
 
+		$meta = "<link rel='stylesheet' type='text/css' href='$swwwroot/annotation/summary-styles.php'/>\n";
 		
 /*		if ( AN_EDITABLEKEYWORDS )
 			$tagsHtml = "<div class='tags'><a href='edit-keywords.php'>".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )."</a></div>";
@@ -69,6 +61,17 @@ class annotation_summary_page
 		else
 			print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null );
 //		echo $tagsHtml;
+
+		if( isloggedin() )
+		{
+			echo "<script language='JavaScript' type='text/javascript'>\n"
+				. "var annotationService = new RestAnnotationService('$swwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
+				. "window.annotationSummary = new AnnotationSummary(annotationService"
+					.", '$swwwroot'"
+					.", '".s($USER->username)."');\n"
+				. "window.preferences = new Preferences( new RestPreferenceService('$swwwroot/annotation/user-preference.php' ) );\n"
+				. "</script>\n";
+		}
 	}
 	
 	function parse_params( )
@@ -156,7 +159,7 @@ class annotation_summary_page
 		
 		$this->show_header( );
 
-		$keywords = annotation_keywords_db::list_keywords( $USER->username );
+		$keywords = isloggedin() ? annotation_keywords_db::list_keywords( $USER->username ) : array( );
 		$keywordhash = array( );
 		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
 			$keyword = $keywords[ $i ];
@@ -239,9 +242,14 @@ class annotation_summary_page
 						.s( $annotation->section_name ) . "</a>";
 					if ( $annotation->section_url != $query->url )  {
 						$turl = $query->get_summary_url( $annotation->section_url, $query->searchuserid, $query->searchof, $query->searchquery, $query->exactmatch );
-						echo "<a class='zoom' title='".s( get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation ) )."' href='".s( $turl )."'>&#9756;</a>\n";
+						echo "<a class='zoom' title='".s( get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation ) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 					}
-					echo '</th></tr></thead><tbody>'."\n";
+					echo '</th></tr></thead>'."\n";
+
+					if ( AN_SUMMARYHEADINGSTOP )
+						$this->show_column_headings( 'top' );
+
+					echo '<tbody>'."\n";
 					$cursection = $annotation->section_url;
 					$cursectiontype = $annotation->section_type;
 					$curuser = $annotation->userid;
@@ -257,9 +265,9 @@ class annotation_summary_page
 					// Figure out how many rows this source will span
 					$nrows = 1;
 					for ( $j = $annotationi + 1;  $j < count( $annotationa );  ++$j )  {
-						if ( $annotationa[ $j ]->url != $curUrl )
+						if ( $annotationa[ $j ]->url != $cururl )
 							break;
-						$nRows += 1;
+						$nrows += 1;
 					}
 					
 					// Only prefix the URL with the site root if it doesn't already have a scheme
@@ -280,7 +288,7 @@ class annotation_summary_page
 					// Link to filter only annotations by this user
 					if ( $annotation->quote_author_id != $query->searchof )  {
 						$turl = $query->get_summary_url( $query->url, $query->searchuserid, $annotation->quote_author_id, $query->searchquery, $query->exactmatch );
-						echo "<a class='zoom' title='".s( get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s( $turl )."'>&#9756;</a>\n";
+						echo "<a class='zoom' title='".s( get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 					}
 					echo "</th>\n";
 				}
@@ -305,22 +313,25 @@ class annotation_summary_page
 					$turl = $query->get_summary_url( $query->url, $query->searchuserid, $query->searchof, $annotation->note, true );
 					echo "<a class='zoom' title='"
 						.s( get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
-						."' href='".s( $turl )."'>&#9756;</a>\n";
+						."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 				}
 				echo "</td>\n";
 
 				
 				// Show edit controls or the user who created the annotation
-				echo "<td class='user".( $annotation->userid == $USER->username ? ' isloginuser' : '')."'>\n";
+				echo "<td class='user".( isloggedin() && $annotation->userid == $USER->username ? ' isloginuser' : '')."'>\n";
 
 				// Smartquote button
-				$SMARTQUOTE_SYMBOL = '&#9850;';
-				$sqid = s( 'sq'.$annotation->id );
-				$sqtitle = s( get_string( 'smartquote_annotation', ANNOTATION_STRINGS ) );
-				echo "<button class='smartquote' id='$sqid' title='$sqtitle'>$SMARTQUOTE_SYMBOL</button>\n";
+				if ( AN_USESMARTQUOTE )
+				{
+					// $SMARTQUOTE_SYMBOL = AN_SMARTQUOTEICON_PHP; //'&#9850;';
+					$sqid = s( 'sq'.$annotation->id );
+					$sqtitle = s( get_string( 'smartquote_annotation', ANNOTATION_STRINGS ) );
+					echo "<button class='smartquote' id='$sqid' title='$sqtitle'>".AN_SMARTQUOTEICON_HTML."</button>\n";
+				}
 				
 				// Controls for current user
-				if ( $annotation->userid == $USER->username )  {
+				if ( isloggedin() && $annotation->userid == $USER->username )  {
 					$AN_SUN_SYMBOL = '&#9675;';
 					$AN_MOON_SYMBOL = '&#9670;';
 					echo "<button class='share-button access-{$annotation->access}' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
@@ -343,7 +354,7 @@ class annotation_summary_page
 				$hiddenusername = '';
 				$class = 'user-name';
 				
-				if ( $annotation->userid == $USER->username )  {
+				if ( isloggedin() && $annotation->userid == $USER->username )  {
 					$hiddenusername = "<span class='user-name'>$displayusername</span>\n";
 					$displayusername = s( get_string( 'me', ANNOTATION_STRINGS, null ) );
 					$class = '';
@@ -360,7 +371,7 @@ class annotation_summary_page
 				// Link to filter only annotations by this user
 				if ( $annotation->userid != $query->searchuserid )  {
 					$turl = $query->get_summary_url( $query->url, $annotation->userid, $query->searchof, $query->searchquery, $query->exactmatch );
-					echo "<a class='zoom' title='".s(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s($turl)."'>&#9756;</a>\n";
+					echo "<a class='zoom' title='".s(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s($turl)."'>".AN_FILTERICON_HTML."</a>\n";
 				}
 				echo "</td>\n";
 				
@@ -380,14 +391,11 @@ class annotation_summary_page
 			
 			if ( $cururl != null )
 				echo "</tbody>\n";
-			echo "<thead class='labels'>\n"
-				."  <th>Source &amp; Author</th>\n"
-				."  <th>Highlighted Text</th>\n"
-				."  <th>Margin Note</th>\n"
-				."  <th>User</th>\n"
-				."</thead>\n"
-				."</table>\n";
-			// print the page content
+			
+			if ( ! AN_SUMMARYHEADINGSTOP )
+				$this->show_column_headings( '' );
+			
+			echo "</table>\n";
 		}
 	
 		//$moodlePath = getMoodlePath( );
@@ -408,6 +416,16 @@ class annotation_summary_page
 		$urlparts = parse_url( $logurl );
 		$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
 		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $query->desc(null) );
+	}
+	
+	function show_column_headings( $className )
+	{
+		echo "<thead class='labels $className'>\n"
+			."  <th>Source &amp; Author</th>\n"
+			."  <th>Highlighted Text</th>\n"
+			."  <th>Margin Note</th>\n"
+			."  <th>User</th>\n"
+			."</thead>\n";
 	}
 	
 	function get_summary_link( $text, $title, $query, $url, $searchuserid, $searchof, $searchquery, $exactmatch )

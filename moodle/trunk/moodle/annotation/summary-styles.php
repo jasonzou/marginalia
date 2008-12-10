@@ -87,6 +87,10 @@ table.annotations thead.labels th:before {
 	content: '\2191 ';
 }
 
+table.annotations thead.labels.top th:before {
+	content: '';
+}
+
 table.annotations th,
 table.annotations td {
 	padding:3px ;

@@ -42,6 +42,7 @@ function MoodleMarginalia( url, moodleRoot, userId, prefs, params )
 	this.splash = prefs[ AN_SPLASH_PREF ] == 'true' ? params[ 'splash' ] : null;
 	this.useSmartquote = params.useSmartquote;
 	this.allowAnyUserPatch = params.allowAnyUserPatch;
+	this.smartquoteIcon = params.smartquoteIcon;
 }
 
 MoodleMarginalia.prototype.onload = function( )
@@ -99,7 +100,7 @@ MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteE
 		{
 			className: 'quote',
 			title: 'share',
-			content: '\u267a',
+			content: this.smartquoteIcon,
 			onclick: function( ) { 
 				Smartquote.quoteAnnotation(
 					annotation,
@@ -160,14 +161,10 @@ MoodleMarginalia.prototype.hideSplash = function( )
  */
 MoodleMarginalia.prototype.fixControlMarginIE = function( post )
 {
-//	var controlMargins = domutil.childrenByTagClass( document.documentElement, 'td', 'control-margin', null, PostMicro.skipPostContent );
-//	for ( var i = 0;  i < controlMargins.length;  ++i )
-//	{
 	var margin = domutil.childByTagClass( post.getElement( ), 'td', 'control-margin', PostMicro.skipPostContent );
 	var button = domutil.childByTagClass( margin, 'button', null );
 	button.style.height = '';
 	button.style.height = '' + margin.offsetHeight + 'px';
-//	}
 };
 
 MoodleMarginalia.prototype.cleanUpPostContent = function( )

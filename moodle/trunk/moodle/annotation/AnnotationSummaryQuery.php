@@ -221,6 +221,17 @@ class annotation_summary_query
 			//	$access_visible .= " OR a.access like '%teacher%'";
 		}
 		
+		// If the all flag is set, see if this is an admin user with permission to
+		// export all annotations.
+		if ( $this->accessall )
+		{
+			$sitecontext = get_context_instance( CONTEXT_SYSTEM );
+			$all = AN_ADMINVIEWALL && ( has_capability( 'moodle/legacy:admin', $sitecontext )
+				or has_capability( 'moodle/site:doanything', $sitecontext) );
+			if ( $all )
+				$accessvisible = '1=1';
+		}
+		
 		// Filter annotations according to their owners
 		
 		// Admin only (used especially for research): transcend usual privacy limitations
@@ -411,7 +422,7 @@ class course_annotation_url_handler extends annotation_url_handler
 		if ( null != $this->title )
 			return;
 		$query = "SELECT fullname "
-			. " FROM {$CFG->prefix}course WHERE id={$this->courseId}";
+			. " FROM {$CFG->prefix}course WHERE id={$this->courseid}";
 		$row = get_record_sql( $query );
 		if ( False !== $row )
 			$this->title = $row->fullname;
@@ -430,8 +441,8 @@ class course_annotation_url_handler extends annotation_url_handler
 		
 		// Conditions
 		$cond = "\n  AND a.object_type='post'";
-		if ( $searchof )
-			$cond .= " AND p.userid='".addSlashes( $searchof )."'";
+		if ( $this->searchof )
+			$cond .= " AND p.userid='".addSlashes( $this->searchof )."'";
 
 		// First section:  discussion posts
 		$q = $qstdselect
@@ -443,7 +454,7 @@ class course_annotation_url_handler extends annotation_url_handler
 			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type='post' AND p.id=a.object_id "
 			 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
 			. $qstdwhere
-			. $this->getConds( $searchof );
+			. $this->get_conds( $this->searchof );
 		
 		if ( $orderby )
 			$q .= "\nORDER BY $orderby";

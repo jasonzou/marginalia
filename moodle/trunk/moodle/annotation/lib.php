@@ -180,7 +180,8 @@ function marginalia_init_html( $refurl )
 	if ( $showsplashpref == 'true' )
 		$meta .= '  splash: \''.s(get_string('splash',ANNOTATION_STRINGS)).'\'';
 	$meta .= ' useSmartquote: '.s(AN_USESMARTQUOTE)
-		."\n".', allowAnyUserPatch: '.($allowAnyUserPatch ? 'true' : 'false' )
+		.",\n".' allowAnyUserPatch: '.($allowAnyUserPatch ? 'true' : 'false' )
+		.",\n smartquoteIcon: '".AN_SMARTQUOTEICON."'"
 		.'  } );'."\n"
 		." moodleMarginalia.onload();\n"
 		."}\n"
