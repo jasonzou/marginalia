@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8" ?>
-<XMLDB PATH="blocks/annotation/db" VERSION="20071010" COMMENT="XMLDB file for Marginalia annotation for Moodle"
+<XMLDB PATH="blocks/marginalia/db" VERSION="20071010" COMMENT="XMLDB file for Marginalia annotation for Moodle"
     xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
     xsi:noNamespaceSchemaLocation="../../../lib/xmldb/xmldb.xsd"
 >

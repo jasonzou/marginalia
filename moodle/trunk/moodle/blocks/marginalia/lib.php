@@ -1,6 +1,6 @@
 <?php
 
-require_once( $CFG->dirroot.'/blocks/annotation/config.php' );
+require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
 require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 
 class moodle_marginalia

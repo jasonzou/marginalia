@@ -11,7 +11,7 @@ define( 'AN_SMARTQUOTEICON_HTML', '&#10075;&#10076;' );
 // Icon for filtering on the summary page
 define( 'AN_FILTERICON_HTML', '&#9754;' );  //&#9756;
 	
-define( 'ANNOTATION_STRINGS', 'block_annotation' );
+define( 'ANNOTATION_STRINGS', 'block_marginalia' );
 
 define( 'AN_USER_PREF', 'annotations.user' );
 define( 'AN_SHOWANNOTATIONS_PREF', 'annotations.show' );
