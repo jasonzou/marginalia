@@ -28,13 +28,14 @@
  * $Id$
  */
 
-function MoodleMarginalia( url, moodleRoot, userId, prefs, params )
+function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, params )
 {
+	this.annotationPath = annotationPath;
 	this.url = url;
 	this.moodleRoot = moodleRoot;
 	this.loginUserId = userId;
 	this.preferences = new Preferences( 
-		new RestPreferenceService( this.moodleRoot + '/annotation/user-preference.php' ),
+		new RestPreferenceService( this.annotationPath + '/user-preference.php' ),
 		prefs );
 	this.displayUserId = prefs[ AN_USER_PREF ];
 	this.showAnnotations = prefs[ AN_SHOWANNOTATIONS_PREF ];
@@ -55,9 +56,9 @@ MoodleMarginalia.prototype.onload = function( )
 	var actualUrl = '' + window.location;
 	if ( this.loginUserId && actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
 	{
-		var annotationService = new RestAnnotationService( this.moodleRoot + '/local/annotation/annotate.php', {
+		var annotationService = new RestAnnotationService( this.annotationPath + '/annotate.php', {
 			csrfCookie: 'MoodleSessionTest' } );
-		var keywordService = new RestKeywordService( this.moodleRoot + '/local/annotation/keywords.php');
+		var keywordService = new RestKeywordService( this.annotationPath + '/keywords.php');
 		keywordService.init( null, true );
 		var moodleMarginalia = this;
 		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.displayUserId == '*' ? '' : this.displayUserId, {
@@ -74,14 +75,20 @@ MoodleMarginalia.prototype.onload = function( )
 				link: null,
 				'default':  Marginalia.newEditorFunc( YuiAutocompleteNoteEditor )
 			},
-			onMarginHeight: function( post ) { moodleMarginalia.fixControlMarginIE( post ); }
+			onMarginHeight: function( post ) { moodleMarginalia.fixControlMargin( post ); }
 		} );
 		
 		this.cleanUpPostContent( );
 		
+		// Display annotations
 		var url = this.url;
 		if ( this.showAnnotations )
 			window.marginalia.showAnnotations( url );
+		
+		// Fix all control margins
+		var postInfo = window.marginalia.listPosts( );
+		for ( var i = 0;  i < postInfo.posts.length;  ++i )
+			this.fixControlMargin( postInfo.posts[ i ] );
 		
 		Smartquote.enableSmartquote( this.moodleRoot, marginalia.listPosts( ), marginalia.skipContent );
 		
@@ -159,7 +166,7 @@ MoodleMarginalia.prototype.hideSplash = function( )
  * Note:  if the annotated content changes length (e.g. because of many inserted links or edit
  * actions), the button won't resize to match.  Hmmm.
  */
-MoodleMarginalia.prototype.fixControlMarginIE = function( post )
+MoodleMarginalia.prototype.fixControlMargin = function( post )
 {
 	var margin = domutil.childByTagClass( post.getElement( ), 'td', 'control-margin', PostMicro.skipPostContent );
 	var button = domutil.childByTagClass( margin, 'button', null );

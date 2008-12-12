@@ -1,16 +1,17 @@
 <?php
 
-// When this is true, any access to annotations (including fetching the Atom feed) requires a valid user
-// When false, anyone on the Web can retrieve public annotations via an Atom feed
-define( 'ANNOTATION_REQUIRE_USER', false );
+// The smartquote icon symbol(s)
+define( 'AN_SMARTQUOTEICON', '\u275b\u275c' );	// 267a: recycle
 
-define( 'MAX_NOTE_LENGTH', 250 );
-define( 'MAX_QUOTE_LENGTH', 1000 );
+// The same thing as entities because - and this stuns the hell out of me every
+// single time - PHP 5 *does not have native unicode support*!!!  Geez guys,
+// I remember reading about unicode in Byte Magazine in what, the 1980s?
+define( 'AN_SMARTQUOTEICON_HTML', '&#10075;&#10076;' );
 
-define( 'ANNOTATE_SERVICE_PATH', '/annotate' );
-define( 'KEYWORD_SERVICE_PATH', '/keywords' );
-
-define( 'ANNOTATION_STRINGS', 'annotation' );
+// Icon for filtering on the summary page
+define( 'AN_FILTERICON_HTML', '&#9754;' );  //&#9756;
+	
+define( 'ANNOTATION_STRINGS', 'block_annotation' );
 
 define( 'AN_USER_PREF', 'annotations.user' );
 define( 'AN_SHOWANNOTATIONS_PREF', 'annotations.show' );
@@ -31,14 +32,14 @@ class annotation_globals
 	function get_service_path( )
 	{
 		global $CFG;
-		return $CFG->wwwroot . ANNOTATE_SERVICE_PATH;
+		return $CFG->wwwroot . ANNOTATION_PATH . '/annotate.php';
 //		return annotation_globals::getMoodlePath( ) . ANNOTATE_SERVICE_PATH;
 	}
 	
 	FUNCTION get_keyword_service_path( )
 	{
 		global $CFG;
-		return $CFG->wwwroot . KEYWORD_SERVICE_PATH;
+		return $CFG->wwwroot . ANNOTATION_PATH . '/keywords.php';
 	}
 	
 	/** Get the moodle path - that is, the path to moodle from the root of the server.  Typically this is 'moodle/'.
@@ -181,4 +182,3 @@ class annotation_globals
 		$record->description = $keyword->description;
 	}
 }
-?>

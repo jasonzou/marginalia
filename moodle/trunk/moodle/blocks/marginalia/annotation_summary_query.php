@@ -335,7 +335,7 @@ class annotation_summary_query
 	function get_summary_url( $url, $searchuserid, $searchof, $searchquery, $exactmatch=false )
 	{
 		global $CFG;
-		$s = "{$CFG->wwwroot}/annotation/summary.php?url=".urlencode($url);
+		$s = ANNOTATION_PATH."/summary.php?url=".urlencode($url);
 		if ( null != $searchquery && '' != $searchquery )
 			$s .= '&q='.urlencode($searchquery);
 		if ( null != $searchuserid && '' != $searchuserid )

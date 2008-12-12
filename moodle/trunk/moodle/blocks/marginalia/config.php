@@ -1,8 +1,15 @@
 <?php
 
 // Where to find annotation source files, both as a URL and as a directory
-define( 'ANNOTATION_PATH', $CFG->wwwroot.'/local/annotation' );
-define( 'ANNOTATION_DIR', $CFG->dirroot.'/local/annotation' );
+define( 'ANNOTATION_PATH', $CFG->wwwroot.'/blocks/marginalia' );
+define( 'ANNOTATION_DIR', $CFG->dirroot.'/blocks/marginalia' );
+
+// When this is true, any access to annotations (including fetching the Atom feed) requires a valid user
+// When false, anyone on the Web can retrieve public annotations via an Atom feed
+define( 'ANNOTATION_REQUIRE_USER', false );
+
+define( 'MAX_NOTE_LENGTH', 250 );
+define( 'MAX_QUOTE_LENGTH', 1000 );
 
 // Enable tag (keyword) autocomplete
 define( 'AN_USEKEYWORDS', true );
@@ -24,16 +31,4 @@ define( 'AN_ADMINVIEWALL', true );
 // the bottom of the whole table.
 define( 'AN_SUMMARYHEADINGSTOP', true );
 
-
-// The smartquote icon symbol(s)
-define( 'AN_SMARTQUOTEICON', '\u275b\u275c' );	// 267a: recycle
-
-// The same thing as entities because - and this stuns the hell out of me every
-// single time - PHP 5 *does not have native unicode support*!!!  Geez guys,
-// I remember reading about unicode in Byte Magazine in what, the 1980s?
-define( 'AN_SMARTQUOTEICON_HTML', '&#10075;&#10076;' );
-
-// Icon for filtering on the summary page
-define( 'AN_FILTERICON_HTML', '&#9754;' );  //&#9756;
-	
 ?>

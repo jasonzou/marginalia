@@ -64,12 +64,13 @@ class annotation_summary_page
 
 		if( isloggedin() )
 		{
+			$sannotationpath = s( ANNOTATION_PATH );
 			echo "<script language='JavaScript' type='text/javascript'>\n"
-				. "var annotationService = new RestAnnotationService('$swwwroot/annotation/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
+				. "var annotationService = new RestAnnotationService('$sannotationpath/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
 				. "window.annotationSummary = new AnnotationSummary(annotationService"
 					.", '$swwwroot'"
 					.", '".s($USER->username)."');\n"
-				. "window.preferences = new Preferences( new RestPreferenceService('$swwwroot/annotation/user-preference.php' ) );\n"
+				. "window.preferences = new Preferences( new RestPreferenceService('$sannotationpath/user-preference.php' ) );\n"
 				. "</script>\n";
 		}
 	}

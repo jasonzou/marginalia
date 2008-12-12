@@ -61,7 +61,7 @@ else  {
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='tags.js'></script>\n"
 		. "<script language='Javascript' type='text/javascript'>\n"
-		. " var serviceRoot = '".htmlspecialchars($CFG->wwwroot).'/annotation'."';\n"
+		. " var serviceRoot = '".s(ANNOTATION_PATH).'/annotation'."';\n"
 		. "</script>\n";
 		
 	$navtail = get_string( 'edit_keywords_title', ANNOTATION_STRINGS );

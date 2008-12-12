@@ -179,10 +179,9 @@ class moodle_annotation_service extends AnnotationService
 		return True;
 	}
 
-	// For some unfathomable reason, Moodle forces magicquotes *on* instead of *off*.  Fun.
-	function unfix_quotes( $value )
+	function listBodyParams( )
 	{
-		return stripslashes( $value );
+		return MarginaliaHelper::ListBodyParams( true );
 	}
 }
 
