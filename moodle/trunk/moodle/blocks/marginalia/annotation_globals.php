@@ -90,51 +90,55 @@ class annotation_globals
 		
 		$annotation->setAnnotationId( $r->id );
 		
-		if ( $r->username )
+		if ( array_key_exists( 'username', $r ) )
 			$annotation->setUserId( $r->username );
-		if ( $r->fullname )
+		if ( array_key_exists( 'fullname', $r ) )
 			$annotation->setUserName( $r->fullname );
 		
-		if ( $r->access_perms )
+		if ( array_key_exists( 'access_perms', $r ) )
 		{
 			if ( $r->access_perms & AN_ACCESS_PUBLIC )
 				$annotation->setAccess( 'public' );
 			else
 				$annotation->setAccess( 'private' );
 		}
-		if ( $r->url )
+		if ( array_key_exists( 'url', $r ) )
 			$annotation->setUrl( $r->url );
-		if ( $r->note )
+		if ( array_key_exists( 'note', $r ) )
 			$annotation->setNote( $r->note );
-		if ( $r->quote )
+		if ( array_key_exists( 'quote', $r ) )
 			$annotation->setQuote( $r->quote );
-		if ( $r->quote_title )
+		if ( array_key_exists( 'quote_title', $r ) )
 			$annotation->setQuoteTitle( $r->quote_title );
-		if ( $r->quote_author_username )
+		if ( array_key_exists( 'quote_author_username', $r ) )
 			$annotation->setQuoteAuthorId( $r->quote_author_username );
-		if ( $r->quote_author_fullname )
+		if ( array_key_exists( 'quote_author_fullname', $r ) )
 			$annotation->setQuoteAuthorName( $r->quote_author_fullname );
-		if ( $r->link )
+		if ( array_key_exists( 'link', $r ) )
 			$annotation->setLink( $r->link );
-		if ( $r->link_title )
+		if ( array_key_exists( 'link_title', $r ) )
 			$annotation->setLinkTitle( $r->link_title );
-		$annotation->setCreated( (int) $r->created );
-		$annotation->setModified( (int) $r->modified );
+		if ( array_key_exists( 'created', $r ) )
+			$annotation->setCreated( (int) $r->created );
+		if ( array_key_exists( 'modified', $r ) )
+			$annotation->setModified( (int) $r->modified );
 		
-		if ( $r->start_block !== null )  {
+		$start_line = array_key_exists( 'start_line', $r ) ? $r->start_line : 0;
+		$end_line = array_key_exists( 'end_line', $r ) ? $r->end_line : 0;
+		if ( array_key_exists( 'start_block', $r ) && $r->start_block !== null )  {
 			$range = new SequenceRange( );
-			$range->setStart( new SequencePoint( $r->start_block, $r->start_line, $r->start_word, $r->start_char ) );
-			$range->setEnd( new SequencePoint( $r->end_block, $r->end_line, $r->end_word, $r->end_char ) );
+			$range->setStart( new SequencePoint( $r->start_block, $start_line, $r->start_word, $r->start_char ) );
+			$range->setEnd( new SequencePoint( $r->end_block, $end_line, $r->end_word, $r->end_char ) );
 			$annotation->setSequenceRange( $range );
 		}
 		// Older versions used a range string column.  Check and translate that field here:
-		else if ( ! empty( $r->range ) )  {
+		else if ( array_key_exists( 'range', $r ) )  {
 			$range = new SequenceRange( );
 			$range->fromString( $r->range );
 			$annotation->setSequenceRange( $range );
 		}
 		
-		if ( $r->start_xpath !== null )  {
+		if ( array_key_exists( 'start_xpath', $r ) && $r->start_xpath !== null )  {
 			$range = new XPathRange( );
 			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_line, $r->start_word, $r->start_char ) );
 			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_line, $r->end_word, $r->end_char ) );

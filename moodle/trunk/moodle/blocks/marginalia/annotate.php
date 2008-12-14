@@ -90,13 +90,14 @@ class moodle_annotation_service extends AnnotationService
 			$range = ', a.range AS range ';
 */		
 		// Caller should ensure that id is numeric
-		$query = "SELECT a.id, a.userid, a.url,
+		$query = "SELECT a.id, a.userid, u.username as username, a.url,
 			  a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char,
 			  a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char,
-			  a.note, a.access, a.quote, a.quote_title, a.quote_author,
+			  a.note, a.access_perms, a.quote, a.quote_title, a.quote_author_id,
 			  a.link, a.link_title, a.action,
 			  a.created, a.modified $range
-			  FROM {$this->tablePrefix}".AN_DBTABLE." AS a
+			  FROM {$this->tablePrefix}".AN_DBTABLE." a
+			  INNER JOIN {$this->tablePrefix}user u ON u.id=a.userid
 			WHERE a.id = $id";
 		$resultset = get_record_sql( $query );
 		if ( $resultset && count( $resultset ) != 0 )  {
