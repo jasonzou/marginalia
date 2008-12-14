@@ -33,19 +33,20 @@ $string['atom_feed'] = 'Atom 1.0 Feed';
 $string['atom_feed_desc'] = 'Subscribe to updates to this page (only recent public annotations will be included).';
 $string['unknown_course'] = 'unknown course';
 $string['all_discussions'] = 'all discussions';
-$string['discussion_name'] = 'discussion \\"$a->name\\"';
-$string['forum_name'] = 'forum \\"$a->name\\"';
+$string['discussion_name'] = 'discussion &quot;$a->name&quot;';
+$string['forum_name'] = 'forum &quot;$a->name&quot;';
 $string['unknown_discussion'] = 'unknown discussion';
 $string['whole_course'] = 'whole course';
 $string['unknown_post'] = 'unknown discussion post';
 $string['post_name'] = 'discussion post "$a->name"';
+$string['annotation_help'] = 'creating and using annotations';
 
 /* Summary page */
 $string['containing'] = 'text containing';
 $string['matching'] = 'notes matching';
-$string['annotation_desc_authorsearch'] = 'annotations by $a->who of work by $a->author with $a->match \\"$a->search\\" in $a->title';
+$string['annotation_desc_authorsearch'] = 'annotations by $a->who of work by $a->author with $a->match &quot;$a->search&quot; in $a->title';
 $string['annotation_desc_author'] = 'annotations by $a->who of work by $a->author in $a->title';
-$string['annotation_desc_search'] = 'annotations by $a->who with $a->match \\"$a->search\\" in $a->title';
+$string['annotation_desc_search'] = 'annotations by $a->who with $a->match &quot;$a->search&quot; in $a->title';
 $string['annotation_desc'] = 'annotations by $a->who in $a->title';
 $string['tip'] = 'Tip';
 $string['smartcopy_help'] = 'The Smartcopy feature automatically includes context information'
@@ -58,14 +59,15 @@ $string['user_th'] = 'User';
 $string['anyone'] = 'anyone';
 $string['me'] = 'Me';
 $string['zoom_user_hover'] = 'Click to show only annotations by $a->fullname.';
-$string['zoom_author_hover'] = 'Click to show only annotations of work by $a->quote_author_fullname.';
+$string['zoom_author_hover'] = 'Click to show only annotations of work by $a->fullname.';
 $string['zoom_url_hover'] = 'Click to show only annotations in this $a->section_type.';
 $string['zoom_match_hover'] = 'Click to show only notes matching this exact text.';
 $string['unzoom_user_hover'] = 'Click to view annotations by anyone.';
-$string['unzoom_author_hover'] = 'Click to view annotations of any user\'s work.';
+$string['unzoom_author_hover'] = 'Click to view annotations of any user&#38;s work.';
 $string['unzoom_url_hover'] = 'Click to broaden the search.';
 $string['unzoom_match_hover'] = 'Click to include all occurrences of this text.';
 $string['smartquote_annotation'] = 'Quote this annotation in a forum post.';
+$string['summary_help'] = 'using the annotaton summary';
 
 /* Edit Keywords Page */
 $string['edit_keywords_link' ] = 'Tags';

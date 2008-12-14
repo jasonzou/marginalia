@@ -129,10 +129,10 @@ class annotation_summary_query
 			$this->user, $this->ofuser, $exact, $this->all );
 	}
 	
-	function title( )
+	function titlehtml( )
 	{
 		$this->handler->fetch_metadata( );
-		return $this->handler->title;
+		return $this->handler->titlehtml;
 	}
 	
 	function fullname( $user )
@@ -141,16 +141,16 @@ class annotation_summary_query
 	}
 	
 	/** Produce a natural language description of a query */
-	function desc( $title )
+	function desc( $titlehtml=null )
 	{
 		global $USER;
 		
 		$this->handler->fetch_metadata( );
 		
-		$a->title = null === $title ? $this->handler->title : $title;
-		$a->who = $this->user ? $this->fullname( $this->user ) : get_string( 'anyone', ANNOTATION_STRINGS );
-		$a->author = $this->ofuser ? $this->fullname( $this->ofuser ) : get_string( 'anyone', ANNOTATION_STRINGS );
-		$a->search = $this->text;
+		$a->title = null === $titlehtml ? $this->handler->titlehtml : $titlehtml;
+		$a->who = $this->user ? s( $this->fullname( $this->user ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
+		$a->author = $this->ofuser ? s( $this->fullname( $this->ofuser ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
+		$a->search = s( $this->text );
 		$a->match = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		
 		if ( null != $this->text && '' != $this->text )
@@ -164,30 +164,30 @@ class annotation_summary_query
 	}
 	
 	/** A natural language description, with elements as links to more general queries */
-	function desc_with_links( $title=null )
+	function desc_with_links( $titlehtml=null )
 	{
 		global $USER;
 		
 		$this->handler->fetch_metadata( );
 		
-		$a->title = null === $title ? $this->handler->title : $title;
+		$a->title = null === $titlehtml ? $this->handler->titlehtml : $titlehtml;
 		
 		// Show link to parent search
 		$parent_summary = $this->for_parent( );
 		if ( $parent_summary ) {
-			$a->title = '<a class="opt-link" href="'.s($parent_summary->summary_url( ))
-				. '" title="'.s( get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ) ).'">'
-				. '<span class="current">'.s($a->title).'</span>'
-				. '<span class="alt">'.s($parent_summary->title( )).'</span></a>';
+			$a->title = '<a class="opt-link" href="'.s( $parent_summary->summary_url( ) )
+				. '" title="'.get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ).'">'
+				. '<span class="current">'.$a->title.'</span>'
+				. '<span class="alt">'.$parent_summary->titlehtml( ).'</span></a>';
 		}
 		
 		// Unzoom from user to anyone
 		if ( $this->user )  {
 			$summary_anyone = $this->for_user( null );
-			$a->who = '<a class="opt-link" href="'.s($summary_anyone->summary_url( ))
-				.'" title="'.s( get_string( 'unzoom_user_hover', ANNOTATION_STRINGS ) )
-				.'"><span class="current">'.s($this->fullname( $this->user ) ).'</span><span class="alt">'
-				.s( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</a></a>';
+			$a->who = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
+				.'" title="'.get_string( 'unzoom_user_hover', ANNOTATION_STRINGS )
+				.'"><span class="current">'.s( $this->fullname( $this->user ) ).'</span><span class="alt">'
+				.get_string( 'anyone', ANNOTATION_STRINGS ).'</a></a>';
 		}
 		else
 			$a->who = get_string( 'anyone', ANNOTATION_STRINGS );
@@ -195,10 +195,10 @@ class annotation_summary_query
 		// Unzoom from of user to of anyone
 		if ( $this->ofuser )  {
 			$summary_anyone = $this->for_ofuser( null );
-			$a->author = '<a class="opt-link" href="'.s($summary_anyone->summary_url( ))
-				.'" title="'.s( get_string( 'unzoom_author_hover', ANNOTATION_STRINGS ) )
-				.'"><span class="current">'.s($this->fullname( $this->ofuser ) ).'</span><span class="alt">'
-				.s( get_string( 'anyone', ANNOTATION_STRINGS ) ).'</span></a>';
+			$a->author = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
+				.'" title="'.get_string( 'unzoom_author_hover', ANNOTATION_STRINGS )
+				.'"><span class="current">'.s( $this->fullname( $this->ofuser ) ).'</span><span class="alt">'
+				.get_string( 'anyone', ANNOTATION_STRINGS ).'</span></a>';
 		}
 		else
 			$a->author = null;
@@ -210,18 +210,18 @@ class annotation_summary_query
 		$hover = get_string( $this->exactmatch ? 'unzoom_match_hover' : 'zoom_match_hover', ANNOTATION_STRINGS );
 		$m1 = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		$m2 = get_string( $this->exactmatch ? 'containing' : 'matching', ANNOTATION_STRINGS );
-		$a->match = '<a class="opt-link" href="'.s($summary_match->summary_url( ))
-			.'" title="'.s( $hover )
-			.'"><span class="current">'.s( $m1 )
-			.'</span><span class="alt">'.s( $m2 ).'</span></a>';
+		$a->match = '<a class="opt-link" href="'.s( $summary_match->summary_url( ) )
+			.'" title="'.$hover
+			.'"><span class="current">'.$m1
+			.'</span><span class="alt">'.$m2.'</span></a>';
 
 		if ( $this->text )
 			$s = ( null != $this->ofuser ) ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
 		else
 			$s = ( null != $this->ofuser ) ? 'annotation_desc_author' : 'annotation_desc';
-			
-		return get_string( $s, ANNOTATION_STRINGS, $a );
 		
+		$desc = get_string( $s, ANNOTATION_STRINGS, $a );
+
 		return $desc;
 	}
 	
@@ -424,14 +424,14 @@ class annotation_url_handler
 class course_annotation_url_handler extends annotation_url_handler
 {
 	var $courseid;
-	var $title;
+	var $titlehtml;
 	var $parenturl;
-	var $parenttitle;
+	var $parenttitlehtml;
 	
 	function course_annotation_url_handler( $courseid )
 	{
 		$this->courseid = $courseid;
-		$this->title = null;
+		$this->titlehtml = null;
 	}
 	
 	/** Internal function to fetch title etc. setting the following fields:
@@ -441,17 +441,17 @@ class course_annotation_url_handler extends annotation_url_handler
 	{
 		global $CFG;
 		
-		if ( null != $this->title )
+		if ( null != $this->titlehtml )
 			return;
 		$query = "SELECT fullname "
 			. " FROM {$CFG->prefix}course WHERE id={$this->courseid}";
 		$row = get_record_sql( $query );
 		if ( False !== $row )
-			$this->title = $row->fullname;
+			$this->titlehtml = a( $row->fullname );
 		else
-			$this->title = get_string( 'unknown course', ANNOTATION_STRINGS );
+			$this->titlehtml = get_string( 'unknown course', ANNOTATION_STRINGS );
 		$this->parenturl = null;
-		$this->parenttitle = null; 
+		$this->parenttitlehtml = null; 
 	}
 	
 	// Override the default implementation of getSql.  This must construct a UNION of multiple queries.
@@ -500,15 +500,15 @@ class course_annotation_url_handler extends annotation_url_handler
 class forum_annotation_url_handler extends annotation_url_handler
 {
 	var $f;
-	var $title;
+	var $titlehtml;
 	var $parenturl;
-	var $parenttitle;
+	var $parenttitlehtml;
 	var $courseid;
 	
 	function forum_annotation_url_handler( $f )
 	{
 		$this->f = $f;
-		$this->title = null;
+		$this->titlehtml = null;
 	}
 	
 	/** Internal function to fetch title etc. setting the following fields:
@@ -518,24 +518,24 @@ class forum_annotation_url_handler extends annotation_url_handler
 	{
 		global $CFG;
 		
-		if ( null != $this->title )
+		if ( null != $this->titlehtml )
 			return;
 		else  {
 			$query = "SELECT id, name, course FROM {$CFG->prefix}forum WHERE id={$this->f}";
 			$row = get_record_sql( $query );
 			if ( False !== $row )
 			{
-				$a->name = $row->name;
-				$this->title = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
+				$a->name = s( $row->name );
+				$this->titlehtml = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
 				$this->courseid = (int) $row->course;
 			}
 			else
 			{
-				$this->title = get_string( 'unknown_forum', ANNOTATION_STRINGS );
+				$this->titlehtml = get_string( 'unknown_forum', ANNOTATION_STRINGS );
 				$this->courseid = null;
 			}
 			$this->parenturl = '/course/view.php?id='.$this->courseid;
-			$this->parenttitle = get_string( 'whole_course', ANNOTATION_STRINGS ); 
+			$this->parenttitlehtml = get_string( 'whole_course', ANNOTATION_STRINGS ); 
 		}
 	}
 	
@@ -576,16 +576,16 @@ class forum_annotation_url_handler extends annotation_url_handler
 class discussion_annotation_url_handler extends annotation_url_handler
 {
 	var $d;
-	var $title;
+	var $titlehtml;
 	var $parenturl;
-	var $parenttitle;
+	var $parenttitlehtml;
 	var $courseid;
 	var $forumid;
 	
 	function discussion_annotation_url_handler( $d )
 	{
 		$this->d = $d;
-		$this->title = null;
+		$this->titlehtml = null;
 	}
 	
 	/** Internal function to fetch title etc. setting the following fields:
@@ -595,12 +595,12 @@ class discussion_annotation_url_handler extends annotation_url_handler
 	{
 		global $CFG;
 	
-		if ( null != $this->title )
+		if ( null != $this->titlehtml )
 			return;
 		elseif ( null == $this->d )  {
-			$this->title = get_string( 'all_discussions', ANNOTATION_STRINGS );
+			$this->titlehtml = get_string( 'all_discussions', ANNOTATION_STRINGS );
 			$this->parenturl = null;
-			$this->parenttitle = null;
+			$this->parenttitlehtml = null;
 			$this->courseid = null;
 		}
 		else  {
@@ -611,20 +611,20 @@ class discussion_annotation_url_handler extends annotation_url_handler
 			$row = get_record_sql( $query );
 			$forumname = 'unknown';
 			if ( False !== $row )  {
-				$a->name = $row->name;
-				$this->title = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
+				$a->name = s( $row->name );
+				$this->titlehtml = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
 				$this->courseid = (int) $row->course;
 				$this->forumid = (int) $row->forum;
 				$forumname = $row->forum_name;
 			}
 			else  {
-				$this->title = get_string( 'unknown_discussion', ANNOTATION_STRINGS );
+				$this->titlehtml = get_string( 'unknown_discussion', ANNOTATION_STRINGS );
 				$this->courseid = null;
 				$this->forumid = null;
 			}
 			$this->parenturl = '/mod/forum/view.php?id='.$this->forumid;
-			$a->name = $forumname;
-			$this->parenttitle = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
+			$a->name = s( $forumname );
+			$this->parenttitlehtml = get_string( 'forum_name', ANNOTATION_STRINGS, $a );
 		}
 	}
 	
@@ -664,9 +664,9 @@ class discussion_annotation_url_handler extends annotation_url_handler
 class post_annotation_url_handler extends annotation_url_handler
 {
 	var $p;
-	var $title;
+	var $titlehtml;
 	var $parenturl;
-	var $parenttitle;
+	var $parenttitlehtml;
 	var $courseid;
 	
 	function post_annotation_url_handler( $p )
@@ -680,7 +680,7 @@ class post_annotation_url_handler extends annotation_url_handler
 	{
 		global $CFG;
 		
-		if ( null != $this->title )
+		if ( null != $this->titlehtml )
 			return;
 		
 		$query = "SELECT p.subject pname, d.id did, d.name dname, d.course course"
@@ -689,17 +689,17 @@ class post_annotation_url_handler extends annotation_url_handler
 			. " WHERE p.id=$p";
 		$row = get_record_sql( $query );
 		if ( False === $row )  {
-			$this->title = get_string( 'unknown_post', ANNOTATION_STRINGS );
+			$this->titlehtml = get_string( 'unknown_post', ANNOTATION_STRINGS );
 			$this->parenturl = null;
-			$this->parenttitle = null;
+			$this->parenttitlehtml = null;
 			$this->courseid = null;
 		}
 		else  {
-			$a->name = $row->pname;
-			$this->title = get_string( 'post_name', ANNOTATION_STRINGS, $a );
+			$a->name = s( $row->pname );
+			$this->titlehtml = get_string( 'post_name', ANNOTATION_STRINGS, $a );
 			$this->parenturl = $CFG->wwwroot.'/mod/forum/discuss.php?d='.$row->did;
-			$a->name = $row->dname;
-			$this->parenttitle = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
+			$a->name = s( $row->dname );
+			$this->parenttitlehtml = get_string( 'discussion_name', ANNOTATION_STRINGS, $a );
 			$this->courseid = (int) $row->course;
 		}
 	}

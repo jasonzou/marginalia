@@ -41,8 +41,8 @@ VERSION_FILE = $(MARGINALIA_MOODLE_DIR)/version.php
 LANG_FILES = $(MOODLE_DIR)/local/lang/en_utf8/annotation.php
 
 HELP_FILES = \
- $(MOODLE_DIR)/local/lang/en_utf8/help/annotate.html \
- $(MOODLE_DIR)/local/lang/en_utif8/help/annotation_summary.html
+ $(MOODLE_DIR)/local/lang/en_utf8/help/marginalia/annotate.html \
+ $(MOODLE_DIR)/local/lang/en_utif8/help/marginalia/annotation_summary.html
 
 DB_DIR = $(MARGINALIA_MOODLE_DIR)/db
 DB_FILES = \
@@ -76,7 +76,7 @@ zipdir:
 	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia//marginalia/3rd-party
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/marginalia-php
-	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/help
+	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/help/marginalia
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/db
 	mkdir -p $(ZIPDIR)/moodle/mod/forum
 
@@ -87,7 +87,7 @@ zipcontents: zipdir $(ZIPDIR)/moodle19.patch $(ZIPDIR)/moodle18.patch $(UTIL_FIL
 	cp $(MARGINALIA_PHP_FILES) $(ZIPDIR)/moodle/blocks/marginalia/marginalia-php/
 	cp $(MOODLEROOT_FILES) $(ZIPDIR)/moodle/
 	cp $(LANG_FILES) $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/
-	cp $(HELP_FILES) $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/help/
+	cp $(HELP_FILES) $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/help/marginalia/
 	cp $(DB_FILES) $(ZIPDIR)/moodle/blocks/marginalia/db/
 	cp $(FORUM_FILES) $(ZIPDIR)/moodle/mod/forum/
 	cp $(UTIL_FILES) $(ZIPDIR)/util/

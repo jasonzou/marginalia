@@ -122,7 +122,7 @@ class moodle_marginalia
 			.' var userId = \''.s($USER->username)."';\n"
 			.' moodleMarginalia = new MoodleMarginalia( annotationPath, url, moodleRoot, userId, '.$sprefs.', {'."\n";
 		if ( $showsplashpref == 'true' )
-			$meta .= '  splash: \''.s(get_string('splash',ANNOTATION_STRINGS)).'\'';
+			$meta .= '  splash: \''.get_string('splash',ANNOTATION_STRINGS).'\'';
 		$meta .= ' useSmartquote: '.s(AN_USESMARTQUOTE)
 			.",\n".' allowAnyUserPatch: '.($allowAnyUserPatch ? 'true' : 'false' )
 			.",\n smartquoteIcon: '".AN_SMARTQUOTEICON."'"
@@ -134,13 +134,17 @@ class moodle_marginalia
 		return $meta;
 	}
 	
-	function show_help( $module )
+	function show_help( )
 	{
 		global $CFG;
+		
+		helpbutton( 'annotate', get_string( 'annotation_help', ANNOTATION_STRINGS ), 'block_marginalia' );
+		/*
 		$helptitle = 'Help with Annotations';
 		$linkobject = '<span class="helplink"><img class="iconhelp" alt="'.$helptitle.'" src="'.$CFG->pixpath .'/help.gif" /></span>';
 		echo link_to_popup_window ('/help.php?file=annotate.html&amp;forcelang=', 'popup',
 										 $linkobject, 400, 500, $helptitle, 'none', true);
+		 */
 	}
 	
 	function show_user_dropdown( $refurl )
@@ -187,11 +191,11 @@ class moodle_marginalia
 		$summaryurl = ANNOTATION_PATH.'/summary.php?user='.urlencode($userid)
 			."&url=".urlencode( $refurl );
 		return " <a id='annotation-summary-link' href='".s($summaryurl)."'"
-			. " title='".s(get_string('summary_link_title',ANNOTATION_STRINGS))
-			."'>".s(get_string('summary_link',ANNOTATION_STRINGS))."</a>\n"
+			. " title='".get_string('summary_link_title',ANNOTATION_STRINGS)
+			."'>".get_string('summary_link',ANNOTATION_STRINGS)."</a>\n"
 			
 			."<a id='annotation-editkeywords-link' href='".ANNOTATION_PATH.'/tags.php?course='.$course->id."'"
-			. " title='".s(get_string( 'edit_keywords_link', ANNOTATION_STRINGS ))
+			. " title='".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )
 			."'>Tags</a>\n";
 	}
 	

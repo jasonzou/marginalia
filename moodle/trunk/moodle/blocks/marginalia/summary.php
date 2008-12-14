@@ -42,7 +42,7 @@ class annotation_summary_page
 		require_js( ANNOTATION_PATH.'/smartquote.js' );
 		require_js( ANNOTATION_PATH.'/summary.js' );
 
-		$meta = "<link rel='stylesheet' type='text/css' href='".ANNOTATION_PATH."/summary-styles.php'/>\n";
+		$meta = "<link rel='stylesheet' type='text/css' href='".s( ANNOTATION_PATH )."/summary-styles.php'/>\n";
 		
 		if ( null != $this->course && $this->course->category)  {
 			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
@@ -127,7 +127,7 @@ class annotation_summary_page
 		$this->courseid = $summary->handler->courseid;
 		if ( null != $this->courseid )  {
 			if (! $this->course = get_record( "course", "id", $this->courseid ) )
-				error( "Course ID is incorrect - discussion is faulty ");
+				error( "Course ID is incorrect");
 
 			// Ok, now this is probably very wrong.  If the user looks for annotations within a course,
 			// it requires a login.  Without the course (i.e. in a more general search), it doesn't!
@@ -166,16 +166,17 @@ class annotation_summary_page
 		echo "<input type='text' id='search-text' name='q' value='".s($summary->text)."'/>\n";
 		echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
 		echo "<input type='hidden' name='url' value='".s($summary->url)."'/>\n";
+		helpbutton( 'annotation_summary', get_string( 'summary_help', ANNOTATION_STRINGS ), 'block_marginalia' );
 		echo "</fieldset>\n";
 		echo "</form>";
 		
 		// If this page is an error, explain what it's about
 		if ( 'range-mismatch' == $this->errorpage ) {
 			echo '<p class="error"><em class="range-error">!</em>'
-				.s( get_string( 'summary_range_error', ANNOTATION_STRINGS ) )."</p>\n";
+				.get_string( 'summary_range_error', ANNOTATION_STRINGS )."</p>\n";
 		}
 		
-		echo '<p id="query">'.s( get_string( 'prompt_search_desc', ANNOTATION_STRINGS ) )
+		echo '<p id="query">'.get_string( 'prompt_search_desc', ANNOTATION_STRINGS )
 			.' '.$summary->desc_with_links(null).":</p>\n";
 		
 		$cursection = null;
@@ -204,12 +205,12 @@ class annotation_summary_page
 					$a->section_type = htmlspecialchars( $annotation->section_type );
 					echo '<h3>'.s( $annotation->section_type ).'</h3>: '
 						. "<a href='".s( $annotation->section_url )
-						."' title='".s( get_string( 'prompt_section', ANNOTATION_STRINGS, $a ) )."'>" 
+						."' title='".get_string( 'prompt_section', ANNOTATION_STRINGS, $a )."'>" 
 						.s( $annotation->section_name ) . "</a>";
 					if ( $annotation->section_url != $summary->url )  {
 						$tsummary = $summary->for_url( $annotation->section_url );
 						$turl = $tsummary->summary_url( );
-						echo "<a class='zoom' title='".s( get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation ) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
+						echo "<a class='zoom' title='".get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 					}
 					echo '</th></tr></thead>'."\n";
 
@@ -247,7 +248,7 @@ class annotation_summary_page
 					$url = MarginaliaHelper::isUrlSafe( $url ) ? $url : '';
 					$a->row_type = $annotation->row_type;
 					$a->author = $annotation->quote_author_fullname;
-					echo "<a class='url' href='".s($url)."' title='".s( get_string( 'prompt_row', ANNOTATION_STRINGS, $a) )."'>";
+					echo "<a class='url' href='".s($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 					echo s( $annotation->quote_title ) . '</a>';
 
 					echo "<br/>by <span class='quote-author'>".s( $annotation->quote_author_fullname )."</span>\n";
@@ -258,7 +259,9 @@ class annotation_summary_page
 						if ( $tuser )  {
 							$tsummary = $summary->for_ofuser( $tuser );
 							$turl = $tsummary->summary_url( );
-							echo "<a class='zoom' title='".s( get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
+							$a->fullname = $annotation->quote_author_fullname;
+							echo "<a class='zoom' title='".get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $a)
+								."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 						}
 					}
 					echo "</th>\n";
@@ -283,7 +286,7 @@ class annotation_summary_page
 				if ( ! $summary->exactmatch && array_key_exists( $annotation->note, $keywordhash ) )  {
 					$tsummary = $summary->for_text( $annotation->note, true );
 					echo "<a class='zoom' title='"
-						.s( get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
+						.get_string( 'zoom_match_hover', ANNOTATION_STRINGS )
 						."' href='".s( $tsummary->summary_url( ) )."'>".AN_FILTERICON_HTML."</a>\n";
 				}
 				echo "</td>\n";
@@ -297,7 +300,7 @@ class annotation_summary_page
 				{
 					// $SMARTQUOTE_SYMBOL = AN_SMARTQUOTEICON_PHP; //'&#9850;';
 					$sqid = s( 'sq'.$annotation->id );
-					$sqtitle = s( get_string( 'smartquote_annotation', ANNOTATION_STRINGS ) );
+					$sqtitle = get_string( 'smartquote_annotation', ANNOTATION_STRINGS );
 					echo "<button class='smartquote' id='$sqid' title='$sqtitle'>".AN_SMARTQUOTEICON_HTML."</button>\n";
 				}
 				
@@ -318,7 +321,7 @@ class annotation_summary_page
 				
 				if ( isloggedin() && $annotation->userid == $USER->id )  {
 					$hiddenusername = "<span class='user-name'>$displayusername</span>\n";
-					$displayusername = s( get_string( 'me', ANNOTATION_STRINGS, null ) );
+					$displayusername = get_string( 'me', ANNOTATION_STRINGS );
 					$class = '';
 				}
 					
@@ -336,7 +339,9 @@ class annotation_summary_page
 					if ( $tuser )  {
 						$tsummary = $summary->for_user( $tuser );
 						$turl = $tsummary->summary_url( );
-						echo "<a class='zoom' title='".s(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s($turl)."'>".AN_FILTERICON_HTML."</a>\n";
+						$a->fullname = $annotation->fullname;
+						echo "<a class='zoom' title='".get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $a)
+							."' href='".s($turl)."'>".AN_FILTERICON_HTML."</a>\n";
 					}
 				}
 				echo "</td>\n";
@@ -370,10 +375,10 @@ class annotation_summary_page
 		// if a login is required I won't include the feature.
 		if ( ! ANNOTATION_REQUIRE_USER )  {
 			$turl = $summary->get_feed_url( 'atom' );
-			echo "<p class='feed' title='".s( get_string( 'atom_feed', ANNOTATION_STRINGS ) )
+			echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )
 				."'><a href='".s($turl)."'><img border='0' alt='"
-				.s( get_string( 'atom_feed', ANNOTATION_STRINGS ) )."' src='$CFG->wwwroot/pix/i/rss.gif'/>"
-				. '</a> '.s( get_string( 'atom_feed_desc', ANNOTATION_STRINGS ) )."</p>\n";
+				.get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='".s( $CFG->wwwroot )."/pix/i/rss.gif'/>"
+				. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 		}
 		
 		print_footer($this->course);
@@ -397,7 +402,7 @@ class annotation_summary_page
 	function get_summary_link( $text, $title, $summary )
 	{
 		$turl = $summary->summary_url( );
-		return '<a href="'.s($turl).'" title="'.s($title).'">'.s( $text ).'</a>';
+		return '<a href="'.s( $turl ).'" title="'.s($title).'">'.s( $text ).'</a>';
 	}
 }
 
