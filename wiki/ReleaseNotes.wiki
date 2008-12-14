@@ -2,7 +2,7 @@
 
 = Upcoming Release =
 
-This release is aimed at stabilizing and refining the Moodle version, though consideration is being given to the other versions also.  The following changes apply to the Marginalia core libraries:
+The release that I am working on as of December 2008 is aimed at stabilizing and refining the Moodle version, though consideration is being given to the other versions also.  The following changes apply to the Marginalia core libraries:
 
   * IE (version 7) is again supported.  Safari is also now fully supported (thanks to browser improvements by Apple).
 
