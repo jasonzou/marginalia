@@ -50,20 +50,22 @@ class moodle_annotation_service extends AnnotationService
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
-	function doListAnnotations( $url, $userid, $block, $all )
+	function doListAnnotations( $url, $username, $block, $all )
 	{
-		$query = new annotation_summary_query( $url, $userid, null, null, false, $all );
-		if ( $query->error )  {
+		$handler = annotation_summary_query::handler_for_url( $url );
+		$user = get_record( 'user', 'username', $username );
+		$summary = new annotation_summary_query( $url, $handler, null, $user, null, false, $all );
+		if ( $summary->error )  {
 			$this->httpError( 400, 'Bad Request', 'Bad URL 1' );
 			return null;
 		}
-		elseif ( isguest() && ANNOTATION_REQUIRE_USER )  {
+		elseif ( !isloggedin( ) && ANNOTATION_REQUIRE_USER )  {
 			$this->httpError( 403, 'Forbidden', 'Anonymous listing not allowed' );
 			return null;
 		}
 		else
 		{
-			$querysql = $query->sql( 'section_type, section_name, quote_title, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
+			$querysql = $summary->sql( 'section_type, section_name, quote_title, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
 			$annotation_set = get_records_sql( $querysql );
 			$annotations = Array( );
 			if ( $annotation_set )  {
@@ -72,8 +74,8 @@ class moodle_annotation_service extends AnnotationService
 					$annotations[ $i++ ] = annotation_globals::record_to_annotation( $r );
 			}
 			$format = $this->getQueryParam( 'format', 'atom' );
-			$logurl = 'annotate.php?format='.$format.($userid ? '&user='.$userid : '').'&url='.$url;
-			add_to_log( $query->handler->courseid, 'annotation', 'list', $logurl );
+			$logurl = 'annotate.php?format='.$format.($user ? '&user='.$user->id : '').'&url='.$url;
+			add_to_log( $summary->handler->courseid, 'annotation', 'list', $logurl );
 			return $annotations;
 		}
 	}
@@ -94,7 +96,7 @@ class moodle_annotation_service extends AnnotationService
 			  a.note, a.access, a.quote, a.quote_title, a.quote_author,
 			  a.link, a.link_title, a.action,
 			  a.created, a.modified $range
-			  FROM {$this->tablePrefix}annotation AS a
+			  FROM {$this->tablePrefix}".AN_DBTABLE." AS a
 			WHERE a.id = $id";
 		$resultset = get_record_sql( $query );
 		if ( $resultset && count( $resultset ) != 0 )  {
@@ -120,17 +122,15 @@ class moodle_annotation_service extends AnnotationService
 			// The cost of doing it here is low because annotations are created one-by one.  In essence,
 			// this is really caching derived fields in the database to make queries easier.  (If only
 			// MySQL had added views before v5).
-			if ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $annotation->getUrl(), $matches ) )
-			{
-				$record->object_type = 'post';
+			if ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $annotation->getUrl( ), $matches ) )  {
+				$record->object_type = AN_OTYPE_POST;
 				$record->object_id = (int) $matches[ 1 ];
 			}
 	
 			// must preprocess fields
-			$id = insert_record( 'annotation', $record, true );
+			$id = insert_record( AN_DBTABLE, $record, true );
 			
-			if ( $id )
-			{
+			if ( $id )  {
 				// TODO: fill in queryStr for the log
 				$urlquerystr = '';
 				$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
@@ -147,7 +147,7 @@ class moodle_annotation_service extends AnnotationService
 		$record = annotation_globals::annotation_to_record( $annotation, True );
 		$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
 		add_to_log( null, 'annotation', 'update', $logurl, "{$annotation->id}" );
-		return update_record( 'annotation', $record );
+		return update_record( AN_DBTABLE, $record );
 	}
 	
 	function doBulkUpdate( $oldnote, $newnote )
@@ -157,14 +157,13 @@ class moodle_annotation_service extends AnnotationService
 		$where = "userid='".addslashes($USER->username)."' AND note='".addslashes($oldnote)."'";
 
 		// Count how many replacements will be made
-		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix."annotation WHERE $where";
+		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix.AN_DBTABLE." WHERE $where";
 		$result = get_record_sql( $query );
 		$n = (int)$result->n;
 		
-		if ( $n )
-		{
+		if ( $n )  {
 			// Do the replacements
-			$query = 'UPDATE '.$CFG->prefix."annotation set note='".addslashes($newnote)."' WHERE $where";
+			$query = 'UPDATE '.$CFG->prefix.AN_DBTABLE." set note='".addslashes($newnote)."' WHERE $where";
 			execute_sql( $query, false );
 		}
 		header( 'Content-type: text/plain' );
@@ -173,7 +172,7 @@ class moodle_annotation_service extends AnnotationService
 	
 	function doDeleteAnnotation( $id )
 	{
-		delete_records( 'annotation', 'id', $id );
+		delete_records( AN_DBTABLE, 'id', $id );
 		$logurl = "annotate.php?id=$id";
 		add_to_log( null, 'annotation', 'delete', $logurl, "$id" );
 		return True;

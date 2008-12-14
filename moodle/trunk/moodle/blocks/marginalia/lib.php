@@ -146,8 +146,9 @@ class moodle_marginalia
 	function show_user_dropdown( $refurl )
 	{
 		global $USER;
-		$summaryquery = new annotation_summary_query( $refurl, null, null, null );
-		$userlist = get_records_sql( $summaryquery->list_users_sql( ) );
+		
+		$summary = annotation_summary_query::from_url( $refurl );
+		$userlist = get_records_sql( $summary->list_users_sql( ) );
 		$annotationuserid = moodle_marginalia::get_userid( );
 		$showannotationspref = moodle_marginalia::get_show_annotations_pref( ) == 'true';
 		

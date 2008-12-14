@@ -55,10 +55,16 @@ class moodle_keyword_service extends KeywordService
 	function doListKeywords( )
 	{
 		global $USER;
-		$keywords = annotation_keywords_db::list_keywords( $this->currentUserId );
-		$logurl = 'keywords.php';
-		add_to_log( null, 'annotation', 'list', $logurl );
-		return $keywords;
+		
+		$user = get_record( 'user', 'username', $this->currentUserId );
+		if ( $user )  {
+			$keywords = annotation_keywords_db::list_keywords( $user->id );
+			$logurl = 'keywords.php';
+			add_to_log( null, 'annotation', 'list', $logurl );
+			return $keywords;
+		}
+		else
+			return array( );
 	}
 	
 	/**

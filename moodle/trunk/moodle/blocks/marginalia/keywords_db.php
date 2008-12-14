@@ -8,11 +8,11 @@ class annotation_keywords_db
 		// A keyword is a note that occurs more than once
 		$query =
 			'SELECT a.note AS name, \'\' AS description'
-			. ' FROM mdl_annotation a'
+			. ' FROM '.$CFG->prefix.AN_DBTABLE.' a'
 			. ' JOIN ('
 			. '  SELECT note, count(*) as m'
-			. '  FROM mdl_annotation'
-			. "  WHERE userid='$userid'"
+			. "  FROM {$CFG->prefix}".AN_DBTABLE
+			. "  WHERE userid=$userid"
 			. '  GROUP BY note) AS b'
 			. ' ON a.note = b.note'
 			. ' AND b.m > 1'
@@ -23,7 +23,12 @@ class annotation_keywords_db
 		if ( $keywordset )  {
 			$i = 0;
 			foreach ( $keywordset as $r )
-				$keywords[ $i++ ] = annotation_globals::record_to_keyword( $r );
+			{
+				$keyword = new MarginaliaKeyword( );
+				$keyword->name = $r->name;
+				$keyword->description = $r->description;
+				$keywords[ $i++ ] = $keyword;
+			}
 		}
 		return $keywords;
 	}

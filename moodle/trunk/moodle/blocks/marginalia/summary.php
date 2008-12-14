@@ -44,11 +44,6 @@ class annotation_summary_page
 
 		$meta = "<link rel='stylesheet' type='text/css' href='".ANNOTATION_PATH."/summary-styles.php'/>\n";
 		
-/*		if ( AN_EDITABLEKEYWORDS )
-			$tagsHtml = "<div class='tags'><a href='edit-keywords.php'>".get_string( 'edit_keywords_link', ANNOTATION_STRINGS )."</a></div>";
-		else
-			$tagsHtml = '';
-*/		
 		if ( null != $this->course && $this->course->category)  {
 			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
 				'<a href='.$CFG->wwwroot.'/course/view.php?id='.$this->course->id.'>'.$this->course->shortname.'</a> -> '.$navtail,
@@ -75,48 +70,37 @@ class annotation_summary_page
 		}
 	}
 	
-	function parse_params( )
-	{
-		$this->errorpage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
-		$this->summaryurl = $_GET[ 'url' ];
-		
-		$this->searchquery = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
-		$this->searchuserid = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
-		$this->searchof = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
-		$this->exactmatch = array_key_exists( 'match', $_GET ) ? 'exact' == $_GET[ 'match' ] : false;
-	}
-	
 	function show( )
 	{
-		$this->parse_params( );
-		if ( ! MarginaliaHelper::isUrlSafe( $this->summaryurl ) )  {
+		$this->errorpage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
+
+		$summary = annotation_summary_query::from_params( );
+
+		if ( null == $summary )  {
+			header( 'HTTP/1.1 400 Bad Request' );
+			echo '<h1>400 Bad Request</h1>';
+		}
+		elseif ( ! MarginaliaHelper::isUrlSafe( $summary->url ) )  {
 			header( 'HTTP/1.1 400 Bad Request' );
 			echo '<h1>400 Bad Request</h1>Bad url parameter';
 		}
 		else  {
-			$query = new annotation_summary_query( $this->summaryurl, $this->searchuserid, $this->searchof, $this->searchquery, $this->exactmatch );
-			if ( $query->error )  {
-				header( 'HTTP/1.1 400 Bad Request' );
-				echo '<h1>400 Bad Request</h1>'.s($query->error);
-			}
-			else  {
-				// Display individual annotations
-				// Dunno if the range sorting is working
-				$sql = $query->sql( 'section_type, section_name, a.url, start_block, start_word, start_char, end_block, end_word, end_char' );
-				// echo "SQL: $sql\n";
-				$annotations = get_records_sql( $sql );
-				
-				$format = array_key_exists( 'format', $_GET ) ? $_GET[ 'format' ] : 'html';
-				
-				if ( 'atom' == $format )
-					$this->show_atom( $query, $annotations );
-				else
-					$this->show_html( $query, $annotations );
-			}
+			// Display individual annotations
+			// Dunno if the range sorting is working
+			$sql = $summary->sql( 'section_type, section_name, a.url, start_block, start_word, start_char, end_block, end_word, end_char' );
+		//	echo "SQL: $sql\n";	// uncomment for debugging
+			$annotations = get_records_sql( $sql );
+			
+			$format = array_key_exists( 'format', $_GET ) ? $_GET[ 'format' ] : 'html';
+			
+			if ( 'atom' == $format )
+				$this->show_atom( $summary, $annotations );
+			else
+				$this->show_html( $summary, $annotations );
 		}
 	}
 
-	function show_atom( $query, $annotations )
+	function show_atom( $summary, $annotations )
 	{
 		global $CFG;
 		
@@ -124,15 +108,15 @@ class annotation_summary_page
 		foreach ( $annotations as $annotationrec )
 			$annotationobjs[ ] = annotation_globals::record_to_annotation( $annotationrec );
 		MarginaliaHelper::generateAnnotationFeed( $annotationobjs,
-			annotation_globals::get_feed_tag_uri(),
-			MarginaliaHelper::getLastModified( $annotationObjs, annotation_globals::get_install_date() ),
-			annotation_globals::get_service_path(),
-			annotation_globals::get_host(),
-			$query->get_feed_url('atom'),
+			annotation_globals::get_feed_tag_uri( ),
+			MarginaliaHelper::getLastModified( $annotationObjs, annotation_globals::get_install_date( ) ),
+			annotation_globals::get_service_path( ),
+			annotation_globals::get_host( ),
+			$summary->get_feed_url( 'atom' ),
 			$CFG->wwwroot );
 	}
 	
-	function show_html( $query, $annotations )
+	function show_html( $summary, $annotations )
 	{
 		global $CFG, $USER;
 		
@@ -140,7 +124,7 @@ class annotation_summary_page
 		// Atom feed, and the Atom feed is generated exclusively by annotation code which doesn't know
 		// that much about Moodle.  So the handler has to query it based on a discussion ID or the like.
 		$this->course = null;
-		$this->courseid = $query->handler->courseid;
+		$this->courseid = $summary->handler->courseid;
 		if ( null != $this->courseid )  {
 			if (! $this->course = get_record( "course", "id", $this->courseid ) )
 				error( "Course ID is incorrect - discussion is faulty ");
@@ -160,7 +144,7 @@ class annotation_summary_page
 		
 		$this->show_header( );
 
-		$keywords = isloggedin() ? annotation_keywords_db::list_keywords( $USER->username ) : array( );
+		$keywords = isloggedin() ? annotation_keywords_db::list_keywords( $USER->id ) : array( );
 		$keywordhash = array( );
 		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
 			$keyword = $keywords[ $i ];
@@ -172,35 +156,16 @@ class annotation_summary_page
 		//  * shared annotations
 		//  * instructor annotations
 		//  * annotations of my work
+		$username = $summary->user ? $summary->user->username : '';
+		$ofusername = $summary->ofuser ? $summary->ofuser->username : '';
 		echo "<form id='annotation-search' method='get' action='summary.php'>\n";
 		echo "<fieldset>\n";
 		echo "<label for='search-of'>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
-		echo "<input type='hidden' name='search-of' id='search-of' value='".$query->searchof."'/>\n";
-		echo "<input type='hidden' name='u' id='u' value='".$query->searchuserid."'/>\n";
-/*		if ( isguest() )
-		{
-			echo "<input type='hidden' name='search-of' id='search-of' value='' />\n";
-			echo get_string( 'search_of_all', ANNOTATION_STRINGS ).' ';
-		}
-		else
-		{
-			echo "<select name='search-of' id='search-of'>\n";
-			echo " <option value=''".(''==$query->searchOf?" selected='selected'":'').'>'.get_string( 'search_of_all', ANNOTATION_STRINGS )."</option>\n";
-			echo " <option value='".htmlspecialchars($USER->username)."'".($query->searchOf==$USER->username?" selected='selected'":'').'>'.get_string( 'search_of_self', ANNOTATION_STRINGS)."</option>\n";
-			echo "</select>\n";
-		}
-		echo "<label for='u'>".get_string( 'prompt_by', ANNOTATION_STRINGS )."</label>\n";
-		echo "<select name='u' id='u'>\n";
-		echo " <option value='' ".(!$query->searchUserId?"selected='selected'":'').'>'.get_string( 'search_by_all', ANNOTATION_STRINGS )."</option>\n";
-		if ( ! isguest() )
-			echo " <option value='".htmlspecialchars($USER->username)."' ".($query->searchUserId==$USER->username?" selected='selected'":'').">".get_string( 'search_by_self', ANNOTATION_STRINGS)."</option>\n";
-//			echo " <option value='*teachers'".('*teachers'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_teachers', ANNOTATION_STRINGS )."</option>\n";
-//			echo " <option value='*students'".('*students'==$searchBy?" selected='selected'":'').'>'.get_string( 'search_by_students', ANNOTATION_STRINGS )."</option>\n";
-		echo "</select>\n";
-		echo "<label for='search-text'>".get_string( 'search_text', ANNOTATION_STRINGS )."</label>\n";
-*/		echo "<input type='text' id='search-text' name='q' value='".s($query->searchquery)."'/>\n";
+		echo "<input type='hidden' name='search-of' id='search-of' value='".s($ofusername)."'/>\n";
+		echo "<input type='hidden' name='u' id='u' value='".s($username)."'/>\n";
+		echo "<input type='text' id='search-text' name='q' value='".s($summary->text)."'/>\n";
 		echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
-		echo "<input type='hidden' name='url' value='".s($query->url)."'/>\n";
+		echo "<input type='hidden' name='url' value='".s($summary->url)."'/>\n";
 		echo "</fieldset>\n";
 		echo "</form>";
 		
@@ -211,7 +176,7 @@ class annotation_summary_page
 		}
 		
 		echo '<p id="query">'.s( get_string( 'prompt_search_desc', ANNOTATION_STRINGS ) )
-			.' '.$query->desc_with_links(null).":</p>\n";
+			.' '.$summary->desc_with_links(null).":</p>\n";
 		
 		$cursection = null;
 		$cursectiontype = null;
@@ -241,8 +206,9 @@ class annotation_summary_page
 						. "<a href='".s( $annotation->section_url )
 						."' title='".s( get_string( 'prompt_section', ANNOTATION_STRINGS, $a ) )."'>" 
 						.s( $annotation->section_name ) . "</a>";
-					if ( $annotation->section_url != $query->url )  {
-						$turl = $query->get_summary_url( $annotation->section_url, $query->searchuserid, $query->searchof, $query->searchquery, $query->exactmatch );
+					if ( $annotation->section_url != $summary->url )  {
+						$tsummary = $summary->for_url( $annotation->section_url );
+						$turl = $tsummary->summary_url( );
 						echo "<a class='zoom' title='".s( get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation ) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 					}
 					echo '</th></tr></thead>'."\n";
@@ -280,16 +246,20 @@ class annotation_summary_page
 					echo "<th rowspan='$nrows'>";
 					$url = MarginaliaHelper::isUrlSafe( $url ) ? $url : '';
 					$a->row_type = $annotation->row_type;
-					$a->author = $annotation->quote_author_name;
+					$a->author = $annotation->quote_author_fullname;
 					echo "<a class='url' href='".s($url)."' title='".s( get_string( 'prompt_row', ANNOTATION_STRINGS, $a) )."'>";
 					echo s( $annotation->quote_title ) . '</a>';
 
-					echo "<br/>by <span class='quote-author'>".s( $annotation->quote_author_name )."</span>\n";
+					echo "<br/>by <span class='quote-author'>".s( $annotation->quote_author_fullname )."</span>\n";
 					
 					// Link to filter only annotations by this user
-					if ( $annotation->quote_author_id != $query->searchof )  {
-						$turl = $query->get_summary_url( $query->url, $query->searchuserid, $annotation->quote_author_id, $query->searchquery, $query->exactmatch );
-						echo "<a class='zoom' title='".s( get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
+					if ( ! $summary->ofuser || $annotation->quote_author_username != $summary->ofuser->username )  {
+						$tuser = get_record( 'user', 'username', $annotation->quote_author_username );
+						if ( $tuser )  {
+							$tsummary = $summary->for_ofuser( $tuser );
+							$turl = $tsummary->summary_url( );
+							echo "<a class='zoom' title='".s( get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
+						}
 					}
 					echo "</th>\n";
 				}
@@ -310,17 +280,17 @@ class annotation_summary_page
 				else
 					p( $annotation->note );
 
-				if ( ! $this->exactmatch && array_key_exists( $annotation->note, $keywordhash ) )  {
-					$turl = $query->get_summary_url( $query->url, $query->searchuserid, $query->searchof, $annotation->note, true );
+				if ( ! $summary->exactmatch && array_key_exists( $annotation->note, $keywordhash ) )  {
+					$tsummary = $summary->for_text( $annotation->note, true );
 					echo "<a class='zoom' title='"
 						.s( get_string( 'zoom_match_hover', ANNOTATION_STRINGS, $annotation) )
-						."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
+						."' href='".s( $tsummary->summary_url( ) )."'>".AN_FILTERICON_HTML."</a>\n";
 				}
 				echo "</td>\n";
 
 				
 				// Show edit controls or the user who created the annotation
-				echo "<td class='user".( isloggedin() && $annotation->userid == $USER->username ? ' isloginuser' : '')."'>\n";
+				echo "<td class='user".( isloggedin() && $annotation->userid == $USER->id ? ' isloginuser' : '')."'>\n";
 
 				// Smartquote button
 				if ( AN_USESMARTQUOTE )
@@ -332,21 +302,12 @@ class annotation_summary_page
 				}
 				
 				// Controls for current user
-				if ( isloggedin() && $annotation->userid == $USER->username )  {
+				if ( isloggedin() && $annotation->userid == $USER->id )  {
 					$AN_SUN_SYMBOL = '&#9675;';
 					$AN_MOON_SYMBOL = '&#9670;';
-					echo "<button class='share-button access-{$annotation->access}' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
-						.('public' == $annotation->access ? $AN_SUN_SYMBOL : $AN_MOON_SYMBOL )."</button>";
-					/* The following code supports additional access modes, but has been disabled
-					 * for now:
-					echo "<select onchange='shareAnnotation(this,$annotation->id)'>\n";
-					echo "<option value='private'".('private'==$annotation->access?"selected='selected'":'').'>'.get_string( 'private', ANNOTATION_STRINGS )."</option>\n";
-					echo "<option value='author'".('author'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author', ANNOTATION_STRINGS )."</option>\n";
-					echo "<option value='teacher'".('teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'teacher', ANNOTATION_STRINGS )."</option>\n";
-					echo "<option value='author teacher'".('author teacher'==$annotation->access?"selected='selected'":'').'>'.get_string( 'author+teacher', ANNOTATION_STRINGS )."</option>\n";
-					echo "<option value='public'".('public'==$annotation->access?"selected='selected'":'').'>'.get_string( 'public', ANNOTATION_STRINGS )."</option>\n";
-					echo "</select>\n";
-					*/
+					$access_str = AN_ACCESS_PUBLIC & $annotation->access_perms ? 'public' : 'private';
+					echo "<button class='share-button access-$access_str' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
+						.($annotation->access_perms & AN_ACCESS_PUBLIC ? $AN_SUN_SYMBOL : $AN_MOON_SYMBOL )."</button>";
 					echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>\n";
 				}
 				
@@ -355,7 +316,7 @@ class annotation_summary_page
 				$hiddenusername = '';
 				$class = 'user-name';
 				
-				if ( isloggedin() && $annotation->userid == $USER->username )  {
+				if ( isloggedin() && $annotation->userid == $USER->id )  {
 					$hiddenusername = "<span class='user-name'>$displayusername</span>\n";
 					$displayusername = s( get_string( 'me', ANNOTATION_STRINGS, null ) );
 					$class = '';
@@ -370,9 +331,13 @@ class annotation_summary_page
 				echo $hiddenusername;
 
 				// Link to filter only annotations by this user
-				if ( $annotation->userid != $query->searchuserid )  {
-					$turl = $query->get_summary_url( $query->url, $annotation->userid, $query->searchof, $query->searchquery, $query->exactmatch );
-					echo "<a class='zoom' title='".s(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s($turl)."'>".AN_FILTERICON_HTML."</a>\n";
+				if ( ! $summary->user || $annotation->userid != $summary->user->username )  {
+					$tuser = get_record( 'user', 'username', $annotation->username );
+					if ( $tuser )  {
+						$tsummary = $summary->for_user( $tuser );
+						$turl = $tsummary->summary_url( );
+						echo "<a class='zoom' title='".s(get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $annotation) )."' href='".s($turl)."'>".AN_FILTERICON_HTML."</a>\n";
+					}
 				}
 				echo "</td>\n";
 				
@@ -404,7 +369,7 @@ class annotation_summary_page
 		// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
 		// if a login is required I won't include the feature.
 		if ( ! ANNOTATION_REQUIRE_USER )  {
-			$turl = $query->get_feed_url( 'atom' );
+			$turl = $summary->get_feed_url( 'atom' );
 			echo "<p class='feed' title='".s( get_string( 'atom_feed', ANNOTATION_STRINGS ) )
 				."'><a href='".s($turl)."'><img border='0' alt='"
 				.s( get_string( 'atom_feed', ANNOTATION_STRINGS ) )."' src='$CFG->wwwroot/pix/i/rss.gif'/>"
@@ -416,7 +381,7 @@ class annotation_summary_page
 		$logurl = $_SERVER[ 'REQUEST_URI' ];
 		$urlparts = parse_url( $logurl );
 		$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
-		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $query->desc(null) );
+		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $summary->desc(null) );
 	}
 	
 	function show_column_headings( $className )
@@ -429,9 +394,9 @@ class annotation_summary_page
 			."</thead>\n";
 	}
 	
-	function get_summary_link( $text, $title, $query, $url, $searchuserid, $searchof, $searchquery, $exactmatch )
+	function get_summary_link( $text, $title, $summary )
 	{
-		$turl = $query->get_summary_url( $url, $searchUserId, $searchof, $searchquery, $exactmatch );
+		$turl = $summary->summary_url( );
 		return '<a href="'.s($turl).'" title="'.s($title).'">'.s( $text ).'</a>';
 	}
 }

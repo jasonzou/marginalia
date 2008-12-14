@@ -19,6 +19,14 @@ define( 'AN_NOTEEDITMODE_PREF', 'annotations.note-edit-mode' );
 define( 'AN_SPLASH_PREF', 'annotations.splash' );
 define( 'SMARTCOPY_PREF', 'smartcopy' );
 
+define( 'AN_DBTABLE', 'marginalia' );
+
+define( 'AN_ACCESS_PRIVATE', 0 );
+define( 'AN_ACCESS_AUTHOR', 0x1 );
+define( 'AN_ACCESS_PUBLIC', 0xffff );
+
+// Object types
+define ( 'AN_OTYPE_POST', 1 );
 
 class annotation_globals
 {
@@ -81,10 +89,19 @@ class annotation_globals
 		$annotation = new Annotation( );
 		
 		$annotation->setAnnotationId( $r->id );
-		$annotation->setUserId( $r->userid );
-		$annotation->setUserName( $r->username );
-		if ( $r->access )
-			$annotation->setAccess( $r->access );
+		
+		if ( $r->username )
+			$annotation->setUserId( $r->username );
+		if ( $r->fullname )
+			$annotation->setUserName( $r->fullname );
+		
+		if ( $r->access_perms )
+		{
+			if ( $r->access_perms & AN_ACCESS_PUBLIC )
+				$annotation->setAccess( 'public' );
+			else
+				$annotation->setAccess( 'private' );
+		}
 		if ( $r->url )
 			$annotation->setUrl( $r->url );
 		if ( $r->note )
@@ -93,10 +110,10 @@ class annotation_globals
 			$annotation->setQuote( $r->quote );
 		if ( $r->quote_title )
 			$annotation->setQuoteTitle( $r->quote_title );
-		if ( $r->quote_author_id )
-			$annotation->setQuoteAuthorId( $r->quote_author_id );
-		if ( $r->quote_author_name )
-			$annotation->setQuoteAuthorName( $r->quote_author_name );
+		if ( $r->quote_author_username )
+			$annotation->setQuoteAuthorId( $r->quote_author_username );
+		if ( $r->quote_author_fullname )
+			$annotation->setQuoteAuthorName( $r->quote_author_fullname );
 		if ( $r->link )
 			$annotation->setLink( $r->link );
 		if ( $r->link_title )
@@ -132,14 +149,24 @@ class annotation_globals
 		$id = $annotation->getAnnotationId( );
 		if ( $id )
 			$record->id = $id;
-		$record->userid = addslashes( $annotation->getUserId( ) );
-		$record->username = addslashes( $annotation->getUserName( ) );
-		$record->access = addslashes( $annotation->getAccess( ) );
+		
+		// Map username to id #
+		$username = $annotation->getUserId( );
+		$user = get_record( 'user', 'username', $username );
+		$record->userid = $user ? $user->id : null;
+
+		$access = $annotation->getAccess( );
+		$record->access_perms = 'public' == $access ? AN_ACCESS_PUBLIC : AN_ACCESS_PRIVATE;
 		$record->url = addslashes( $annotation->getUrl( ) );
 		$record->note = addslashes( $annotation->getNote( ) );
 		$record->quote = addslashes( $annotation->getQuote( ) );
 		$record->quote_title = addslashes( $annotation->getQuoteTitle( ) );
-		$record->quote_author = addslashes( $annotation->getQuoteAuthorId( ) );
+		
+		// Map author username to id #
+		$username = $annotation->getQuoteAuthorId( );
+		$user = get_record( 'user', 'username', $username );
+		$record->quote_author_id = $user ? $user->id : null;
+		
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
 		if ( ! $forupdate )
@@ -164,21 +191,5 @@ class annotation_globals
 		$record->end_word = $xpathEnd->getWords( );
 		$record->end_char = $xpathEnd->getChars( );
 		return $record;
-	}
-
-	function record_to_keyword( $r )
-	{
-		$keyword = new MarginaliaKeyword( );
-		$keyword->name = $r->name;
-		$keyword->description = $r->description;
-		return $keyword;
-	}
-	
-	function keyword_to_record( $keyword )
-	{
-		global $USER;
-		$record->userid = $USER->id;
-		$record->name = $keyword->name;
-		$record->description = $keyword->description;
 	}
 }

@@ -1,10 +1,10 @@
 <?php
 
-class block_annotation extends block_base
+class block_marginalia extends block_base
 {
 	function init( )
 	{
-		$this->title = 'Marginalia'; //get_string('annotation', 'block_annotation');
+		$this->title = 'Marginalia Annotation'; //get_string('annotation', 'block_annotation');
 		$this->version = 2008121000;
 	}
 	
