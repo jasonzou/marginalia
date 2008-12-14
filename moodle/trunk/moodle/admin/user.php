@@ -79,7 +79,7 @@
             if (delete_user($user)) {
             	// Delete annotations here to avoid adding an include to moodlelib.php
             	// (which would then pull the annotation library into everything) 
-            	annotations_delete_user($user->username);
+            	annotations_delete_user($user->id);
                 notify(get_string('deletedactivity', '', fullname($user, true)) );
             } else {
                 notify(get_string('deletednot', '', fullname($user, true)));

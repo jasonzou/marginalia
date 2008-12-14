@@ -201,32 +201,11 @@ class moodle_marginalia
 	 * This is here rather than in the annotation code so that not everything will have to
 	 * include the annotation code.
 	 *
-	 * @param int $username the name of the user (note, the username, *not* the userid!)
+	 * @param int $userid
 	 * @return boolean
 	 */
 	function annotations_delete_user( $userid )
 	{
-		return delete_records( 'annotation', 'userid', $userid );
-	}
-	
-	/**
-	 * Change a user name in the annotations table
-	 * The annotation engine is intended to be independent of Moodle internals, so it uses
-	 * username rather than user ID.  So annotations need to be updated when a user name changes.
-	 *
-	 * @param string $oldname the current name of the user in the annotation table
-	 * @param string $newname the new name of the user in the annotation table
-	 * @return boolean
-	 */
-	function annotations_update_username( $oldname, $newname )
-	{
-		global $CFG, $db;
-		
-		$query = "UPDATE {$CFG->prefix}annotation SET userid='".addslashes($newname)
-			."' WHERE userid='".addslashes($oldname)."'";
-		if ( $db->Execute( $query ) )
-			return true;
-		else
-			return false;
+		return delete_records( AN_DBTABLE, 'id', $userid );
 	}
 }

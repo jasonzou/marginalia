@@ -1,7 +1,7 @@
 create table mdl_annotation (
 	id int primary key auto_increment,
-	userid varchar(255) not null,
-	access varchar(32) null,
+	userid int not null,
+	access_perms int,
 	url varchar(255) not null,
 	start_block varchar(255),
 	start_xpath varchar(255),
@@ -16,13 +16,13 @@ create table mdl_annotation (
 	note varchar(255) null,
 	quote text null,
 	quote_title varchar(255) null,
-	quote_author varchar(255) null,
+	quote_author_id int,
 	action varchar(30) null,
 	link varchar(255) null,
 	link_title varchar(255) null,
-	created datetime not null,	
-	modified timestamp not null,
-	object_type varchar(16) null,
+	created int,	
+	modified int,
+	object_type int,
 	object_id int null
 );
 
