@@ -12,6 +12,8 @@ This release is aimed at stabilizing and refining the Moodle version, though con
 
 The following changes are Moodle-specific:
 
+  * Marginalia is, to the extent possible, a proper Moodle plug-in.  This makes it much easier to install:  Moodle will automatically create Marginalia's database tables, and there are fewer files to place in odd places.  This should also make future upgrades much simpler.
+
   * Smartcopy is gone.  It was a Firefox-specific hack that was not discoverable and seemed to seldom be used.  Instead, we now have Smartquotes.  A "quote" button beneath each forum message allows you to select and quote message content into a reply.  This will start a reply if necessary, or paste into a reply in another window.
 
   * Annotations can also be quoted.  If you wish to reply to someone else's annotation, click the quote button.  Or, you can effectively turn one of your own annotations into a forum post.  We found that users tried to conduct discussions within the annotation margin.  This is intended to redirect discussion back to the medium best suited for it - the forum itself.
@@ -23,5 +25,7 @@ The following changes are Moodle-specific:
   * All users' existing (public) annotations on a forum page can be fixed automatically when an administrator views them.  This can prevent the display problem mentioned above.  This feature allows admin users to make changes to highlight range locations for other users, so it can be switched off for increased security.
 
   * The height of the button in the margin is set correctly, including when annotations are added, deleted, etc.
+
+  * The database schema has been redesigned to be smaller and faster (using Moodle id values instead of the strings used in Marginalia's client/server protocol).
 
   * The Moodle-specific code is being shifted towards Moodle's coding standards.
