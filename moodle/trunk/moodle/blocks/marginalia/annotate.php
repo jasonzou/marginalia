@@ -115,6 +115,9 @@ class moodle_annotation_service extends AnnotationService
 			$this->httpError( 400, 'Bad Request', 'Quote too long' );
 		else
 		{
+			$time = time( );
+			$annotation->setCreated( $time );
+			$annotation->setModified( $time );
 			$record = annotation_globals::annotation_to_record( $annotation );
 			
 			// Figure out the object type and ID from the url
@@ -144,7 +147,8 @@ class moodle_annotation_service extends AnnotationService
 	function doUpdateAnnotation( $annotation )
 	{
 		$urlquerystr = '';
-		$record = annotation_globals::annotation_to_record( $annotation, True );
+		$annotation->setModified( time( ) );
+		$record = annotation_globals::annotation_to_record( $annotation );
 		$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
 		add_to_log( null, 'annotation', 'update', $logurl, "{$annotation->id}" );
 		return update_record( AN_DBTABLE, $record );
@@ -163,7 +167,10 @@ class moodle_annotation_service extends AnnotationService
 		
 		if ( $n )  {
 			// Do the replacements
-			$query = 'UPDATE '.$CFG->prefix.AN_DBTABLE." set note='".addslashes($newnote)."' WHERE $where";
+			$query = 'UPDATE '.$CFG->prefix.AN_DBTABLE
+				." set note='".addslashes($newnote)."',"
+				." modified=".time( )
+				." WHERE $where";
 			execute_sql( $query, false );
 		}
 		header( 'Content-type: text/plain' );

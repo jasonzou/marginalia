@@ -118,8 +118,8 @@ class annotation_globals
 			$annotation->setLink( $r->link );
 		if ( $r->link_title )
 			$annotation->setLinkTitle( $r->link_title );
-		$annotation->setCreated( $r->created );
-		$annotation->setModified( $r->modified );
+		$annotation->setCreated( (int) $r->created );
+		$annotation->setModified( (int) $r->modified );
 		
 		if ( $r->start_block !== null )  {
 			$range = new SequenceRange( );
@@ -144,7 +144,7 @@ class annotation_globals
 		return $annotation;
 	}
 		
-	function annotation_to_record( $annotation, $forupdate=False )
+	function annotation_to_record( $annotation )
 	{
 		$id = $annotation->getAnnotationId( );
 		if ( $id )
@@ -169,8 +169,8 @@ class annotation_globals
 		
 		$record->link = addslashes( $annotation->getLink( ) );
 		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
-		if ( ! $forupdate )
-			$record->created = $annotation->getCreated( );
+		$record->created = $annotation->getCreated( );
+		$record->modified = $annotation->getModified( );
 
 		$sequenceRange = $annotation->getSequenceRange( );
 		$sequenceStart = $sequenceRange->getStart( );
