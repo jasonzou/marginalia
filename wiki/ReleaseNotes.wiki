@@ -1,6 +1,6 @@
-#Release Notes
+#summary Release Notes
 
-= Upcoming Release =
+= December 2008 Release =
 
 The release that I am working on as of December 2008 is aimed at stabilizing and refining the Moodle version, though consideration is being given to the other versions also.  The following changes apply to the Marginalia core libraries:
 
