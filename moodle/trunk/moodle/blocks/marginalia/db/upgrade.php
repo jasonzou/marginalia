@@ -64,36 +64,44 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 			$query = "SELECT a.*, u.id AS uid, qa.id as aid "
 				." FROM {$CFG->prefix}annotation a"
 				." JOIN {$CFG->prefix}user u ON u.username=a.userid"
-				." JOIN {$CFG->prefix}user qa ON qa.username=a.quote_author";
+				." LEFT JOIN {$CFG->prefix}user qa ON qa.username=a.quote_author";
 			$data = get_records_sql( $query );
 			if ( $data )  {
 				foreach ( $data as $r )  {
-					// This method and the range classes are clever enough to handle
+/*					// This method and the range classes are clever enough to handle
 					// ranges in the old format.
-					if ( array_key_exists( 'start_block', $r ) )  {
+					if ( array_key_exists( 'start_block', $r ) && $r->start_block !== null )  {
 						$r->start_block = preg_replace( '/^\//', '', $r->start_block );
 						$r->start_block = preg_replace( '/\//', '\.', $r->start_block );
 					}
-					if ( array_key_exists( 'end_block', $r ) )  {
+					if ( array_key_exists( 'end_block', $r ) && $r->end_block !== null )  {
 						$r->end_block = preg_replace( '/^\//', '', $r->end_block );
 						$r->end_block = preg_replace( '/\//', '\.', $r->end_block );
 					}
-					echo "Record<br/>\n";
+*/
 					$r->username = $r->userid;
 					$r->userid = 0;
 					$r->quote_author_username = $r->quote_author;
+
 					$annotation = annotation_globals::record_to_annotation( $r );
+	
+					// Will handle 'public' or 'private'
 					if ( array_key_exists( 'access', $r) )
 						$annotation->setAccess( $r->access );
+					
 					$record = annotation_globals::annotation_to_record( $annotation );
+					
+					// Make sure start_line and end_line are not null
 					if ( ! array_key_exists( 'start_line', $r ) )
 						$record->start_line = 0;
 					if ( ! array_key_exists( 'end_line', $r ) )
 						$record->end_line = 0;
+
 					$record->userid = $r->uid;
 					$record->quote_author_id = $r->aid;
 					$record->object_type = AN_OTYPE_POST;
 					$record->object_id = $r->object_id;
+
 					$x = insert_record( AN_DBTABLE, $record, true );
 					$result = $result && 0 != $x;
 				}

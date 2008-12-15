@@ -187,20 +187,22 @@ class annotation_globals
 		$sequenceStart = $sequenceRange->getStart( );
 		$sequenceEnd = $sequenceRange->getEnd( );
 		$xpathRange = $annotation->getXPathRange( );
-		$xpathStart = $xpathRange->getStart( );
-		$xpathEnd = $xpathRange->getEnd( );
+		if ( null !== $xpathRange )  {
+			$xpathStart = $xpathRange->getStart( );
+			$xpathEnd = $xpathRange->getEnd( );
+		}
 		
 		$record->start_block = addslashes( $sequenceStart->getPaddedPathStr( ) );
-		$record->start_xpath = addslashes( $xpathStart->getPathStr( ) );
-		$record->start_line = $xpathStart->getLines( );
-		$record->start_word = $xpathStart->getWords( );
-		$record->start_char = $xpathStart->getChars( );
+		$record->start_xpath = null === $xpathRange ? null : addslashes( $xpathStart->getPathStr( ) );
+		$record->start_line = $sequenceStart->getLines( );
+		$record->start_word = $sequenceStart->getWords( );
+		$record->start_char = $sequenceStart->getChars( );
 		
 		$record->end_block = addslashes( $sequenceEnd->getPaddedPathStr( ) );
-		$record->end_xpath = addslashes( $xpathEnd->getPathStr( ) );
-		$record->end_line = $xpathEnd->getLines( );
-		$record->end_word = $xpathEnd->getWords( );
-		$record->end_char = $xpathEnd->getChars( );
+		$record->end_xpath = null === $xpathRange ? null : addslashes( $xpathEnd->getPathStr( ) );
+		$record->end_line = $sequenceEnd->getLines( );
+		$record->end_word = $sequenceEnd->getWords( );
+		$record->end_char = $sequenceEnd->getChars( );
 		return $record;
 	}
 }

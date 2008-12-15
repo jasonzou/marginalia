@@ -86,9 +86,7 @@ MoodleMarginalia.prototype.onload = function( )
 			window.marginalia.showAnnotations( url );
 		
 		// Fix all control margins
-		var postInfo = window.marginalia.listPosts( );
-		for ( var i = 0;  i < postInfo.posts.length;  ++i )
-			this.fixControlMargin( postInfo.posts[ i ] );
+		this.fixAllControlMargins( );
 		
 		Smartquote.enableSmartquote( this.moodleRoot, marginalia.listPosts( ), marginalia.skipContent );
 		
@@ -174,6 +172,13 @@ MoodleMarginalia.prototype.fixControlMargin = function( post )
 	button.style.height = '' + margin.offsetHeight + 'px';
 };
 
+MoodleMarginalia.prototype.fixAllControlMargins = function( )
+{
+	var postInfo = window.marginalia.listPosts( );
+	for ( var i = 0;  i < postInfo.posts.length;  ++i )
+		this.fixControlMargin( postInfo.posts[ i ] );
+}
+
 MoodleMarginalia.prototype.cleanUpPostContent = function( )
 {
 	var f = function( node ) {
@@ -214,7 +219,7 @@ MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
 		marginalia.preferences.setPreference( AN_USER_PREF, userId, null );
 		if ( this.splash && ( marginalia.loginUserId == marginalia.displayUserId || '' == marginalia.displayUserId ) )
 			this.showSplash( );
-		this.fixControlMarginIE();
+		this.fixAllControlMargins( );
 	}
 };
 
