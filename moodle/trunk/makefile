@@ -20,6 +20,7 @@ MARGINALIA_MOODLE_FILES = \
  $(MARGINALIA_MOODLE_DIR)/annotation-styles.php \
  $(MARGINALIA_MOODLE_DIR)/annotation_globals.php \
  $(MARGINALIA_MOODLE_DIR)/annotation_summary_query.php \
+ $(MARGINALIA_MOODLE_DIR)/block_marginalia.php \
  $(MARGINALIA_MOODLE_DIR)/config.php \
  $(MARGINALIA_MOODLE_DIR)/tags.css \
  $(MARGINALIA_MOODLE_DIR)/tags.js \

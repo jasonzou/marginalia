@@ -5,7 +5,7 @@
 
     require_once('../../config.php');
     require_once('lib.php');
-	require_once( '../../local/annotation/config.php' );
+	require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
     require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
     require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
     require_once( ANNOTATION_DIR.'/annotation_globals.php' );
@@ -156,7 +156,7 @@
     $searchform = forum_search_form($course);
 
     // Begin Annotation Code to set $meta
-    $meta = marginalia_header_html( );
+    $meta = moodle_marginalia::header_html( );
     // I'm perverting the meta argument here, but there's no way provided to do this otherwise that I 
     // can see #GEOF#
 
@@ -171,7 +171,7 @@
 
     // refurl is the relative URL to this resource from the server root (i.e., it should start with '/')
     $refurl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
-	echo marginalia_init_html( $refurl );
+	echo moodle_marginalia::init_html( $refurl );
 
 /// Check to see if groups are being used in this forum
 /// If so, make sure the current person is allowed to see this discussion
@@ -258,9 +258,9 @@
 	
 	// Annotation controls (help, user dropdown, link to summary page)
 	echo "</td>\n<td id='annotation-controls'>";
-	show_marginalia_help( 'forum' );
-	show_marginalia_user_dropdown( $refUrl, true );
-	show_marginalia_summary_link( $refUrl, $USER->username );
+	moodle_marginalia::show_help( 'forum' );
+	moodle_marginalia::show_user_dropdown( $refurl, true );
+	echo moodle_marginalia::summary_link_html( $refurl, $USER->username );
     echo "</td></tr></table>";
 
     if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
