@@ -5,14 +5,17 @@ global $CFG;
 require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
 require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/Annotation.php' );
+require_once( ANNOTATION_DIR.'/marginalia-php/MarginaliaHelper.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/SequenceRange.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/XPathRange.php' );
 	
 function xmldb_block_marginalia_upgrade( $oldversion )
 {
+	global $CFG;
+	
 	$result = true;
 	
-	if ( $result && $oldversion < 2008121000 ) {
+	if ( $result && $oldversion < 2008121000 )  {
 		
 		/// Define table annotation to be created
 		$table = new XMLDBTable('marginalia');
@@ -22,7 +25,7 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 	//	$table->addFieldInfo('userid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
 		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 	//	$table->addFieldInfo('access', XMLDB_TYPE_CHAR, '32', null, null, null, null, null, null);
-		$table->addFieldInfo('access_perm', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('access_perms', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 		$table->addFieldInfo('url', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
 		$table->addFieldInfo('start_block', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
 		$table->addFieldInfo('start_xpath', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
@@ -57,29 +60,42 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		$result = $result && create_table($table);
 		
 		// Check for old annotation table and convert its data over
-		if ( $result )
-		{
+		if ( $result )  {
 			$query = "SELECT a.*, u.id AS uid, qa.id as aid "
 				." FROM {$CFG->prefix}annotation a"
 				." JOIN {$CFG->prefix}user u ON u.username=a.userid"
 				." JOIN {$CFG->prefix}user qa ON qa.username=a.quote_author";
-			$data = get_record_sql( $query );
-			if ( $data )
-			{
-				foreach ( $data as $record )
-				{
+			$data = get_records_sql( $query );
+			if ( $data )  {
+				foreach ( $data as $r )  {
 					// This method and the range classes are clever enough to handle
 					// ranges in the old format.
-					if ( $r->access )
+					if ( array_key_exists( 'start_block', $r ) )  {
+						$r->start_block = preg_replace( '/^\//', '', $r->start_block );
+						$r->start_block = preg_replace( '/\//', '\.', $r->start_block );
+					}
+					if ( array_key_exists( 'end_block', $r ) )  {
+						$r->end_block = preg_replace( '/^\//', '', $r->end_block );
+						$r->end_block = preg_replace( '/\//', '\.', $r->end_block );
+					}
+					echo "Record<br/>\n";
+					$r->username = $r->userid;
+					$r->userid = 0;
+					$r->quote_author_username = $r->quote_author;
+					$annotation = annotation_globals::record_to_annotation( $r );
+					if ( array_key_exists( 'access', $r) )
 						$annotation->setAccess( $r->access );
-					$record->userid = 0;
-					$annotation = annotation_globals::record_to_annotation( $record );
 					$record = annotation_globals::annotation_to_record( $annotation );
+					if ( ! array_key_exists( 'start_line', $r ) )
+						$record->start_line = 0;
+					if ( ! array_key_exists( 'end_line', $r ) )
+						$record->end_line = 0;
 					$record->userid = $r->uid;
 					$record->quote_author_id = $r->aid;
 					$record->object_type = AN_OTYPE_POST;
-					$id = insert_record( AN_DBTABLE, $record, true );
-					$result = $result && 0 != $id;
+					$record->object_id = $r->object_id;
+					$x = insert_record( AN_DBTABLE, $record, true );
+					$result = $result && 0 != $x;
 				}
 			}
 		}

@@ -84,6 +84,11 @@ class annotation_globals
 		return "tag:" . annotation_globals::get_host() . ',' . date( 'Y-m-d', annotation_globals::get_install_date() ) . ":annotation";
 	}
 	
+	/**
+	 * Remember: This the Annotation class does not store Moodle user IDs, so
+	 * you must be sure to query for username and quote_author_username if you
+	 * want userid and quoteAuthorId set.
+	 */
 	function record_to_annotation( $r )
 	{
 		$annotation = new Annotation( );
@@ -112,6 +117,8 @@ class annotation_globals
 			$annotation->setQuoteTitle( $r->quote_title );
 		if ( array_key_exists( 'quote_author_username', $r ) )
 			$annotation->setQuoteAuthorId( $r->quote_author_username );
+		elseif ( array_key_exists( 'quote_author', $r ) )	// to support old mdl_annotation table
+			$annotation->setQuoteAuthorId( $r->quote_author );
 		if ( array_key_exists( 'quote_author_fullname', $r ) )
 			$annotation->setQuoteAuthorName( $r->quote_author_fullname );
 		if ( array_key_exists( 'link', $r ) )
@@ -140,8 +147,8 @@ class annotation_globals
 		
 		if ( array_key_exists( 'start_xpath', $r ) && $r->start_xpath !== null )  {
 			$range = new XPathRange( );
-			$range->setStart( new XPathPoint( $r->start_xpath, $r->start_line, $r->start_word, $r->start_char ) );
-			$range->setEnd( new XpathPoint( $r->end_xpath, $r->end_line, $r->end_word, $r->end_char ) );
+			$range->setStart( new XPathPoint( $r->start_xpath, $start_line, $r->start_word, $r->start_char ) );
+			$range->setEnd( new XpathPoint( $r->end_xpath, $end_line, $r->end_word, $r->end_char ) );
 			$annotation->setXPathRange( $range );
 		}
 		

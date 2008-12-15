@@ -94,10 +94,12 @@ class moodle_annotation_service extends AnnotationService
 			  a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char,
 			  a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char,
 			  a.note, a.access_perms, a.quote, a.quote_title, a.quote_author_id,
+			  qu.username as quote_author_username,
 			  a.link, a.link_title, a.action,
 			  a.created, a.modified $range
 			  FROM {$this->tablePrefix}".AN_DBTABLE." a
-			  INNER JOIN {$this->tablePrefix}user u ON u.id=a.userid
+			  JOIN {$this->tablePrefix}user u ON u.id=a.userid
+			  JOIN {$this->tablePrefix}user qu ON qu.id=a.quote_author_id
 			WHERE a.id = $id";
 		$resultset = get_record_sql( $query );
 		if ( $resultset && count( $resultset ) != 0 )  {
