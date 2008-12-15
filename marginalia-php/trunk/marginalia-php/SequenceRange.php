@@ -56,14 +56,14 @@ class SequenceRange
 		// Old block format, e.g. /2 3.1 3.5
 		elseif ( preg_match( '/^\s*(\/[\/0-9]*)\s+(\d+)\.(\d+)\s+(\d+)\.(\d+)\s*$/', $s, $matches ) )
 		{
-			$this->start = new SequencePoint( $matches[1], (int) $matches[2], (int) $matches[3] );
-			$this->end = new SequencePoint( $matches[1], (int) $matches[4], (int) $matches[5] );
+			$this->start = new SequencePoint( $matches[1], 0, (int) $matches[2], (int) $matches[3] );
+			$this->end = new SequencePoint( $matches[1], 0, (int) $matches[4], (int) $matches[5] );
 		}
 		// Old word format, e.g. 7.1 7.5
 		elseif ( preg_match( '/^\s*(\d+)\.(\d+)\s+(\d+)\.(\d+)\s*$/', $s, $matches ) )
 		{
-			$this->start = new SequencePoint( '', (int) $matches[1], (int) $matches[2] );
-			$this->end = new SequencePoint( '', (int) $matches[3], (int) $matches[4] );
+			$this->start = new SequencePoint( '', 0, (int) $matches[1], (int) $matches[2] );
+			$this->end = new SequencePoint( '', 0, (int) $matches[3], (int) $matches[4] );
 		}
 		else
 			$r = false;
@@ -185,7 +185,10 @@ class SequencePoint
 			// The blockStr may be padded with zeros.  Strip them.
 			$this->path = array( );
 			for ( $i = 1;  $i < $n;  ++$i )
-				$this->path[] = (int) $parts[ $i ];		
+			{
+				if ( '' != $parts[ $i ] )
+					$this->path[] = (int) $parts[ $i ];
+			}
 		}
 		
 		// Treat zero as null for lines and words (but 0 is valid for chars)

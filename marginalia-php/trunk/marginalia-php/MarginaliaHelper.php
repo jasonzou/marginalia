@@ -273,7 +273,7 @@ class MarginaliaHelper
 
 			// Make 100% certain that the XPath expression contains no unsafe calls (e.g. to document())
 		$xpathRange = $annotation->getXPathRange( );
-		if ( XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
+		if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 			$s .= "  <ptr:range format='xpath'>".htmlspecialchars($xpathRange->toString())."</ptr:range>\n";
 		
 		$s .= "  <ptr:access>$sAccess</ptr:access>\n"
@@ -478,14 +478,18 @@ class MarginaliaHelper
 		return array_key_exists( $name, $_GET ) ? MarginaliaHelper::unfix_quotes( $_GET[ $name ] ) : $default;
 	}
 	
-	function listBodyParams( )
+	// forceStrip - always strip slashes, regardless of PHP setting (needed for Moodle)
+	function listBodyParams( $forceStrip=false )
 	{
 		$method = $_SERVER[ 'REQUEST_METHOD' ];
 		if ( 'POST' == $method )
 		{
 			$params = array();
 			foreach ( array_keys( $_POST ) as $param )
-				$params[ $param ] = MarginaliaHelper::unfix_quotes( $_POST[ $param ] );
+			{
+				$params[ $param ] = $forceStrip ? stripslashes( $_POST[ $param ] )
+					: MarginaliaHelper::unfix_quotes( $_POST[ $param ] );
+			}
 			return $params;
 		}
 		elseif ( 'PUT' == $method )
