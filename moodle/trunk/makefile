@@ -14,7 +14,7 @@ OUTNAME = marginalia-moodle-$(DATE)
 ZIPDIR = $(OUTDIR)/$(OUTNAME)
 
 MOODLE_DIR = moodle
-MARGINALIA_MOODLE_DIR = $(MOODLE_DIR)/local/annotation
+MARGINALIA_MOODLE_DIR = $(MOODLE_DIR)/blocks/marginalia
 MARGINALIA_MOODLE_FILES = \
  $(MARGINALIA_MOODLE_DIR)/annotate.php \
  $(MARGINALIA_MOODLE_DIR)/annotation-styles.php \
@@ -38,11 +38,11 @@ MARGINALIA_MOODLE_FILES = \
  
 VERSION_FILE = $(MARGINALIA_MOODLE_DIR)/version.php
 
-LANG_FILES = $(MOODLE_DIR)/local/lang/en_utf8/annotation.php
+LANG_FILES = $(MARGINALIA_MOODLE_DIR)/lang/en_utf8/block_marginalia.php
 
 HELP_FILES = \
- $(MOODLE_DIR)/local/lang/en_utf8/help/marginalia/annotate.html \
- $(MOODLE_DIR)/local/lang/en_utif8/help/marginalia/annotation_summary.html
+ $(MARGINALIA_MOODLE_DIR)/lang/en_utf8/help/marginalia/annotate.html \
+ $(MARGINALIA_MOODLE_DIR)/lang/en_utf8/help/marginalia/annotation_summary.html
 
 DB_DIR = $(MARGINALIA_MOODLE_DIR)/db
 DB_FILES = \
@@ -50,8 +50,6 @@ DB_FILES = \
  $(DB_DIR)/upgrade.php
  
 FORUM_FILES = $(MOODLE_DIR)/mod/forum/permalink.php
-
-MOODLEROOT_FILES = $(MOODLE_DIR)/help.php
 
 README_FILES = \
  README.txt \
@@ -80,12 +78,11 @@ zipdir:
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/db
 	mkdir -p $(ZIPDIR)/moodle/mod/forum
 
-zipcontents: zipdir $(ZIPDIR)/moodle19.patch $(ZIPDIR)/moodle18.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES) $(MOODLEROOT_FILES) $(VERSION_FILE) $(DB_FILES)
+zipcontents: zipdir $(ZIPDIR)/moodle19.patch $(ZIPDIR)/moodle18.patch $(UTIL_FILES) $(DOC_FILES) $(README_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES) $(VERSION_FILE) $(DB_FILES)
 	cp $(MARGINALIA_MOODLE_FILES) $(ZIPDIR)/moodle/blocks/marginalia/
 	cp $(MARGINALIA_LIB_FILES) $(ZIPDIR)/moodle/blocks/marginalia/marginalia/
 	cp $(MARGINALIA_LIB_3RDPARTY_FILES) $(ZIPDIR)/moodle/blocks/marginalia/marginalia/3rd-party/
 	cp $(MARGINALIA_PHP_FILES) $(ZIPDIR)/moodle/blocks/marginalia/marginalia-php/
-	cp $(MOODLEROOT_FILES) $(ZIPDIR)/moodle/
 	cp $(LANG_FILES) $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/
 	cp $(HELP_FILES) $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/help/marginalia/
 	cp $(DB_FILES) $(ZIPDIR)/moodle/blocks/marginalia/db/
@@ -94,7 +91,7 @@ zipcontents: zipdir $(ZIPDIR)/moodle19.patch $(ZIPDIR)/moodle18.patch $(UTIL_FIL
 	cp $(DOC_FILES) $(ZIPDIR)/doc/
 	cp $(README_FILES) $(ZIPDIR)
 
-$(VERSION_FILE): zipdir moodle.orig moodle18.orig moodle moodle18 $(UTIL_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES) $(MOODLEROOT_FILES) $(DB_FILES)
+$(VERSION_FILE): zipdir moodle.orig moodle18.orig moodle moodle18 $(UTIL_FILES) $(MARGINALIA_MOODLE_FILES) $(MARGINALIA_LIB_FILES) $(MARGINALIA_LIB_3RDPARTY_FILES) $(MARGINALIA_PHP_FILES) $(FORUM_FILES) $(LANG_FILES) $(HELP_FILES) $(DB_FILES)
 	echo '<?php' >$@
 	echo '    $$version = $(DATE)00;' >>$@
 

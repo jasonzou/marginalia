@@ -1,15 +1,10 @@
-<?php // $Id: post.php,v 1.154.2.7 2008/03/20 06:26:20 nicolasconnault Exp $
+<?php // $Id: post.php,v 1.134.2.14 2008/01/28 03:22:41 moodler Exp $
 
 //  Edit and save a new post to a discussion
 
     require_once('../../config.php');
     require_once('lib.php');
     require_once('post_form.php');
-    require_once('../../blocks/marginalia/config.php');
-    require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
-    require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
-    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
-    require_once( ANNOTATION_DIR.'/lib.php' );
 
     $reply   = optional_param('reply', 0, PARAM_INT);
     $forum   = optional_param('forum', 0, PARAM_INT);
@@ -18,9 +13,6 @@
     $prune   = optional_param('prune', 0, PARAM_INT);
     $name    = optional_param('name', '', PARAM_CLEAN);
     $confirm = optional_param('confirm', 0, PARAM_INT);
-	
-	// #geof#
-	$messageinit = optional_param('message',0,PARAM_CLEANHTML);
 
 
     //these page_params will be passed as hidden variables later in the form.
@@ -60,13 +52,22 @@
             $modcontext = get_context_instance(CONTEXT_MODULE, $cm->id);
         }
 
+        $strforums = get_string('modulenameplural', 'forum');
         if (!get_referer()) {   // No referer - probably coming in via email  See MDL-9052
             require_login();
         }
-
-        $navigation = build_navigation('', $cm);
-        print_header($course->shortname, $course->fullname, $navigation, '' , '', true, "", navmenu($course, $cm));
-
+        if ($course->id != SITEID) {
+            print_header($course->shortname, $course->fullname,
+                 "<a href=\"../../course/view.php?id=$course->id\">$course->shortname</a> ->
+                  <a href=\"../forum/index.php?id=$course->id\">$strforums</a> ->
+                  <a href=\"view.php?f=$forum->id\">".format_string($forum->name, true)."</a>",
+                  '', '', true, "", navmenu($course, $cm));
+        } else {
+            print_header($course->shortname, $course->fullname,
+                 "<a href=\"../forum/index.php?id=$course->id\">$strforums</a> ->
+                  <a href=\"view.php?f=$forum->id\">".format_string($forum->name)."</a>",
+                  '', '', true, "", navmenu($course, $cm));
+        }
         notice_yesno(get_string('noguestpost', 'forum').'<br /><br />'.get_string('liketologin'),
                      $wwwroot, get_referer(false));
         print_footer($course);
@@ -82,13 +83,8 @@
         if (! $course = get_record("course", "id", $forum->course)) {
             error("The course number was incorrect ($forum->course)");
         }
-        if (! $cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
-            error("Incorrect course module");
-        }
-
         $coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
-
-        if (! forum_user_can_post_discussion($forum, -1, -1, $cm)) {
+        if (! forum_user_can_post_discussion($forum)) {
             if (has_capability('moodle/legacy:guest', $coursecontext, NULL, false)) {  // User is a guest here!
                 $SESSION->wantsurl = $FULLME;
                 $SESSION->enrolcancel = $_SERVER['HTTP_REFERER'];
@@ -98,8 +94,10 @@
             }
         }
 
-        if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
-            error(get_string("activityiscurrentlyhidden"));
+        if ($cm = get_coursemodule_from_instance("forum", $forum->id, $course->id)) {
+            if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
+                error(get_string("activityiscurrentlyhidden"));
+            }
         }
 
         if (isset($_SERVER["HTTP_REFERER"])) {
@@ -120,9 +118,9 @@
         $post->userid     = $USER->id;
         $post->message    = '';
 
-        if ($groupmode = groups_get_activity_groupmode($cm)) {
-            $post->groupid = groups_get_activity_group($cm);
-            if (empty($post->groupid)) {
+        if ($groupmode = groupmode($course, $cm)) {
+            $post->groupid = get_and_set_current_group($course, $groupmode);
+            if ($post->groupid == 0) {
                 $post->groupid = -1; //TODO: why -1??
             }
         } else {
@@ -151,7 +149,7 @@
         $coursecontext = get_context_instance(CONTEXT_COURSE, $course->id);
         $modcontext    = get_context_instance(CONTEXT_MODULE, $cm->id);
 
-        if (! forum_user_can_post($forum, null, $cm, $modcontext)) {
+        if (! forum_user_can_post($forum)) {
             if (has_capability('moodle/legacy:guest', $coursecontext, NULL, false)) {  // User is a guest here!
                 $SESSION->wantsurl = $FULLME;
                 $SESSION->enrolcancel = $_SERVER['HTTP_REFERER'];
@@ -164,14 +162,15 @@
         if (groupmode($course, $cm)) {   // Make sure user can post here
             $mygroupid = mygroupid($course->id);
             if (!((empty($mygroupid) and $discussion->groupid == -1)
-                    || (groups_is_member($discussion->groupid)/*$mygroupid == $discussion->groupid*/)
-                    || has_capability('moodle/site:accessallgroups', $modcontext, NULL, false) )) {
+					|| (ismember($discussion->groupid)/*$mygroupid == $discussion->groupid*/)
+					|| has_capability('moodle/site:accessallgroups', $modcontext, NULL, false) )) {
                 print_error('nopostdiscussion', 'forum');
             }
         }
-        if (!$cm->visible and !has_capability('moodle/course:viewhiddenactivities', $coursecontext)) {
+        if (!$cm->visible and !has_capability('moodle/course:manageactivities', $coursecontext)) {
             error(get_string("activityiscurrentlyhidden"));
         }
+
 
         // Load up the $post variable.
 
@@ -182,7 +181,7 @@
         $post->parent      = $parent->id;
         $post->subject     = $parent->subject;
         $post->userid      = $USER->id;
-        $post->message     = $messageinit ? $messageinit : '';	// #geof#
+        $post->message     = '';
 
         $strre = get_string('re', 'forum');
         if (!(substr($post->subject, 0, strlen($strre)) == $strre)) {
@@ -324,22 +323,21 @@
                              "post.php?delete=$delete&amp;confirm=$delete",
                              $CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'#p'.$post->id);
 
-                forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+                forum_print_post($post, $course->id, $ownpost=false, $reply=false, $link=false);
                 if (empty($post->edit)) {
                     if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
                         $user_read_array = forum_tp_get_discussion_read_records($USER->id, $discussion->id);
                     } else {
                         $user_read_array = array();
                     }
-                    $posts = forum_get_all_discussion_posts($discussion->id, "created ASC");
-                    forum_print_posts_nested($course, $cm, $forum, $discussion, $post, false, false, $user_read_array, $posts);
+                    forum_print_posts_nested($post->id, $course->id, false, false, $user_read_array, $forum->id);
                 }
             } else {
                 print_header();
                 notice_yesno(get_string("deletesure", "forum", $replycount),
                              "post.php?delete=$delete&amp;confirm=$delete",
                              $CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'#p'.$post->id);
-                forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+                forum_print_post($post, $forum->course, $ownpost=false, $reply=false, $link=false);
             }
 
         }
@@ -414,19 +412,19 @@
         } else { // User just asked to prune something
 
             $course = get_record('course', 'id', $forum->course);
-
-            $navlinks = array();
-            $navlinks[] = array('name' => format_string($post->subject, true), 'link' => "discuss.php?d=$discussion->id", 'type' => 'title');
-            $navlinks[] = array('name' => get_string("prune", "forum"), 'link' => '', 'type' => 'title');
-            $navigation = build_navigation($navlinks, $cm);
-            print_header_simple(format_string($discussion->name).": ".format_string($post->subject), "", $navigation, '', "", true, "", navmenu($course, $cm));
+            $strforums = get_string("modulenameplural", "forum");
+            print_header_simple(format_string($discussion->name).": ".format_string($post->subject), "",
+                         "<a href=\"../forum/index.php?id=$course->id\">$strforums</a> ->
+                          <a href=\"view.php?f=$forum->id\">".format_string($forum->name, true)."</a> ->
+                          <a href=\"discuss.php?d=$discussion->id\">".format_string($post->subject, true)."</a> -> ".
+                          get_string("prune", "forum"), '', "", true, "", navmenu($course, $cm));
 
             print_heading(get_string('pruneheading', 'forum'));
             echo '<center>';
 
             include('prune.html');
 
-            forum_print_post($post, $discussion, $forum, $cm, $course, false, false, false);
+            forum_print_post($post, $forum->course, $ownpost=false, $reply=false, $link=false);
             echo '</center>';
         }
         print_footer($course);
@@ -459,12 +457,6 @@
             $errordestination = $SESSION->fromurl;
         }
 
-		// Strip out any annotation class names.
-		$expr = '/(<[^>]+\s)class=[\\\\]?[\'\"][^>\'\"]*\bannotation\b[^>\'\"]*[\\\\]?[\'\"]/';
-		$post->message = preg_replace( $expr, '$1', $post->message );
-		// It would be good to also strip out annotation highlighting, but that's tricky.
-		// #/geof#
-
         // TODO add attachment processing
         //$fromform->attachment = isset($_FILES['attachment']) ? $_FILES['attachment'] : NULL;
 
@@ -491,12 +483,22 @@
                 error("You can not update this post");
             }
 
-            $updatepost = $fromform; //realpost
-            $updatepost->forum = $forum->id;
+            if ($forum->type == 'news' && !$fromform->parent) {
+                $updatediscussion = new object;
+                $updatediscussion->id = $fromform->discussion;
+                $updatediscussion->timestart = $fromform->timestart;
+                $updatediscussion->timeend = $fromform->timeend;
+                if (!update_record('forum_discussions', $updatediscussion)) {
+                    error(get_string("couldnotupdate", "forum"), $errordestination);
+                }
+            }
+
+            $updatepost=$fromform; //realpost
+            $updatepost->forum=$forum->id;
             if (!forum_update_post($updatepost, $message)) {
                 error(get_string("couldnotupdate", "forum"), $errordestination);
             }
-
+            
             // MDL-11818
             if (($forum->type == 'single') && ($updatepost->parent == '0')){ // updating first post of single discussion type -> updating forum intro
                 $forum->intro = $updatepost->message;
@@ -541,7 +543,7 @@
                 if (!empty($message)) { // if we're printing stuff about the file upload
                     $timemessage = 4;
                 }
-
+                
                 if ($subscribemessage = forum_post_subscription($fromform)) {
                     $timemessage = 4;
                 }
@@ -550,8 +552,7 @@
                     $message .= get_string("postmailnow", "forum");
                     $timemessage = 4;
                 } else {
-                    $message .= '<p>'.get_string("postaddedsuccess", "forum") . '</p>';
-                    $message .= '<p>'.get_string("postaddedtimeleft", "forum", format_time($CFG->maxeditingtime)) . '</p>';
+                    $message .= '<br />'.get_string("postadded", "forum", format_time($CFG->maxeditingtime));
                 }
 
                 if ($forum->type == 'single') {
@@ -595,14 +596,13 @@
                 if (!empty($message)) { // if we're printing stuff about the file upload
                     $timemessage = 4;
                 }
-
+                
                 if ($fromform->mailnow) {
                     $message .= get_string("postmailnow", "forum");
                     $timemessage = 4;
                 } else {
-                    $message .= '<p>'.get_string("postaddedsuccess", "forum") . '</p>';
-                    $message .= '<p>'.get_string("postaddedtimeleft", "forum", format_time($CFG->maxeditingtime)) . '</p>';
-                }
+                    $message .= '<br />'.get_string("postadded", "forum", format_time($CFG->maxeditingtime));
+                }    
 
                 if ($subscribemessage = forum_post_subscription($discussion)) {
                     $timemessage = 4;
@@ -641,9 +641,23 @@
                                                        get_string("addanewdiscussion", "forum");
     }
 
+
+
+    if ($post->parent) {
+        $navtail = ' -> <a href="discuss.php?d='.$discussion->id.'">'.format_string($toppost->subject, true).'</a> -> '.
+                    get_string('editing', 'forum');
+    } else {
+        $navtail = ' -> '.format_string($toppost->subject);
+    }
+
     if (empty($post->edit)) {
         $post->edit = '';
     }
+
+    $strforums = get_string("modulenameplural", "forum");
+
+
+    $navmiddle = "<a href=\"../forum/index.php?id=$course->id\">$strforums</a> -> <a href=\"view.php?f=$forum->id\">".format_string($forum->name, true).'</a> ';
 
     if (empty($discussion->name)) {
         if (empty($discussion)) {
@@ -656,6 +670,7 @@
         // not show the discussion name (same as forum name in this case) in
         // the breadcrumbs.
         $strdiscussionname = '';
+        $navtail = '';
     } else {
         // Show the discussion name in the breadcrumbs.
         $strdiscussionname = format_string($discussion->name).':';
@@ -663,39 +678,24 @@
 
     $forcefocus = empty($reply) ? NULL : 'message';
 
-    // The Javascript is required for smartquotes to work.  #geof#
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/log.js'></script>\n"
-    	."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/3rd-party.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/domutil.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/ranges.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/post-micro.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript'>\n"
-		."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwroot."'); } );\n"
-		."</script>\n";
-	// It is incredibly inefficient to use the CookieBus to send this quote.  However... avoiding that means finding
-	// the editor object, which has been given a random name by the library.  *That* would mean heavier modification
-	// to other Moodle code, which would make Marginalia harder to integrate and maintain.  So.  This is it.
+    if ($course->id != SITEID) {
+        print_header("$course->shortname: $strdiscussionname ".
+                      format_string($toppost->subject), $course->fullname,
+                     "<a href=\"../../course/view.php?id=$course->id\">$course->shortname</a> ->
+                      $navmiddle $navtail", $mform_post->focus($forcefocus), "", true, "", navmenu($course, $cm));
 
-	$navlinks = array();
-    if ($post->parent) {
-        $navlinks[] = array('name' => format_string($toppost->subject, true), 'link' => "discuss.php?d=$discussion->id", 'type' => 'title');
-        $navlinks[] = array('name' => get_string('editing', 'forum'), 'link' => '', 'type' => 'title');
     } else {
-        $navlinks[] = array('name' => format_string($toppost->subject), 'link' => '', 'type' => 'title');
-    }
-    $navigation = build_navigation($navlinks, $cm);
+        print_header("$course->shortname: $strdiscussionname ".
+                      format_string($toppost->subject), $course->fullname,
+                     "$navmiddle $navtail", $mform_post->focus($forcefocus), "", true, "", navmenu($course, $cm));
 
-    print_header("$course->shortname: $strdiscussionname ".
-                  format_string($toppost->subject), $course->fullname,
-                  $navigation, $mform_post->focus($forcefocus), $meta, true, "", navmenu($course, $cm));
+    }
 
 // checkup
-    if (!empty($parent) && !forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
+    if (!empty($parent) && !forum_user_can_see_post($forum, $discussion, $post)) {
         error("You cannot reply to this post");
     }
-    if (empty($parent) && empty($edit) && !forum_user_can_post_discussion($forum, -1, -1, $cm, $modcontext)) {
+    if (empty($parent) && empty($edit) && !forum_user_can_post_discussion($forum)) {
         error("You cannot start a new discussion in this forum");
     }
 
@@ -709,11 +709,7 @@
     forum_check_throttling($forum);
 
     if (!empty($parent)) {
-        if (! $discussion = get_record('forum_discussions', 'id', $parent->discussion)) {
-            error('This post is not part of a discussion!');
-        }
-
-        forum_print_post($parent, $discussion, $forum, $cm, $course, false, false, false);
+        forum_print_post($parent, $course->id, $ownpost=false, $reply=false, $link=false);
         if (empty($post->edit)) {
             if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
                 $user_read_array = forum_tp_get_discussion_read_records($USER->id, $discussion->id);
@@ -721,8 +717,7 @@
                 $user_read_array = array();
             }
             if ($forum->type != 'qanda' || forum_user_can_see_discussion($forum, $discussion, $modcontext)) {
-                $posts = forum_get_all_discussion_posts($discussion->id, "created ASC");
-                forum_print_posts_threaded($course, $cm, $forum, $discussion, $parent, 0, false, false, $user_read_array, $posts);
+                forum_print_posts_threaded($parent->id, $course->id, 0, false, false, $user_read_array, $discussion->forum, $modcontext);
             }
         }
         $heading = get_string("yourreply", "forum");
@@ -771,7 +766,7 @@
                                         'format'=>$post->format):
                                     array())+
 
-                                (isset($discussion->timestart)?array(
+                                (isset($dicussion->timestart)?array(
                                         'timestart'=>$discussion->timestart):
                                     array())+
 

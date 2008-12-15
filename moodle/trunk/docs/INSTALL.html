@@ -43,7 +43,10 @@ the install.</p>
 
 <h3>1. Patch Moodle</h3>
 
-<p>The patch file will update existing files in your moodle installation.  There
+<p>The patch file will update existing files in your Moodle installation.  You
+should do this from a clean Moodle install.  If you previously had an older
+version of Marginalia installed, you will need to restore the Moodle files
+to their unpatched state before going ahead.  There
 are two versions of the patch:  one for Moodle 1.8, another for Moodle 1.9. They
 are named moodle18.patch and moodle19.patch respectively.  To apply the patch to
 a Moodle 1.9 installation, <code>cd</code> to your <kbd>moodle</kbd> directory 
@@ -92,8 +95,8 @@ your moodle directory may be named differently):</p>
 
 <pre>
 moodle/
-  local/
-    annotation/
+  blocks/
+    marginalia/
       annotate.php
       ...
       marginalia/
@@ -109,39 +112,44 @@ moodle/
         annotation.php
         help/
           annotate.html
+          ...
   mod/
     forum/
       permalink.php
-  ...
 </pre>
 
 <p>Make sure mod/forum/permalink.php is installed;  otherwise, links from the
 summary page back to individual forum posts may not work.</p>
  
   
-<h3>3. Update the Database</h3>
+<h3>3. Install the Database</h3>
 
-<p>You will need to create the annotation table in your Moodle database.  Moodle
-has a mechanism for doing this automatically.  All you need to do is log in to
-Moodle as an administrator and click on the <kbd>Notifications</kbd> link in
-the <kbd>Site Administration</kbd> sidebar.  That should update the database
-correctly.  If there is a problem follow the "Manual Database Update" instructions
-below.</p>
+<p>Log in to Moodle as an administrator visit the <kbd>Notifications</kbd> link
+in the <kbd>Site Administration</kbd> sidebar.  Moodle will then
+automatically create the necessary database table.</p>
 
-<h4>3.1 Manual Database Update</h4>
+<h4>Existing Users of Marginalia</h4>
 
-<p>You may need to update the database manually.  There are two possible reasons
-for this:  1) you already have a Marginalia installation from before December 2008,
-or 2) the automatic update failed for some reason.</p>
+<p>If you already have an older version of Marginalia installed (older than
+December 2008), you will need to take an additional step to make your existing 
+annotations work with this version of the software.</p>
 
-<p>The second case is the simplest.  Simply execute the table creation commands
-in <code>util/tables.sql</code>.  You may need to change the name of the
-table to from <code>mdl_annotation</code> to conform to your Moodle configuration.</p>
+<p>After creating the database, as described above (by clicking on
+<kbd>Notifications</kbd>), you must log into MySQL and execute the following
+command:</p>
 
-<p>If you already have an old Moodle database, you will need to update it to
-match the new specification.  See the "Updating from Previous Marginalia
-Releases" section below.</p>
+<pre>
+<code>
+update mdl_block set version=2008101800 where name='marginalia';
+</code>
+</pre>
 
+<p>Then, go back to Moodle and click on the <kbd>Notifications</kbd> link
+a second time.  Marginalia should convert your existing annotations so that they
+will work with the new software.  (As of December 2008, Marginalia uses a new
+table in the database so your old annotation table will not be touched.  In a
+pinch, you should be able to revert to an older Marginalia release without
+having to restore the database.)</p>
 
 <h3>4. Modify Marginalia Security Settings</h3>
 
@@ -219,113 +227,11 @@ reload the page:  your annotations should still be there.</p>
 
 <h2>Upgrading from Previous Marginalia Releases</h2>
 
-<p>In most cases, you can upgrade by simply replacing the 
-<code>local/annotation</code> directory in your Moodle installation with the version included
-in the new release of Marginalia for Moodle.  To determine whether this will work for
-you, check whether your existing installation is older than any of the following dates
-(in newer releases of Marginalia you can discover the date of the existing installation
-by checking the <code>version.php</code> file in the <code>local/annotation</code> 
-directory).  Note that if you are upgrading from an older version you may need to 
-perform more than one of these steps:</p>
-
-<ul>
-<li><strong>20080-12</strong>:  The file structure has changed.  You no longer need
-to add anything under <kbd>moodle/lang</kbd>.  The database structure has changed,
-however, and you will need to update the database, as described below.</li>
-<li><strong>2007-11-05</strong>: If your existing version is older than this, you will also need to update
-files outside the <code>annotation</code> directory (e.g. in <code>lang</code>).  In 
-addition, you should check the settings in <code>annotation/config.php</code>.</li>
-<li><strong>2007-10-16</strong>: This version introduced per-user tags.  If you use
-this feature, you will need to create the <code>mdl_annotation_keywords</code> table
-in the database.</li>
-<li><strong>2007-08-16</strong>: If your existing version is older than this, you will need to reapply
-<code>moodle.patch</code>.  You must apply this patch to fresh a fresh copy of the Moodle
-files - not one that has been previously patched for Marginalia.</li>
-<li><strong>2007-08-06</strong>:  If your existing version is older than this, you must update the
-<code>mdl_annotation</code> table in the database.  See instructions below.</li>
-<li><strong>2006-01-07</strong>:  If your existing version is older than this, you must update the
-<code>mdl_annotation</code> table in the database.  See instructions below.</li>
-</ul>
-
-<p>It is conceivable that I will forget to update this list on occasion.  If you run
-into trouble when simply relpacing the <code>annotation</code> directory, it's worth 
-contacting me or trying a more thorough reinstall.  I expect it will always be safe
-to simply replace the <code>annotation</code> directory even if more updates are
-required, but as always I recommend
-making back-ups of your Moodle directory and database just to be safe.</p>
-
-<h3>Upgrading to Release 2006-01-07</h3>
-
-<p>If you are updating from a release of Marginalia (annotation for Moodle)
-prior to the 2006-01-07 release, you will need to update your database.  Two
-columns have since been added to the database schema:
-<code>object_id int</code> and <code>object_type varchar(16)</code>.  These make the
-queries faster and simpler.  The following SQL code will add the columns and set
-their contents correctly (you may need to change the table name from 
-mdl_annotation):</p>
-
-<pre>
-<code>
-alter table mdl_annotation add column object_id int null;
-alter table mdl_annotation add column object_type varchar(16) null;
-update mdl_annotation set object_type='post';
-update mdl_annotation set object_id=substring(url,locate('p=',url)+2);
-</code>
-</pre>
-
-
-<h3>Upgrading to Release 2007-08-06</h3>
-
-<p>If you are updating from a release of Marginalia (annotation for Moodle)
-prior to the 2007-08-06 release, you will need to update your database.  Several
-columns have been added to the database in order to support new features and
-increase performance.  The following SQL code will add the columns and set
-their contents correctly (you may need to change the table name from 
-mdl_annotation):</p>
-
-<pre>
-<code>
-alter table mdl_annotation add constraint range null;
-alter table mdl_annotation add column start_block varchar(255) not null;
-alter table mdl_annotation add column start_xpath varchar(255) not null;
-alter table mdl_annotation add column start_word int not null;
-alter table mdl_annotation add column start_char int not null;
-alter table mdl_annotation add column end_block varchar(255) not null;
-alter table mdl_annotation add column end_xpath varchar(255) not null;
-alter table mdl_annotation add column end_word int not null;
-alter table mdl_annotation add column end_char int not null;
-alter table mdl_annotation add column action varchar(30) null;
-alter table mdl_annotation add column link varchar(255) null;
-alter table_mdl_annotation add column link_title vachar(255) null;
-</code>
-</pre>
-
-
-<h3>Upgrading to Release 2008-12-xx</h3>
-<p>As of December 2008, the <code>start_line</code>
-and <code>end_line</code> columns are new.  You can add them in MySQL with the
-following command (remember to use the appropriate table prefix for your
-Moodle installation):</p>
-
-<pre>
-<code>
-    alter table mdl_annotation add column start_line int not null;
-	alter table mdl_annotation add column end_line int not null;
-</code>
-</pre>
-
-<p>In future, Marginalia will aim to use Moodle's built-in database update
-facility.  But if you have a <code>range</code> column from an older release of
-Marginalia, you will need to convert its data now - otherwise Marginalia may 
-simply delete the column.  This means populating the <code>start_</code> and
-<code>end_</code> <code>block</code>, <code>word</code>, and <code>char</code>
-fields appropriately (Marginalia should then be able to update 
-<code>xpath</code> and <code>line</code> automatically when you view your
-annotations).  The old formats are one of "/block/block word.char word.char" or 
-"word.char word.char", so the update is simple but I simply haven't implemented
-code to do it yet.  If this is you (I'm not sure it really applies to anyone
-anymore), please contact me.</p>
-
+<p>When upgrading from a pre-December 2008 release you will always need to start
+with a clean Moodle install, not with files previously patched for older versions
+of Marginalia.  For future releases of Marginalia you will likely not need to
+change these files.  I will note here when a version change makes that
+necessary.
 
 <h2>Installation Problems</h2>
 
@@ -344,6 +250,10 @@ explicit errors reported by Firebug) is the URL of the GET request sent to
 annotation/annotate.php with the parameter "format=atom" when a page with 
 annotations is first loaded.  Looking at the server response often immediately 
 reveals the problem (assuming PHP error reporting is on).</p>
+
+<p>The upgrade code for older databases is less heavily used and tested than
+other parts of Marginalia.  If you have any difficulty with it, be sure to
+contact me.</p>
 
 <h2>Known Issues</h2>
 
