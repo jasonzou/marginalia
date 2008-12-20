@@ -29,6 +29,10 @@ LocalizedAnnotationStrings = {
 	
 	'delete annotation link button' : 'Remove this link.',
 	
+	'annotation expand edit button' : 'Click to display margin note editor',
+	
+	'annotation collapse edit button' : 'Click to display margin note drop-down list',
+	
 	
 	
 	'action annotate button' : 'Annotate...',

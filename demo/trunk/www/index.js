@@ -23,7 +23,11 @@ function demoOnLoad( userid, queryUrl, serviceRoot, uiStyle )
 //	initLogging( );
 	window.marginaliaUiStyle = uiStyle;
 	
-	var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', { } );
+	// Uncomment RestAnnotationService if you have set up a database, or
+	// StaticAnnotationService for a static demo.
+	// var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', { } );
+	var annotationService = new StaticAnnotationService(serviceRoot, 'example-annotations.xml' );
+	
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords.txt');
 	keywordService.init( );
 	var preferences = new Preferences( new StaticPreferenceService( ) );

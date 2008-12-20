@@ -126,19 +126,11 @@ the entrylink class). -->
 				but for this demo I have not connected up a database:  if you reload this page,
 				your changes will disappear.</p>
 				
-				<p>This version of Marginalia only works in Firefox, as I have not yet updated
-				Internet Explorer support.  Other browsers may
-				display the annotations, but as far as I know you cannot create them with
-				other browsers (this may change as W3C standards are more widely adopted).
-				Note that previous versions of this demo would cause IE to crash;  this has long
+				<p>This version of Marginalia works on Firefox, Internet Explorer 7,
+				and Safari.  Other browsers will probably be able to display annotations,
+				and may (depending on their support for standards) be able to create
+				them.  Note that long ago a version of this demo would cause IE to crash;  this has long
 				been fixed, nonetheless use of this page is <a href="../LICENSE.txt">at your own risk</a>.</p>
-				
-				<p>In addition to annotation, Firefox users will be able to try smart copy.
-				Select some text, then copy it somewhere (e.g. into an email message, a word
-				processor document, or the text box at the bottom of this page).  The copied
-				text will be prefixed by information about the source of the copy.  This is
-				intended as a feature for discussion forums, so that users can more easily refer
-				to other messages when they quote them.</p>
 			</div>
 			
 			<!-- The metadata class is something I added for styling.  It isn't used by 
@@ -246,31 +238,6 @@ the entrylink class). -->
 					</tbody>
 				</table>
 				
-				<h4>Smart Copy</h4>
-				
-				<p>Smart copy is a hack which allows copy-paste operations to include additional
-				context information, such as the title, author, and date of the post from which
-				the copy was made.  Here's what you can try:</p>
-				
-				<ol>
-					<li>Select some text in the body of one of the messages above by
-					clicking and dragging with the mouse.  The selection 
-					must begin and end within the message body.</li>
-					
-					<li>Copy the selected text as you normally would (e.g. with <kbd>Ctrl-C</kbd>
-					or the <kbd>Copy</kbd> option in your browser's <kbd>Edit</kbd> menu).</li>
-					
-					<li>Paste the text into the text area below.  If you're
-					using Firefox, you will see the additional context information.</li>
-					
-					<li>Now try copying into a word processor or new email message.  This time,
-					the title of the source post will be a link.</li>
-					
-					<li>Finally, there's a bug:  try copying italicized text, such as the word
-					"faculty" in the second mesasge.  The context information will also be
-					italicized.  Sorry, I did say it was a hack.</li>
-				</ol>
-			
 			</div>
 			
 			<p class="metadata">

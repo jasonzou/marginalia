@@ -33,13 +33,22 @@ function StaticAnnotationService( serviceUrl, filename )
 	return this;
 }
 
+/**
+ * Fetch a list of annotated blocks
+ */
+StaticAnnotationService.prototype.listBlocks = function( url, f )
+{
+	if ( f )
+		f( null );
+}
+
 /*
  * Fetch a list of annotations from the server
  */
-StaticAnnotationService.prototype.listAnnotations = function ( marginalia, url, point, f )
+StaticAnnotationService.prototype.listAnnotations = function ( url, userid, block, f )
 {
 	var serviceUrl = this.serviceUrl + '/' + this.filename;
-	var xmlhttp = createAjaxRequest( );
+	var xmlhttp = domutil.createAjaxRequest( );
 	xmlhttp.open( 'GET', serviceUrl );
 	xmlhttp.onreadystatechange = function( ) {
 		if ( 4 == xmlhttp.readyState ) {
@@ -62,7 +71,7 @@ StaticAnnotationService.prototype.listAnnotations = function ( marginalia, url, 
 /*
  * Create an annotation on the server
  */
-StaticAnnotationService.prototype.createAnnotation = function( marginalia, annotation, f )
+StaticAnnotationService.prototype.createAnnotation = function( annotation, f )
 {
 	this.current_id += 1;
 	if ( null != f )
@@ -72,7 +81,7 @@ StaticAnnotationService.prototype.createAnnotation = function( marginalia, annot
 /*
  * Update an annotation on the server
  */
-StaticAnnotationService.prototype.updateAnnotation = function( marginalia, annotation, f )
+StaticAnnotationService.prototype.updateAnnotation = function( annotation, f )
 {
 	if ( null != f )
 		f( null );
@@ -81,7 +90,7 @@ StaticAnnotationService.prototype.updateAnnotation = function( marginalia, annot
 /*
  * Delete an annotation on the server
  */
-StaticAnnotationService.prototype.deleteAnnotation = function( marginalia, annotationId, f )
+StaticAnnotationService.prototype.deleteAnnotation = function( annotationId, f )
 {
 	if ( null != f )
 		f( null );

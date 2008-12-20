@@ -1,117 +1,151 @@
 <?xml version="1.0" encoding="utf-8"?>
-<feed xmlns:ptr='http://www.geof.net/code/annotation/' xmlns='http://www.w3.org/2005/Atom' ptr:annotation-version='0.3'>
- <link rel='self' type='text/html' href="/~geof/annotation/www/annotate"/>
- <updated>20070121T2318-0800</updated>
- <title>Annotations</title> <id>tag:www.geof.net,2005-07-20:annotation</id>
+<feed xmlns:ptr='http://www.geof.net/code/annotation/' xmlns='http://www.w3.org/2005/Atom' ptr:annotation-version='0.7'>
+ <link rel='self' type='text/html' href="/~geof/marginalia/demo/www/annotate.php?url=http%3A%2F%2F192.168.1.138%2F%7Egeof%2Fmarginalia%2Fdemo%2Fwww%2F%23%2A&amp;user=anonymous&amp;format=atom"/>
+ <updated>20081219T1629-0800</updated>
+ <title>Annotations</title> <id>tag:192.168.1.138,1970-01-01:annotation</id>
  <entry>
-  <ptr:range>/2/15.0:/2/17.7</ptr:range>
+  <ptr:range format='sequence'>2/1.8.0;2/1.10.1</ptr:range>
 
+  <ptr:range format='xpath'>html:p[2]/line(1)/word(8)/char(0);html:p[2]/line(1)/word(10)/char(1)</ptr:range>
   <ptr:access>private</ptr:access>
-  <title>Sorry;  IE is a pain to debug and it hasn't been a priority while I've been adding new features.  Some new of those features may never be supported in IE, but basic annotation will be possible when support is working.</title>
-  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/12"/>
-  <link rel='alternate' type='text/html' title="Web Annotation Demo" href="http://www.geof.net/code/annotation/demo/#m1"/>
-  <id>tag:www.geof.net,2007-01-21:0</id>
-  <updated>2007-01-21T22:39:-0800</updated>
-  <summary>Internet Explorer support</summary>
+  <ptr:action></ptr:action>
+  <title>Annotation of "Web Annotation Demo"</title>
+  <link rel='self' type='application/xml' href="/~geof/marginalia/demo/www/annotate.php/57"/>
+  <link rel='alternate' type='text/html' title="Web Annotation Demo" href="http://192.168.1.138/~geof/marginalia/demo/www/#m1"/>
+  <id>tag:192.168.1.138,2008-12-19:annotation/57</id>
 
+  <updated>2008-12-19T16:27:-0800</updated>
   <author>
-   <name>anonymous</name>
+   <name></name>
+   <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-   <name>Geof Glass</name>
+   <name></name>
+   <ptr:userid></ptr:userid>
+
   </contributor>
+  <content type='xhtml'>
+   <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
+<p class='quote'><q>Internet Explorer 7</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m1">Web Annotation Demo</a></cite></p>
+<p class='note'>IE support is not as well tested.  It also lacks some minor UI refinements and may be slower due to browser limitations.</p>
+   </div>
+
+  </content>
+ </entry>
+ <entry>
+  <ptr:range format='sequence'>2.2.1.2/1.50.0;2.2.1.2/1.53.9</ptr:range>
+  <ptr:range format='xpath'>html:table[1]/html:tbody[1]/html:tr[1]/html:td[2]/line(1)/word(50)/char(0);html:table[1]/html:tbody[1]/html:tr[1]/html:td[2]/line(1)/word(53)/char(9)</ptr:range>
+  <ptr:access>private</ptr:access>
+  <ptr:action></ptr:action>
+
+  <title>Annotation of "Detailed Instructions"</title>
+  <link rel='self' type='application/xml' href="/~geof/marginalia/demo/www/annotate.php/58"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://192.168.1.138/~geof/marginalia/demo/www/#m2"/>
+  <id>tag:192.168.1.138,2008-12-19:annotation/58</id>
+  <updated>2008-12-19T16:27:-0800</updated>
+  <author>
+   <name></name>
+
+   <ptr:userid>anonymous</ptr:userid>
+  </author>
+  <contributor>
+   <name></name>
+   <ptr:userid></ptr:userid>
+  </contributor>
+  <content type='xhtml'>
+   <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
+
+<p class='quote'><q>start in one paragraph</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+<p class='note'>Paragraph, table cell, list item, etc.</p>
+   </div>
+  </content>
  </entry>
  <entry>
 
-  <ptr:range>/3/3.0:/3/3.6</ptr:range>
+  <ptr:range format='sequence'>2.2.1.2/1.52.0;2.2.1.2/1.57.7</ptr:range>
+  <ptr:range format='xpath'>html:table[1]/html:tbody[1]/html:tr[1]/html:td[2]/line(1)/word(52)/char(0);html:table[1]/html:tbody[1]/html:tr[1]/html:td[2]/line(1)/word(57)/char(7)</ptr:range>
   <ptr:access>private</ptr:access>
-  <title>aoeu</title>
-  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/26"/>
-  <link rel='alternate' type='text/html' title="Web Annotation Demo" href="http://www.geof.net/code/annotation/demo/#m1"/>
-  <id>tag:www.geof.net,2007-01-21:0</id>
-  <updated>2007-01-21T23:18:-0800</updated>
+  <ptr:action></ptr:action>
+  <title>Annotation of "Detailed Instructions"</title>
+  <link rel='self' type='application/xml' href="/~geof/marginalia/demo/www/annotate.php/59"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://192.168.1.138/~geof/marginalia/demo/www/#m2"/>
 
-  <summary>bottom</summary>
+  <id>tag:192.168.1.138,2008-12-19:annotation/59</id>
+  <updated>2008-12-19T16:28:-0800</updated>
   <author>
-   <name>anonymous</name>
+   <name></name>
+   <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-   <name>Geof Glass</name>
-  </contributor>
 
+   <name></name>
+   <ptr:userid></ptr:userid>
+  </contributor>
+  <content type='xhtml'>
+   <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
+<p class='quote'><q>one paragraph and end in another</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+
+<p class='note'>Annotation can also overlap.</p>
+   </div>
+  </content>
  </entry>
  <entry>
-  <ptr:range>/2/2/1/2/50.0:/2/2/1/2/57.7</ptr:range>
+  <ptr:range format='sequence'>2.2.6.2/1.29.0;2.2.6.2/1.38.3</ptr:range>
+  <ptr:range format='xpath'>html:table[1]/html:tbody[1]/html:tr[6]/html:td[2]/line(1)/word(29)/char(0);html:table[1]/html:tbody[1]/html:tr[6]/html:td[2]/line(1)/word(38)/char(3)</ptr:range>
   <ptr:access>private</ptr:access>
-  <title>Highlights can also overlap, like this one.  Hover over the highlight or note to see which is associated with which.</title>
-  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/14"/>
-  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
 
-  <id>tag:www.geof.net,2007-01-21:0</id>
-  <updated>2007-01-21T22:40:-0800</updated>
-  <summary>start in one paragraph and end in another</summary>
+  <ptr:action></ptr:action>
+  <title>Annotation of "Detailed Instructions"</title>
+  <link rel='self' type='application/xml' href="/~geof/marginalia/demo/www/annotate.php/60"/>
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://192.168.1.138/~geof/marginalia/demo/www/#m2"/>
+  <id>tag:192.168.1.138,2008-12-19:annotation/60</id>
+  <updated>2008-12-19T16:28:-0800</updated>
   <author>
-   <name>anonymous</name>
+
+   <name></name>
+   <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-
-   <name>Geof Glass</name>
+   <name></name>
+   <ptr:userid></ptr:userid>
   </contributor>
+  <content type='xhtml'>
+
+   <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
+<p class='quote'><q>type in or paste the URL into the edit box</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+<p class='note'>The OJS version allows you to simply click on a paragraph in a journal article on the same site;  it then automatically links to that paragraph.</p>
+   </div>
+  </content>
  </entry>
- <entry>
-  <ptr:range>/2/2/1/2/52.0:/2/2/1/2/53.9</ptr:range>
-  <ptr:access>private</ptr:access>
-  <title>Paragraph, table cell, list item, etc.</title>
 
-  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/13"/>
-  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
-  <id>tag:www.geof.net,2007-01-21:0</id>
-  <updated>2007-01-21T22:40:-0800</updated>
-  <summary>one paragraph</summary>
+ <entry>
+  <ptr:range format='sequence'>2.2.6.2/1.50.0;2.2.6.2/1.50.4</ptr:range>
+  <ptr:range format='xpath'>html:table[1]/html:tbody[1]/html:tr[6]/html:td[2]/line(1)/word(50)/char(0);html:table[1]/html:tbody[1]/html:tr[6]/html:td[2]/line(1)/word(50)/char(4)</ptr:range>
+  <ptr:access>private</ptr:access>
+  <ptr:action></ptr:action>
+  <title>Annotation of "Detailed Instructions"</title>
+  <link rel='self' type='application/xml' href="/~geof/marginalia/demo/www/annotate.php/61"/>
+
+  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://192.168.1.138/~geof/marginalia/demo/www/#m2"/>
+  <link rel='related' type='text/html' title="Here's a sample link to my site." href="http://www.geof.net/"/>
+  <id>tag:192.168.1.138,2008-12-19:annotation/61</id>
+  <updated>2008-12-19T16:29:-0800</updated>
   <author>
-   <name>anonymous</name>
+   <name></name>
+   <ptr:userid>anonymous</ptr:userid>
 
   </author>
   <contributor>
-   <name>Geof Glass</name>
+   <name></name>
+   <ptr:userid></ptr:userid>
   </contributor>
- </entry>
- <entry>
-  <ptr:range>/2/2/6/2/28.0:/2/2/6/2/38.3</ptr:range>
-  <ptr:access>private</ptr:access>
+  <content type='xhtml'>
+   <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
+<p class='quote'><q>link</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
 
-  <title>The OJS version allows you to simply click on a paragraph in a journal article on the same site;  it then automatically links to that paragraph.</title>
-  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/15"/>
-  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
-  <id>tag:www.geof.net,2007-01-21:0</id>
-  <updated>2007-01-21T22:41:-0800</updated>
-  <summary>then type in or paste the URL into the edit box</summary>
-  <author>
-
-   <name>anonymous</name>
-  </author>
-  <contributor>
-   <name>Geof Glass</name>
-  </contributor>
- </entry>
- <entry>
-  <ptr:range>/2/2/7/2/5.0:/2/2/7/2/6.9</ptr:range>
-
-  <ptr:access>private</ptr:access>
-  <title>Here's a sample link to my site.</title>
-  <link rel='self' type='application/xml' href="/~geof/annotation/www/annotate/19"/>
-  <link rel='alternate' type='text/html' title="Detailed Instructions" href="http://www.geof.net/code/annotation/demo/#m2"/>
-  <link rel='related' type='text/html' title="Here's a sample link to my site." href="http://www.geof.net/code/annotation/"/>
-  <id>tag:www.geof.net,2007-01-21:0</id>
-  <updated>2007-01-21T22:48:-0800</updated>
-
-  <summary>a hyperlink</summary>
-  <author>
-   <name>anonymous</name>
-  </author>
-  <contributor>
-   <name>Geof Glass</name>
-  </contributor>
-
+<p class='note'>Here's a sample link to my site.</p>
+<a href="http://www.geof.net/">See Also</a>   </div>
+  </content>
  </entry>
 </feed>
+

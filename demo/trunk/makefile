@@ -20,7 +20,6 @@ MARGINALIA_DEMO_DIR = www
 MARGINALIA_DEMO_FILES = \
  $(MARGINALIA_DEMO_DIR)/annotate-db.php \
  $(MARGINALIA_DEMO_DIR)/annotate.php \
- $(MARGINALIA_DEMO_DIR)/bungeni-annotate.css \
  $(MARGINALIA_DEMO_DIR)/bungeni-annotate.js \
  $(MARGINALIA_DEMO_DIR)/config-example.php \
  $(MARGINALIA_DEMO_DIR)/index.css \
