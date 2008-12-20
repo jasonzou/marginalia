@@ -160,7 +160,7 @@ the entrylink class). -->
 				Note the title attribute and its date format. -->
 				Last Updated <abbr class="published" title="2005-07-21T19:00-08:00">21 July 2005</abbr>
 				<!-- The author, like the title, is stored with the annotation. -->
-				by <span class="author">Geof Glass</span>
+				by <span class="author" title="geof">Geof Glass</span>
 			</p>
 			
 			<!-- There must be an element with a class of "notes", and that element must contain

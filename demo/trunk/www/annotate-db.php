@@ -77,7 +77,7 @@ class AnnotationDB
 		$sAction		= addslashes( $annotation->getAction( ) );
 		$sQuote			= addslashes( $annotation->getQuote( ) );
 		$sQuote_title	= addslashes( $annotation->getQuoteTitle( ) );
-		$sQuote_author	= addslashes( $annotation->getQuoteAuthor( ) );
+		$sQuote_author	= addslashes( $annotation->getQuoteAuthorId( ) );
 		$sLink			= null == $link ? 'null' : "'".addslashes( $link )."'";
 		$sLinkTitle		= addslashes( $annotation->getLinkTitle( ) );
 		
