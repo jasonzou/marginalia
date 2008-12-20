@@ -83,12 +83,12 @@ the entrylink class). -->
 	<form method="get">
 		<label for="u">Logged in as <?php echo htmlspecialchars($userid)?>.  Change to </label>
 		<select name="u" id="u">
-			<option value="anonymous"  <?php if ($userid=='anonymous') echo 'selected="selected"';?>>anonymous</option>
-			<option value="ashok" <?php if ($userid=='ashok') echo 'selected="selected"';?>>ashok</option>
-			<option value="flavio" <?php if ($userid=='flavio') echo 'selected="selected"';?>>flavio</option>
-			<option value="geof" <?php if ($userid=='geof') echo 'selected="selected"';?>>geof</option>
-			<option value="jean" <?php if ($userid=='jean') echo 'selected="selected"';?>>jean</option>
-			<option value="millie" <?php if ($userid=='millie') echo 'selected="selected"';?>>millie</option>
+			<option value="anonymous"  <?php if ($userid=='anonymous') echo 'selected="selected"';?>>Anonymous</option>
+			<option value="ashok" <?php if ($userid=='ashok') echo 'selected="selected"';?>>Ashok</option>
+			<option value="flavio" <?php if ($userid=='flavio') echo 'selected="selected"';?>>Flavio</option>
+			<option value="geof" <?php if ($userid=='geof') echo 'selected="selected"';?>>Geof</option>
+			<option value="jean" <?php if ($userid=='jean') echo 'selected="selected"';?>>Jean</option>
+			<option value="millie" <?php if ($userid=='millie') echo 'selected="selected"';?>>Millie</option>
 		</select>
 		<input type="submit" value="Log in"/>
 	</form>
@@ -243,7 +243,7 @@ the entrylink class). -->
 			<p class="metadata">
 				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m2">#</a>
 				Last Updated <abbr class="published" title="2005-07-21T19:00-08:00">21 July 2005</abbr>
-				by <span class="author">Geof Glass</span>
+				by <span class="author" title="geof">Geof Glass</span>
 			</p>
 			
 			<div class="notes">
@@ -266,7 +266,7 @@ the entrylink class). -->
 			<p class="metadata">
 				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m3">#</a>
 				Last Updated <abbr class="published" title="2005-08-24T11:50-08:00">24 August 2005</abbr>
-				by <span class="author">Geof Glass</span>
+				by <span class="author" title="geof">Geof Glass</span>
 			</p>
 			
 			<div class="notes">
@@ -319,7 +319,7 @@ the entrylink class). -->
 			<p class="metadata">
 				<a rel="bookmark" href="<?php echo htmlspecialchars($CFG->annotatedUrl);?>/#m4">#</a>
 				Last Updated <abbr class="published" title="2008-1-14T10:49-08:00">14 November 2008</abbr>
-				by <span class="author">Geof Glass</span>
+				by <span class="author" title="geof">Geof Glass</span>
 			</p>
 			
 			<div class="notes">

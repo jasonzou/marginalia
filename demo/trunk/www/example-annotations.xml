@@ -16,17 +16,16 @@
 
   <updated>2008-12-19T16:27:-0800</updated>
   <author>
-   <name></name>
+   <name>Anonymous</name>
    <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-   <name></name>
-   <ptr:userid></ptr:userid>
-
+   <name>Geof Glass</name>
+   <ptr:userid>geof</ptr:userid>
   </contributor>
   <content type='xhtml'>
    <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
-<p class='quote'><q>Internet Explorer 7</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m1">Web Annotation Demo</a></cite></p>
+<p class='quote'><q>Internet Explorer 7</q> &#x2015; <span class='quoteAuthor' title='geof'>Geof Glass</span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m1">Web Annotation Demo</a></cite></p>
 <p class='note'>IE support is not as well tested.  It also lacks some minor UI refinements and may be slower due to browser limitations.</p>
    </div>
 
@@ -44,18 +43,17 @@
   <id>tag:192.168.1.138,2008-12-19:annotation/58</id>
   <updated>2008-12-19T16:27:-0800</updated>
   <author>
-   <name></name>
-
+   <name>Anonymous</name>
    <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-   <name></name>
-   <ptr:userid></ptr:userid>
+   <name>Geof Glass</name>
+   <ptr:userid>geof</ptr:userid>
   </contributor>
   <content type='xhtml'>
    <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
 
-<p class='quote'><q>start in one paragraph</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+<p class='quote'><q>start in one paragraph</q> &#x2015; <span class='quoteAuthor' title='geof'>Geof Glass</span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
 <p class='note'>Paragraph, table cell, list item, etc.</p>
    </div>
   </content>
@@ -73,17 +71,16 @@
   <id>tag:192.168.1.138,2008-12-19:annotation/59</id>
   <updated>2008-12-19T16:28:-0800</updated>
   <author>
-   <name></name>
+   <name>Anonymous</name>
    <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-
-   <name></name>
-   <ptr:userid></ptr:userid>
+   <name>Geof Glass</name>
+   <ptr:userid>geof</ptr:userid>
   </contributor>
   <content type='xhtml'>
    <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
-<p class='quote'><q>one paragraph and end in another</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+<p class='quote'><q>one paragraph and end in another</q> &#x2015; <span class='quoteAuthor' title='geof'>Geof Glass</span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
 
 <p class='note'>Annotation can also overlap.</p>
    </div>
@@ -101,18 +98,17 @@
   <id>tag:192.168.1.138,2008-12-19:annotation/60</id>
   <updated>2008-12-19T16:28:-0800</updated>
   <author>
-
-   <name></name>
+   <name>Anonymous</name>
    <ptr:userid>anonymous</ptr:userid>
   </author>
   <contributor>
-   <name></name>
-   <ptr:userid></ptr:userid>
+   <name>Geof Glass</name>
+   <ptr:userid>geof</ptr:userid>
   </contributor>
   <content type='xhtml'>
 
    <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
-<p class='quote'><q>type in or paste the URL into the edit box</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+<p class='quote'><q>type in or paste the URL into the edit box</q> &#x2015; <span class='quoteAuthor' title='geof'>Geof Glass</span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
 <p class='note'>The OJS version allows you to simply click on a paragraph in a journal article on the same site;  it then automatically links to that paragraph.</p>
    </div>
   </content>
@@ -131,17 +127,16 @@
   <id>tag:192.168.1.138,2008-12-19:annotation/61</id>
   <updated>2008-12-19T16:29:-0800</updated>
   <author>
-   <name></name>
+   <name>Anonymous</name>
    <ptr:userid>anonymous</ptr:userid>
-
   </author>
   <contributor>
-   <name></name>
-   <ptr:userid></ptr:userid>
+   <name>Geof Glass</name>
+   <ptr:userid>geof</ptr:userid>
   </contributor>
   <content type='xhtml'>
    <div xmlns='http://www.w3.org/1999/xhtml' class='annotation'>
-<p class='quote'><q>link</q> &#x2015; <span class='quoteAuthor' title=''></span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
+<p class='quote'><q>link</q> &#x2015; <span class='quoteAuthor' title='geof'>Geof Glass</span> in <cite><a href="http://192.168.1.138/~geof/marginalia/demo/www/#m2">Detailed Instructions</a></cite></p>
 
 <p class='note'>Here's a sample link to my site.</p>
 <a href="http://www.geof.net/">See Also</a>   </div>
