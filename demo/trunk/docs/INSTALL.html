@@ -50,24 +50,21 @@ integrations (e.g. Moodle and OJS).</p>
 
 <h2>Option 1:  Use a Static XML Back-End</h2>
 
-<p>It is possible to set up Marginalia with a static XML back-end, though the code
-and sample XML may be a little out of date.</p>
-
 <p>Instead of setting up a database, you can simply run the demo off a static
-XML file.  In this case, none of the changes you make will be saved (and you
-may run into a few problems), but you can at least see how things work in
-principle.  Make sure the <code>RestAnnotationService</code> is commented-out
-in <code>index.html</code>:</p>
+XML file.  In this case, none of the changes you make will be saved, but you can
+at least see how things work in principle.  Make sure the 
+<code>RestAnnotationService</code> is commented-out
+in <code>index.js</code>:</p>
 
 <pre>
 <code>
-		// var annotationService = new RestAnnotationService( serviceRoot );
-		var annotationService = new StaticAnnotationService( serviceRoot, "example-annotations.xml" );
+    // var annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', { } );
+    var annotationService = new StaticAnnotationService(serviceRoot, 'example-annotations.xml' );
 </code>
 </pre>
 
 <p>Now the annotations will simply be taken from <code>example-annotations.xml</code>.
-None of the <code>.php</code> files will be used.</p>
+The database and most of the <code>.php</code> files will not be used.</p>
 
 
 <h2>Option 2: Configure a Database Back-End</h2>
@@ -85,8 +82,8 @@ which should look like this:</p>
 
 <h3>Populate the Database</h3>
 
-<p>Create a database and database user, then run the <code>.sql</code>
-scripts in the <code>db</code> directory.</p>
+<p>Create a database and database user, then run <code>tables.sql</code>
+scripts in the <code>util</code> directory.</p>
 
 <h3>Update Configuration Files</h3>
 
@@ -103,6 +100,10 @@ $CFG->host = 'localhost';
 $CFG->wwwapp = 'annotation-demo';
 </code>
 </pre>
+
+<p>Be certain the host name is exactly the same as what you will use from the
+browser.  If your machine name is "george", you can't say "localhost" here
+but use "http://george" in the browser.</p>
 
 <p>If you want the Bungeni-style user interface features 
 (including the "track changes" display of highlights), set <code>$CFG->bungeniStyle</code>
@@ -124,23 +125,11 @@ Firebug) is the URL of the GET request sent to annotation/annotate.php with the 
 on its own in a browser window:  it should return an Atom feed containing the annotations
 for that page.</p>
 
-<p>If there
-is a problem connecting to the service, you will see an error.  A 404 error indicates
-that Apache could not find the annotation service because of a misconfiguration.  One
-possible cause is problems with mod_rewrite (see step 4 above).  Any
-other error code usually means that the service is available, but something else is
-wrong.  If there is a bug in the application, that could show up as an error code other 
-than 404.</p>
-
 <h2>Known Issues</h2>
 
 <ul>
 <li>This is a demo, not a full web application.  As such, it may not be secure enough 
 to run as a web application on the Internet.</li>
-<li>This version has not yet been tested and tweaked for Internet Explorer.  It may
-work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
-always run a little better on Firefox (e.g. there are user interface niceties on
-Firefox that are absent on IE).</li>
 <li>Marginalia includes a feature to protect against cross-site request forgery when
 creating and updating annotations (though not, as yet, for preferences and keywords).
 However, this feature is not properly implemented in the demo (again because this is
