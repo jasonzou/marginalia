@@ -68,12 +68,28 @@ class DemoAnnotationService extends AnnotationService
 		
 	function doListAnnotations( $url, $username, $block )
 	{
-		return $this->db->listAnnotations( $url, $username, $block );
+		$annotations = $this->db->listAnnotations( $url, $username, $block );
+		if ( $annotations )
+		{
+			foreach ( $annotations as $annotation )
+			{
+				// In a real application, the username should be human-readable while the userid must be unique.
+				// But since the demo doesn't have a lookup table to map from userid to username, just use userid
+				// as username.
+				$annotation->setUserName( $annotation->getUserId( ) );
+			}
+		}
+		return $annotations;
 	}
 	
 	function doGetAnnotation( $id )
 	{
-		return $this->db->getAnnotation( $id );
+		$annotation = $this->db->getAnnotation( $id );
+		// In a real application, the username should be human-readable while the userid must be unique.
+		// But since the demo doesn't have a lookup table to map from userid to username, just use userid
+		// as username.
+		$annotation->setUserName( $annotation->getUserId( ) );
+		return $annotation;
 	}
 	
 	function doCreateAnnotation( &$annotation )
