@@ -71,21 +71,6 @@ Firebug) is the URL of the GET request sent to annotation/annotate.php with the 
 on its own in a browser window:  it should return an Atom feed containing the annotations
 for that page.</p>
 
-<h2>Known Issues</h2>
-
-<ul>
-<li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
-any defence because I believe a) the risk is vanishingly small, b) the consequences
-of such an attack would be minor, and c) I am not aware of an foolproof defence for
-an application like Marginalia.  Basically, it is possible for a programmer to create 
-a web page which - if you visited it while logged in to OJS - could (in theory 
-anyway) quietly create or delete your annotations (though they could not view your
-private annotations).  Why anyone would want to go to the effort to do this I have no 
-idea (this kind of attack is far more dangerous for financial transactions online).  I'm 
-just mentioning it in case you feel differently.  If I am dreadfully wrong in my 
-assessment, please drop me an email and explain.</li>
-</ul>
-
 <h2>Uninstalling Annotation</h2>
 
 <p>To uninstall annotation, simply delete the install directories:
