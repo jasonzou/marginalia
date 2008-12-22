@@ -2,15 +2,17 @@
 ANNOTATION_ACCESS_DEFAULT = 'private';	// default access
 AN_PERBLOCKANNOTATIONS_CLASS = 'per-block-annotations';
 
-function ojsAnnotationInit( serviceRoot, currentUser )
+function ojsAnnotationInit( serviceRoot, currentUser, csrfCookie )
 {
-	addEvent( window, 'load', function() { ojsAnnotationOnLoad( serviceRoot, currentUser ); });
+	addEvent( window, 'load', function() { ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie ); });
 }
 
 
-function ojsAnnotationOnLoad( serviceRoot, currentUser )
+function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 {
-	var annotationService = new RestAnnotationService( serviceRoot + '/annotate', false );
+	var annotationService = new RestAnnotationService( serviceRoot + '/annotate', {
+		csrfCookie: csrfCookie
+	} );
 	var keywordService = new RestKeywordService( serviceRoot + '/keywords' );
 	keywordService.init( );
 

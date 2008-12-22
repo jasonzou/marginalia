@@ -147,7 +147,17 @@ class OjsAnnotationService extends AnnotationService
 		if ( $username )
 			$username = $username->getUsername( );
 
-		AnnotationService::AnnotationService( $host, $servicePath, $installDate, $username );
+		$sessionManager =& SessionManager::getManager( );
+		$session = $sessionManager->getUserSession( );
+		AnnotationService::AnnotationService(
+			$host,
+			$servicePath,
+			$installDate,
+			$username,
+			array(
+				'csrfCookie' => Config::getVar( 'general', 'session_cookie_name' ),
+				'csrfCookieValue' => $session->getId( )
+			) );
 	}
 
 	function newAnnotation( )

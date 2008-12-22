@@ -141,10 +141,11 @@ class MarginaliaPlugin extends GenericPlugin
 					$head_html .= "<script type='text/javascript' src='".$baseUrl.'/'.MARGINALIA_PATH.'/'.htmlspecialchars($name)."'></script>\n";
 				$head_html .= "<script type='text/javascript' src='".$baseUrl.'/'.PLUGIN_PATH."/ojs-annotate.js'></script>\n";
 			}
+			$csrfCookie = Config::getVar( 'general', 'session_cookie_name' );
 			$head_html .=
 				"<script language='javascript' type='text/javascript'>\n"
 				."  var serviceRoot = '".$serviceUrl."';\n"
-				."	ojsAnnotationInit( serviceRoot, $currentUser );\n"
+				."	ojsAnnotationInit( serviceRoot, $currentUser, '$csrfCookie' );\n"
 				."</script>\n";
 			//."  var  serviceRoot = '".$baseUrl.'/index.php/'.$journalName.'/marginalia'."';\n"
 
