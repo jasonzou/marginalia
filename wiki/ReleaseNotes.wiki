@@ -6,7 +6,7 @@
 
 == December 2008 Release ==
 
-The release that I am working on as of December 2008 is aimed at stabilizing and refining the Moodle version, though consideration is being given to the other versions also.  The following changes apply to the Marginalia core libraries:
+This release is aimed at stabilizing and refining the Moodle version, though consideration is being given to the other versions also.  So far there have been releases of the Moodle version (2008-12-14 and later) and demo (2008-12-20 and later).  The following changes are in the Marginalia core libraries and apply to all subsequent releases for all platforms (Moodle, OJS, demo):
 
   * IE (version 7) is again supported.  Safari is also now fully supported (thanks to browser improvements by Apple).
 
