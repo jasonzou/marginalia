@@ -34,8 +34,7 @@ MARGINALIA_OJS_FILES = \
  $(MARGINALIA_OJS_DIR)/ojs-annotate.js \
  $(MARGINALIA_OJS_DIR)/Preference.inc.php \
  $(MARGINALIA_OJS_DIR)/PreferenceDAO.inc.php \
- $(MARGINALIA_OJS_DIR)/schema-block.xml \
- $(MARGINALIA_OJS_DIR)/schema-range.xml
+ $(MARGINALIA_OJS_DIR)/schema.xml
  
 LANG_FILES = $(MARGINALIA_OJS_DIR)/locale/en_US/locale.xml
 

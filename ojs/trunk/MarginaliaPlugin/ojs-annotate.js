@@ -126,7 +126,8 @@ function getNodeByFragmentPath( url )
 	var content = post.getContentElement( );
 	if ( -1 == url.indexOf( '#' ) )
 		return null;
-	var path = url.substring( url.indexOf( '#' ) + 1 );
+	var prefix = '#node-path:';
+	var path = url.substring( url.indexOf( prefix ) + prefix.length );
 	var node = domutil.blockPathToNode( content, path );
 	return node;
 }

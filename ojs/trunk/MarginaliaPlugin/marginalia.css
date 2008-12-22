@@ -114,7 +114,8 @@
 
 .hentry .button-wrapper {
 	height: 100%;
-	width: 1.5ex;
+	font-size: normal;
+	width: 1em;
 	position: absolute;
 	top: 0;
 	border-left: #ddd 1px dotted;
@@ -128,7 +129,9 @@
 .hentry button.createAnnotation {
 	height: 100%;
 	width: 100%;
+	font-size: inherit;
 	position: absolute;
+	left: 0;
 	top: 0 ;
 	border: none;
 	background: inherit;
