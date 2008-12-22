@@ -13,16 +13,17 @@
 <p>The installation requires the following:</p>
 
 <ul>
-	<li>PHP 4.3 or later</li>
+	<li>PHP 5 or later (4.3+ is probably still fine)</li>
 	<li>OJS as of mid-September 2006 (a small fix was implemented to one of the
 	page templates at this point)</li>
 	<li>MySQL 4.1 or later (though a colleague has had success with MySQL 3; 
 	I haven't tested with earlier versions or with Postgres)</li>
 </ul>
 
-<p>The install procedure doesn't change any existing files or database data,
-but if you're paranoid like me, you might want to back up your OJS installation
-before performing the install just to be sure.</p>
+<p>Back up your OJS database before performing the installation!  This applies
+<em>particularly</em> to updates to Marginalia.  Marginalia does not change any
+other OJS files or data, but upgrades can be harmful (see Upgrading, below).
+If you're really paranoid - a good trait - back up your OJS files too.</p>
 
 <p>Marginalia for OJS is a plugin.  Installing it is fairly straightforward.
 First, copy the contents of the <kbd>ojs</kbd> directory in the installation
@@ -36,25 +37,23 @@ The easiest way to do this is using OJS's built-in update procedure, as follows:
 <ol>
 <li>Back up your OJS database in case something goes wrong.</li>
 <li>Enable the Marginalia plugin (as described above) if you have not already done so.</li>
-<li>Create the <kbd>schema.xml</kbd> file in the <kbd>MarginaliaPlugin</kbd>
-directory.  If you are creating a new installation, copy <kbd>schema-range.xml</kbd>.  If 
-you are upgrading an version of Marginalia from summer 2007 or earlier, copy 
-<kbd>schema-block.xml</kbd> instead.</li>
 <li>From within your OJS install directory, run the following command:
 
 <pre><code>php tools/upgrade.php upgrade</code></pre>
 </li>
 </ol>
 
-<p>Alternatively, you can create the tables manually using the <kbd>tables.sql</kbd>
-and <kbd>keywords.sql</kbd> scripts from the <kbd>util</kbd> directory of the 
-Marginalia install.</p>
-
-<p>If you are upgrading an existing system with Marginalia already running, the
-upgrade.php script should work.  (I tried it and reported an error from the
-OJS code, but the annotation table was nonetheless successfully updated.)</p>
-
 <p>That's all there is to it.  If you run into any difficulties, let me know.</p>
+
+<h3>Upgrades</h3>
+
+<p>As of the December 2008 release of Marginalia for OJS the database schema
+has changed.  If you upgrade to the new release, your existing annotation data
+<em>will be</em> wiped out.  Unfortunately, I do not currently have an upgrade 
+script to convert the old data to the new format.  I'm not sure this is a problem
+as I'm not aware of installations that need to upgrade and keep their annotation
+data.  If this is a problem for you, get in touch with me.  My email address is
+displayed at <a href="http://www.geof.net/">www.geof.net</a>.</p>
 
 <h2>Installation Problems</h2>
 
@@ -72,21 +71,9 @@ Firebug) is the URL of the GET request sent to annotation/annotate.php with the 
 on its own in a browser window:  it should return an Atom feed containing the annotations
 for that page.</p>
 
-<p>If there
-is a problem connecting to the service, you will see an error.  A 404 error indicates
-that Apache could not find the annotation service because of a misconfiguration.  One
-possible cause is problems with mod_rewrite (see step 4 above).  Any
-other error code usually means that the service is available, but something else is
-wrong.  If there is a bug in the application, that could show up as an error code other 
-than 404.</p>
-
 <h2>Known Issues</h2>
 
 <ul>
-<li>This version has not yet been tested and tweaked for Internet Explorer.  It may
-work - or it may not.  IE fixes should be forthcoming soon.  Note that Marginalia will
-always run a little better on Firefox (e.g. there are user interface niceties on
-Firefox that are absent on IE).</li>
 <li>Annotation is vulnerable to cross-site request forgery.  I have not implemented
 any defence because I believe a) the risk is vanishingly small, b) the consequences
 of such an attack would be minor, and c) I am not aware of an foolproof defence for

@@ -1,4 +1,8 @@
 <?php
+
+define( 'AN_ACCESS_PUBLIC', 0xffff );
+define( 'DEBUG_ANNOTATION_QUERY', false );	// will break GET operations by emitting query string
+
 	
 class AnnotationDAO extends DAO
 {
@@ -24,10 +28,15 @@ class AnnotationDAO extends DAO
 
 		// No security check!
 		$result = &$this->retrieve(
-			'SELECT * FROM annotations WHERE id=? AND userid=?',
+			'SELECT a.*'
+			.', u.username AS userlogin'
+			.", concat(u.first_name,' ',u.middle_name,' ',u.last_name) AS username"
+			.' FROM annotations a'
+			.' JOIN users u ON u.user_id=a.userid'
+			.' WHERE id=? AND userid=?',
 			array (
 				$annotationId,
-				$currentUser->getUsername()
+				$currentUser->getUserId()
 			)
 			);
 
@@ -61,19 +70,22 @@ class AnnotationDAO extends DAO
 	function _annotationFromRow( &$annotation, &$row )
 	{
 		$annotation->setAnnotationId( $row[ 'id' ] );
-
-		$annotation->setUserId( $row[ 'userid' ] );
+		$annotation->setUserId( $row[ 'userlogin' ] );
+		$annotation->setUserName( $row[ 'username' ] );
 		$annotation->setUrl( $row[ 'url' ] );
 		$annotation->setNote( $row[ 'note' ] );
-		$annotation->setAccess( $row[ 'access' ] );
 		$annotation->setAction( $row[ 'action' ] );
 		$annotation->setQuote( $row[ 'quote' ] );
 		$annotation->setQuoteTitle( $row[ 'quote_title' ] );
-		$annotation->setQuoteAuthor( $row[ 'quote_author' ] );
+		$annotation->setQuoteAuthorId( $row[ 'quote_author_id' ] );
+		$annotation->setQuoteAuthorName( $row[ 'quote_author_name' ] );
 		$annotation->setLink( $row[ 'link' ] );
 		$annotation->setLinkTitle( $row[ 'link_title' ] );
 		$annotation->setCreated( $row[ 'created' ] );
 		$annotation->setModified( $row[ 'modified' ] );
+
+		$access = $row[ 'access_perms' ];
+		$annotation->setAccess( $access & AN_ACCESS_PUBLIC ? 'public' : 'private' );
 		
 		$start_line = $row[ 'start_line' ];
 		$start_word = $row[ 'start_word' ];
@@ -128,29 +140,43 @@ class AnnotationDAO extends DAO
 			$sequenceEnd = $sequenceRange->getEnd( );
 			$xpathStart = $xpathRange->getStart( );
 			$xpathEnd = $xpathRange->getEnd( );
+			$access = 'public' == $annotation->getAccess( ) ? AN_ACCESS_PUBLIC : 0;
+			
+			$quoteAuthorName = $annotation->getQuoteAuthorName( );
+			$quoteAuthorId = $annotation->getQuoteAuthorId( );
+			if ( ! $quoteAuthorName && $quoteAuthorId)
+			{
+				$userdao = new UserDAO( );
+				$tuser = $userdao->getUserByUsername( $quoteAuthorId );
+				if ( $tuser )
+					$quoteAuthorName = $tuser->getUsername( );
+			}
+			
 			$this->update(
 				sprintf(
 					'INSERT INTO annotations'
-					.' (userid, url, note, access, action'
-					.', quote, quote_title, quote_author, link, link_title'
+					.' (userid, url, note, access_perms, action'
+					.', quote, quote_title, quote_author_id, quote_author_name'
+					.', link, link_title'
 					.', start_xpath, start_block, start_line, start_word, start_char'
 					.', end_xpath, end_block, end_line, end_word, end_char'
 					.', created, modified)'
 					.' VALUES '
-					.' (?,?,?,?,?, ?,?,?,?,?,  ?,?,?,?,?, ?,?,?,?,?, %s, %s)',
+					.' (?,?,?,?,?, ?,?,?,?,?,?,  ?,?,?,?,?, ?,?,?,?,?, %s, %s)',
 					$this->datetimeToDB( $now ),
 					$this->datetimeToDB( $now )
 				),
 				array(
-					$annotation->getUserId( ),
+					$currentUser->getUserId( ),
 					$annotation->getUrl( ),
 					$annotation->getNote( ),
-					$annotation->getAccess( ),
+					$access,
 					$annotation->getAction( ),
 					
 					$annotation->getQuote( ),
 					$annotation->getQuoteTitle( ),
-					$annotation->getQuoteAuthor( ),
+					$quoteAuthorId,
+					$quoteAuthorName,
 					$annotation->getLink( ),
 					$annotation->getLinkTitle( ),
 					
@@ -193,6 +219,18 @@ class AnnotationDAO extends DAO
 			$sequenceEnd = $sequenceRange->getEnd( );
 			$xpathStart = $xpathRange ? $xpathRange->getStart( ) : null;
 			$xpathEnd = $xpathRange ? $xpathRange->getEnd( ) : null;
+			$access = 'public' == $annotation->getAccess( ) ? AN_ACCESS_PUBLIC : 0;
+
+			$quoteAuthorName = $annotation->getQuoteAuthorName( );
+			$quoteAuthorId = $annotation->getQuoteAuthorId( );
+			if ( ! $quoteAuthorName && $quoteAuthorId)
+			{
+				$userdao = new UserDAO( );
+				$tuser = $userdao->getUserByUsername( $quoteAuthorId );
+				if ( $tuser )
+					$quoteAuthorName = $tuser->getUsername( );
+			}
+			
 			$this->update(
 				'UPDATE annotations'
 				.' SET'
@@ -208,11 +246,12 @@ class AnnotationDAO extends DAO
 				.' , end_word=?'
 				.' , end_char=?'
 				.' , note=?'
-				.' , access=?'
+				.' , access_perms=?'
 				.' , action=?'
 				.' , quote=?'
 				.' , quote_title=?'
-				.' , quote_author=?'
+				.' , quote_author_id=?'
+				.' , quote_author_name=?'
 				.' , link=?'
 				.' , link_title=?'
 				.' , modified=?'
@@ -230,11 +269,12 @@ class AnnotationDAO extends DAO
 					$sequenceEnd->getWords( ),
 					$sequenceEnd->getChars( ),
 					$annotation->getNote( ),
-					$annotation->getAccess( ),
+					$access,
 					$annotation->getAction( ),
 					$annotation->getQuote( ),
 					$annotation->getQuoteTitle( ),
-					$annotation->getQuoteAuthor( ),
+					$quoteAuthorId,
+					$quoteAuthorName,
 					$annotation->getLink( ),
 					$annotation->getLinkTitle( ),
 					$this->datetimeToDB( Core::getCurrentDate() ),
@@ -267,9 +307,10 @@ class AnnotationDAO extends DAO
 		// user's annotations (e.g. when deleting the user)
 		if ( $currentUser )
 		{
-			$this->update(
+			return $this->update(
 				'DELETE FROM annotations WHERE id=?', array( $annotationId ) );
 		}
+		return  false;
 	}
 	
 	function blockS( $blockStr )
@@ -291,38 +332,53 @@ class AnnotationDAO extends DAO
 	{
 		$annotations = array();
 		$currentUser = Request::getUser();
-		$query = 'SELECT * FROM annotations WHERE ';
+		$query = 'SELECT a.*'
+			.', u.username AS userlogin'
+			.", concat(u.first_name,' ',u.middle_name,' ',u.last_name) AS username"
+			.' FROM annotations a'
+			.' JOIN users u ON u.user_id=a.userid'
+			.' WHERE ';
 		$queryParams = array();
 		
 		if ( $url )
 		{
 			array_push( $queryParams, $url );
-			$query .= "url=?";
+			$query .= "a.url=?";
 		}
 		else
 			$query .= '1=1';
 		
 		// Only fetch annotations visible to the current user
+		$findUserId = 0;
 		if ( $username )
 		{
-			if ( $currentUser && ( $currentUser->getUsername() == $username || $all ) )
-				$query .= " AND userid=?";
-			elseif ( $username )
-				$query .= " AND access='public' AND userid=?";
-			array_push( $queryParams, $username );
+			$userdao = new UserDAO( );
+			$tuser = $userdao->getUserByUsername( $username );
+			if ( $tuser )
+			{
+				if ( $currentUser && ( $currentUser->getUsername() == $username || $all ) )
+					$query .= " AND a.userid=?";
+				elseif ( $username )
+					$query .= ' AND a.access_perms&'.AN_ACCESS_PUBLIC.' AND a.userid=?';
+				
+				array_push( $queryParams, $tuser->getUserId( ) );
+			}
+			// If there's no such user, there can be no results
+			else
+				$query .=' AND 1=0';
 		}
 		elseif ( ! $all )
-			$query .= " AND access='public'";
+			$query .= ' AND a.access_perms&'.AN_ACCESS_PUBLIC;
 			
 		if ( $block )
 		{
 			// This implementation ignores the word and char fields of point
 			$testBlockStr = $block->getPaddedPathStr( );
-			$query .= " AND start_block <= ? AND end_block >= ?";
+			$query .= " AND a.start_block <= ? AND a.end_block >= ?";
 			array_push( $queryParams, $testBlockStr, $testBlockStr );
 		}
 		
-		$query .= " ORDER BY start_block, start_line, start_word, start_char";
+		$query .= " ORDER BY a.start_block, a.start_line, a.start_word, a.start_char";
 		$result = &$this->retrieve( $query, $queryParams );
 		
 		if ( DEBUG_ANNOTATION_QUERY )
@@ -397,4 +453,3 @@ class AnnotationDAO extends DAO
 
 }
 
-?>

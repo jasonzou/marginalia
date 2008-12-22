@@ -27,6 +27,12 @@ class Annotation extends DataObject
 	function setUserId( $userid )
 	{  $this->setData( 'userid', $userid );  }
 	
+	function getUserName( )
+	{  return $this->getData( 'username' );  }
+	
+	function setUserName( $username )
+	{  $this->setData( 'username', $username );  }
+	
 	function getUrl( )
 	{  return $this->getData( 'url' );  }
 	
@@ -91,11 +97,17 @@ class Annotation extends DataObject
 	function setQuoteTitle( $quoteTitle )
 	{  $this->setData( 'quote_title', $quoteTitle );  }
 
-	function getQuoteAuthor( )
-	{  return $this->getData( 'quote_author' );  }
+	function getQuoteAuthorId( )
+	{  return $this->getData( 'quote_author_id' );  }
 	
-	function setQuoteAuthor( $quoteAuthor )
-	{  $this->setData( 'quote_author', $quoteAuthor );  }
+	function setQuoteAuthorId( $quoteAuthorId )
+	{  $this->setData( 'quote_author_id', $quoteAuthorId );  }
+	
+	function getQuoteAuthorName( )
+	{  return $this->getData( 'quote_author_name' );  }
+	
+	function setQuoteAuthorName( $quoteAuthorName )
+	{  $this->setData( 'quote_author_name', $quoteAuthorName );  }
 	
 	function getLink( )
 	{  return $this->getData( 'link' );  }

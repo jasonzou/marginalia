@@ -14,8 +14,6 @@
 
 error_reporting( E_ALL );
 
-define( 'DEBUG_ANNOTATION_QUERY', false );	// will break GET operations by emitting query string
-
 require_once( 'marginalia-php/MarginaliaHelper.php' );
 require_once( 'marginalia-php/SequenceRange.php' );
 require_once( 'marginalia-php/XPathRange.php' );

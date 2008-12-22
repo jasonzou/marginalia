@@ -56,6 +56,9 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser )
 			node.setAttribute( "rel", PM_URL_REL );
 			var url = node.getAttribute( 'href' );
 		}
+		
+		// Should also be inserting author information, but I'm not sure where
+		// to get that (quote_author_id, quote_author_name).
 	
 		// Create a wrapper around the article content so we can create two columns -
 		// one for the content, one for margin notes
