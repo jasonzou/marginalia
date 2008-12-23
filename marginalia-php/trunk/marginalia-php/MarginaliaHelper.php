@@ -224,6 +224,17 @@ class MarginaliaHelper
 		echo "</feed>\n";
 	}
 	
+	static function timeToIso( $t )
+	{
+		$day = date( 'Y-m-d', $t );
+		$time = date( 'H:i:s', $t );
+		$tzoffset = date( 'O', $t );
+		if ( preg_match( '/^([+-])(\d\d)(\d*)$/', $tzoffset, $matches ) )
+			$tzoffset = sprintf( '%s%02d:%02d', $matches[ 1 ], (int) $matches[ 2 ], (int) $matches[ 3 ] );
+		elseif ( preg_match( '/^(\d\d)(\d*)$/', $tzoffset, $matches ) )
+			$tzoffset = sprintf( '+%02d:%02d', (int) $matches[ 1 ], (int) $matches[ 2 ] );
+		return $day.'T'.$time.$tzoffset;
+ 	}
 	
 	/**
 	 * Convert an annotation to an Atom entry
@@ -286,9 +297,10 @@ class MarginaliaHelper
 		if ( $annotation->getLink() )
 			$s .= "  <link rel='related' type='text/html' title=\"$sNote\" href=\"$sLink\"/>\n";
 		// TODO: Is this international-safe?  I could use htmlsecialchars on it, but that might not match the
-		// restrictions on IRIs.  #GEOF#
+		// restrictions on IRIs.  #GEOF#	
 		$s .= "  <id>tag:$tagHost," . date( 'Y-m-d', $annotation->getCreated() ) . ':annotation/'.$annotation->getAnnotationId()."</id>\n"
-			. "  <updated>" . date( 'Y-m-d', $annotation->getModified() ) . 'T' . date( 'H:i:O', $annotation->getModified() ) . "</updated>\n";
+		. "  <updated>" . MarginaliaHelper::timeToIso( $annotation->getModified() ) . "</updated>\n"
+		. "  <ptr:created>" . MarginaliaHelper::timeToIso( $annotation->getCreated() ). "</ptr:created>\n";
 		// Selected text as summary
 		//echo "  <summary>$summary</summary>\n";
 		// Author of the annotation
