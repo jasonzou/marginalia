@@ -2,7 +2,11 @@
 
 == OJS, Demo 2008-12-22 ==
 
-IE compatibility for OJS.  IE fixes for the demo.
+  * IE compatibility for OJS.
+  * Bug fixes and performance improvements for OJS.
+  * Fixed modified and created dates for OJS.
+  * CSRF protection for OJS.
+  * IE fixes for the demo.
 
 == Demo 2008-12-21 ==
 
