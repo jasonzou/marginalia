@@ -1,5 +1,9 @@
 #summary Release Notes
 
+== OJS, Demo 2008-12-22 ==
+
+IE compatibility for OJS.  IE fixes for the demo.
+
 == Demo 2008-12-21 ==
 
   * The non-static demo only works with userids, not usernames.  When annotations created by other users were displayed, the username was blank.  Now the username is set equal to the userid.  In a working application, the username should be a proper human-readable name (contrasted with the userid, which must be unique - usually it's the login name).
