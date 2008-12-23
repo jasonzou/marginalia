@@ -86,7 +86,7 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 							title: 'Click here to create an annotation',
 							onclick: ojsCreateAnnotation,
 							content: '>'
-						} ),
+						} )
 				} ),
 				domutil.element( 'ol', {
 					content:  domutil.element( 'li', { } )

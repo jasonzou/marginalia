@@ -120,6 +120,7 @@
 	top: 0;
 	border-left: #ddd 1px dotted;
 	border-right:  #ddd 1px dashed;
+	z-index: 1;
 }
 
 .hentry .button-wrapper:hover {
@@ -159,9 +160,12 @@
 body .hentry .notes ol {
 	position: relative;
 	list-style-type: none;
-	margin: 0 0 0 1em ;
+/*	margin: 0 0 0 1em ;
 	padding: 2px .5ex ;
-	background: inherit;
+*/
+	margin: 0;
+	padding: 2px .5ex 0 1.25em;
+	background: none;
 }
 
 .hentry .notes li {
@@ -229,7 +233,7 @@ body .hentry .notes ol {
 .hentry .notes li button,
 .hentry .notes li a {
 	border: none;
-	background: inherit;
+	background: none;
 	display: inline;
 	font-size: inherit;
 	padding: 0;
