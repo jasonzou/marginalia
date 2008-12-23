@@ -183,6 +183,11 @@ ol#articles {
 	float: right;
 }
 
+.hentry .notes li .controls button {
+	border: none;
+	background: none;
+}
+
 .hentry .notes li textarea {
 	font-size: inherit;
 	font-family: sans-serif;
