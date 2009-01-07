@@ -1,5 +1,9 @@
 #summary Release Notes
 
+== All Versions, 2009-01-07 ==
+
+This release fixes a significant security problem.
+
 == OJS, Demo 2008-12-22 ==
 
   * IE compatibility for OJS.
