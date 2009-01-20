@@ -1,5 +1,12 @@
 #summary Release Notes
 
+== Moodle, 2009-01-20 ==
+
+* fixes to the code for upgrading existing annotations from older (pre-December 2008) versions of Marginalia
+* file path problem for Moodle 1.8
+
+If you did not have trouble with either of these, you do not need to update to this version.
+
 == All Versions, 2009-01-07 ==
 
 This release fixes a significant security problem.
