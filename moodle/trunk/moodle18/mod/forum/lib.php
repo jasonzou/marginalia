@@ -1,7 +1,7 @@
 <?php  // $Id$
 
 require_once($CFG->libdir.'/filelib.php');
-require_once( '../../blocks/marginalia/config.php' );
+require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/marginalia-constants.php' );
 require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 

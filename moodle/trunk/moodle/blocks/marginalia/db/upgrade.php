@@ -63,7 +63,7 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		if ( $result )  {
 			$query = "SELECT a.*, u.id AS uid, qa.id as aid "
 				." FROM {$CFG->prefix}annotation a"
-				." JOIN {$CFG->prefix}user u ON u.username=a.userid"
+				." LEFT JOIN {$CFG->prefix}user u ON u.username=a.userid"
 				." LEFT JOIN {$CFG->prefix}user qa ON qa.username=a.quote_author";
 			$data = get_records_sql( $query );
 			if ( $data )  {
@@ -85,6 +85,8 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 
 					$annotation = annotation_globals::record_to_annotation( $r );
 	
+					//$sequence = $annotation->getSequenceRange( );
+					// echo "Convert annotation #" . $annotation->getAnnotationId( ).' '.$sequence->toString( ).'<br/>';
 					// Will handle 'public' or 'private'
 					if ( array_key_exists( 'access', $r) )
 						$annotation->setAccess( $r->access );
@@ -97,8 +99,12 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 					if ( ! array_key_exists( 'end_line', $r ) )
 						$record->end_line = 0;
 
-					$record->userid = $r->uid;
-					$record->quote_author_id = $r->aid;
+					// Userid is permitted to be zero so that this won't crap out
+					// during testing or debugging data from other Moodle installations.
+					// Ordinarily it shouldn't happen.  Quote ID, on the other hand,
+					// can quite legitimately be zero if the user no longer exists.
+					$record->userid = $r->uid ? $r->uid : 0 ;
+					$record->quote_author_id = $r->aid ? $r->aid : 0;
 					$record->object_type = AN_OTYPE_POST;
 					$record->object_id = $r->object_id;
 

@@ -17,6 +17,105 @@ bug fixes etc. from the stand-alone version apply to the subsequent Moodle versi
 release;  similarly, some fixes to the stand-alone version first appear in a Moodle 
 release.</p>
 
+<h2>All versions 2009-01-07</h2>
+
+<p>This version fixes a significant security vulnerability.</p>
+
+<h2>OJS and Demo releases for 2008-12-22</h2>
+
+<ul>
+<li>IE compatibility for OJS.</li>
+<li>Bug fixes and performance improvements for OJS.</li>
+<li>Fixed modified and created dates for OJS.</li>
+<li>CSRF protection for OJS.</li>
+<li>IE fixes for the demo.</li>
+</ul>
+
+<h2>Demo release for 2008-12-21</h2>
+
+<ul>
+<li>The non-static demo only works with userids, not usernames.  When 
+annotations created by other users were displayed, the username was blank.  Now 
+the username is set equal to the userid.  In a working application, the username 
+should be a proper human-readable name (contrasted with the userid, which must 
+be unique - usually it's the login name).</li>
+</ul>
+
+<h2>Moodle release for 2008-12-15</h2>
+
+<p>This release is aimed at stabilizing and refining the Moodle version, though 
+consideration is being given to the other versions also.  So far there have been 
+releases of the Moodle version (2008-12-14 and later) and demo (2008-12-20 and 
+later).  The following changes are in the Marginalia core libraries and apply to 
+all subsequent releases for all platforms (Moodle, OJS, demo):</p>
+
+<ul>
+<li>IE (version 7) is again supported.  Safari is also now fully supported 
+(thanks to browser improvements by Apple).</li>
+<li>I found a serious problem that could cause margin notes to be wrongly 
+ordered on pages containing HTML br elements.  Typically, notes would cluster 
+towards the bottom of the margin, not near their highlights.  The fix requires a 
+change in the database.  Fixes to data can only happen when a user logs in and 
+views his or her annotations.  Pages displaying annotations by multiple users 
+may exhibit this kind of incorrect behavior (even when they didn't before) until 
+all users have viewed their annotations on the page.  This will fix annotations 
+already experiencing the problem <i>so long as you visit the page in a non-IE 
+browser</i> (this is due to IE's lack of XPath support).</li>
+<li>Marginalia previously assumed well-formed HTML, i.e. HTML in which block 
+elements are never nested within inline elements.  Marginalia no longer makes 
+this assumption, although in some cases it might be quite slow on malformed 
+pages.</li>
+<li>Protection against a form of cross-site request forgery attack that could in 
+theory be used to modify or delete a user's existing annotations.  This is 
+implemented for Moodle (if cookies are used for the session ID, which is the 
+default) and OJS.  Previously the benefits of such an attack would be limited;  
+to my knowledge there was and is no way to inject database commands or HTML 
+through Marginalia.</li>
+</ul>
+
+<p>The following changes are Moodle-specific:</p>
+
+<p>Marginalia is, to the extent possible, a proper Moodle plug-in.  This makes 
+it much easier to install:  Moodle will automatically create Marginalia's 
+database tables, and there are fewer files to place in odd places.  This should 
+also make future upgrades much simpler.</p>
+
+<ul>
+<li>Smartcopy is gone.  It was a Firefox-specific hack that was not discoverable 
+and seemed to seldom be used.  Instead, we now have Smartquotes.  A "quote" 
+button beneath each forum message allows you to select and quote message content 
+into a reply.  This will start a reply if necessary, or paste into a reply in 
+another window.</li>
+<li>Annotations can also be quoted.  If you wish to reply to someone else's 
+annotation, click the quote button.  Or, you can effectively turn one of your 
+own annotations into a forum post.  We found that users tried to conduct 
+discussions within the annotation margin.  This is intended to redirect 
+discussion back to the medium best suited for it - the forum itself.</li>
+<li>Tags (keywords) have been replaced with a system to make it easy to type 
+frequently used margin notes.  If a note has been used more than once, 
+Marginalia can autocomplete it when you start typing.  This eliminates the +/- 
+control next to each annotation, and eliminates the need to create tags on the 
+Tags page.</li>
+<li>The summary page search interface has been simplified.  The drop-down menus 
+for specifying search criteria are gone.  Instead, you can click a pop-up icon 
+next to the name of a user in the summary results in order to filter by that 
+user.  You can do the same for tags (notes used more than once).  In order to 
+remove filters from the search, click on links in the text description of the 
+search at the top of the page.  Clicking here can also specify that the search 
+should find exact matches of the search string (useful for keywords).</li>
+<li>All users' existing (public) annotations on a forum page can be fixed 
+automatically when an administrator views them.  This can prevent the display 
+problem mentioned above.  This feature allows admin users to make changes to 
+highlight range locations for other users, so it can be switched off for 
+increased security.</li>
+<li>The height of the button in the margin is set correctly, including when 
+annotations are added, deleted, etc.</li>
+<li>The database schema has been redesigned to be smaller and faster (using 
+Moodle id values instead of the strings used in Marginalia's client/server 
+protocol).</li>
+<li>The Moodle-specific code is being shifted towards Moodle's coding standards.</li>
+</ul>
+
 <h2>Release Notes for 2007-11-05 (Moodle version)</h2>
 <ul>
 <li>Per-user tag feature ("keywords"), accessible from Summary page</li>

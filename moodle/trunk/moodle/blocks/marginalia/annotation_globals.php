@@ -132,14 +132,19 @@ class annotation_globals
 		
 		$start_line = array_key_exists( 'start_line', $r ) ? $r->start_line : 0;
 		$end_line = array_key_exists( 'end_line', $r ) ? $r->end_line : 0;
-		if ( array_key_exists( 'start_block', $r ) && $r->start_block !== null )  {
+		// The second and subsequente lines of the test are to catch cases where everything is blank,
+		// which can happen if the range is really old and uses the range field
+		if ( array_key_exists( 'start_block', $r ) && $r->start_block !== null 
+			&& ( ! array_key_exists( 'range', $r )
+				|| ( $start_line || $end_line || $r->start_block || $r->end_block || $r->start_word || $r->end_word || $r->start_char || $r->end_char ) ) )
+		{
 			$range = new SequenceRange( );
 			$range->setStart( new SequencePoint( $r->start_block, $start_line, $r->start_word, $r->start_char ) );
 			$range->setEnd( new SequencePoint( $r->end_block, $end_line, $r->end_word, $r->end_char ) );
 			$annotation->setSequenceRange( $range );
 		}
 		// Older versions used a range string column.  Check and translate that field here:
-		else if ( array_key_exists( 'range', $r ) )  {
+		else if ( array_key_exists( 'range', $r ) && $r->range !== null )  {
 			$range = new SequenceRange( );
 			$range->fromString( $r->range );
 			$annotation->setSequenceRange( $range );
@@ -195,13 +200,13 @@ class annotation_globals
 		$record->start_block = addslashes( $sequenceStart->getPaddedPathStr( ) );
 		$record->start_xpath = null === $xpathRange ? null : addslashes( $xpathStart->getPathStr( ) );
 		$record->start_line = $sequenceStart->getLines( );
-		$record->start_word = $sequenceStart->getWords( );
+		$record->start_word = $sequenceStart->getWords( ) ? $sequenceStart->getWords( ) : 0;
 		$record->start_char = $sequenceStart->getChars( );
 		
 		$record->end_block = addslashes( $sequenceEnd->getPaddedPathStr( ) );
 		$record->end_xpath = null === $xpathRange ? null : addslashes( $xpathEnd->getPathStr( ) );
 		$record->end_line = $sequenceEnd->getLines( );
-		$record->end_word = $sequenceEnd->getWords( );
+		$record->end_word = $sequenceEnd->getWords( ) ? $sequenceEnd->getWords( ) : 0;
 		$record->end_char = $sequenceEnd->getChars( );
 		return $record;
 	}
