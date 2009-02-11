@@ -693,13 +693,13 @@
     $forcefocus = empty($reply) ? NULL : 'message';
 
     // The Javascript is required for smartquotes to work.  #geof#
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/annotation/annotation-styles.php'/>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/log.js'></script>\n"
-    	."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/3rd-party.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/domutil.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/ranges.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/marginalia/post-micro.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/annotation/smartquote.js'></script>\n"
+	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/blocks/marginalia/annotation-styles.php'/>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/log.js'></script>\n"
+    	."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/3rd-party.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/domutil.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/ranges.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/post-micro.js'></script>\n"
+		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/smartquote.js'></script>\n"
 		."<script language='JavaScript' type='text/javascript'>\n"
 		."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwroot."'); } );\n"
 		."</script>\n";
