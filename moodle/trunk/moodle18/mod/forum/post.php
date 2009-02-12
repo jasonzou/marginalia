@@ -189,7 +189,7 @@
         $post->parent      = $parent->id;
         $post->subject     = $parent->subject;
         $post->userid      = $USER->id;
-        $post->message     = '';
+        $post->message     = $messageInit ? $messageInit : '';	// #geof#
 
         $strre = get_string('re', 'forum');
         if (!(substr($post->subject, 0, strlen($strre)) == $strre)) {

@@ -118,7 +118,7 @@
         $post->parent     = 0;
         $post->subject    = '';
         $post->userid     = $USER->id;
-        $post->message    = '';
+        $post->message     = $messageInit ? $messageInit : '';	// #geof#
 
         if ($groupmode = groups_get_activity_groupmode($cm)) {
             $post->groupid = groups_get_activity_group($cm);
