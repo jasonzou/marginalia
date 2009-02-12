@@ -1,5 +1,9 @@
 #summary Release Notes
 
+== Moodle, 2009-02-11 ==
+
+  * fix quote buttons on posts and margin notes
+
 == Moodle, 2009-01-20 ==
 
   * fixes to the code for upgrading existing annotations from older (pre-December 2008) versions of Marginalia
