@@ -33,10 +33,7 @@ LocalizedAnnotationStrings = {
 	
 	'annotation collapse edit button' : 'Click to display margin note drop-down list',
 
-	
-	// Smartcopy
-	'smartcopy on' : 'Smartcopy is On.  Press Shift-Ctrl-S to switch it off.',
-	'smartcopy off' : 'Smartcopy is Off.  Press Shift-Ctrl-S to switch it on.',
+	'annotation quote button' : 'Quote this annotation in a discussion post.',
 	
 	
 	

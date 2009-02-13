@@ -12,12 +12,16 @@ Smartquote = {
 			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', skipContent );
 			if ( button )
 			{
-				var content = posts[ i ].getContentElement( );
-				var postId = Smartquote.postIdFromUrl( posts[ i ].getUrl( ) );
-				button.onclick = function( ) { Smartquote.quotePostMicro( content, skipContent, wwwroot, postId ); };
+				var f = function( ) {
+					var content = posts[ i ].getContentElement( );
+					var postId = Smartquote.postIdFromUrl( posts[ i ].getUrl( ) );
+					button.onclick = function( ) { Smartquote.quotePostMicro( content, skipContent, wwwroot, postId ); };
+				};
+				f( );
 			}
 		}
 	},
+	
 	
 	/**
 	 * Return a function for handling a smartquote button click

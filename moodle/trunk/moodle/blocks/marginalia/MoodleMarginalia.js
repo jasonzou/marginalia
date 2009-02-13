@@ -104,7 +104,7 @@ MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteE
 	buttonParams = this.useSmartquote ?
 		{
 			className: 'quote',
-			title: 'share',
+			title: getLocalized( 'annotation quote button' ),
 			content: this.smartquoteIcon,
 			onclick: function( ) { 
 				Smartquote.quoteAnnotation(
