@@ -1,5 +1,12 @@
 #summary Release Notes
 
+== Moodle, 2009-02-18 ==
+
+  * fix quote button on summary page
+  * ensure quote button on forum posts replies to correct post
+  * sometimes annotation display and annotation user drop-down menu on forum page would conflict
+  * autocomplete would force an autocompletion when Enter was pressed, so instead use a drop-down menu for now
+
 == Moodle, 2009-02-11 ==
 
   * fix quote buttons on posts and margin notes
