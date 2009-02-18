@@ -37,13 +37,24 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 	this.preferences = new Preferences( 
 		new RestPreferenceService( this.annotationPath + '/user-preference.php' ),
 		prefs );
-	this.displayUserId = prefs[ AN_USER_PREF ];
 	this.showAnnotations = prefs[ AN_SHOWANNOTATIONS_PREF ];
 	this.showAnnotations = this.showAnnotations == 'true';
 	this.splash = prefs[ AN_SPLASH_PREF ] == 'true' ? params[ 'splash' ] : null;
 	this.useSmartquote = params.useSmartquote;
 	this.allowAnyUserPatch = params.allowAnyUserPatch;
 	this.smartquoteIcon = params.smartquoteIcon;
+	
+	// This is kind of awkward.  If the user changes the display user, then
+	// visits another page, then uses the browser back button, we need to use
+	// the new display user, not the one set when the page was loaded the first
+	// time.  So check whether the user dropdown has a value, and match it.
+	this.displayUserId = prefs[ AN_USER_PREF ];
+	var userCtrl = document.getElementById( 'anuser' );
+	if ( userCtrl )
+	{
+		if ( userCtrl.selectedIndex >= 0 )
+			this.displayUserId = userCtrl.options[ userCtrl.selectedIndex ].value;
+	}
 }
 
 MoodleMarginalia.prototype.onload = function( )

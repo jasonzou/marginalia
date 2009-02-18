@@ -48,7 +48,7 @@ else  {
     if (! $course = get_record('course', 'id', $courseid ) )
         error("Course ID $courseid is incorrect - discussion is faulty");
 
-	$keywords = annotation_keywords_db::list_keywords( $USER->username );
+	$keywords = annotation_keywords_db::list_keywords( $USER->id );
 	
 	$meta
 		= "<link type='text/css' rel='stylesheet' href='tags.css'/>\n"
@@ -76,7 +76,7 @@ else  {
 			$url = 'summary.php?url='
 				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseid" )
 				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name).'&match=exact';
-			echo '<li><a href="'.htmlspecialchars( $url ).'">'.urlencode($keyword->name)."</a></li>\n";
+			echo '<li><a href="'.htmlspecialchars( $url ).'">'.htmlspecialchars($keyword->name)."</a></li>";
 		}
 		echo "</ul>\n";
 	}

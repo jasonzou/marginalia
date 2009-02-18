@@ -351,7 +351,7 @@ class annotation_summary_page
 			
 			// Build scripts for individual buttons
 			echo "<script type='text/javascript'>\n";
-			for ( $annotation_i = 0;  $annotationi < count( $annotationa );  ++$annotationi )  {
+			for ( $annotationi = 0;  $annotationi < count( $annotationa );  ++$annotationi )  {
 				$annotation = $annotationa[ $annotationi ];
 				$sqid = s( 'sq'.$annotation->id );
 				$tuserid = s( $annotation->userid );
