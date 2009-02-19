@@ -10,7 +10,7 @@ $t = Locale::translate( '' );
 
 function getMarginaliaStringsJS( )
 {
-header( 'Content-type', 'text/javascript' );
+header( 'Content-type: text/javascript' );
 
 echo "/*\n";
 echo " * Languages for annotation Javascript\n";
