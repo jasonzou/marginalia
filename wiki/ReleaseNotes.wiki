@@ -1,5 +1,9 @@
 #summary Release Notes
 
+== OJS, 2009-02-19 ==
+
+  * On some web servers Marginalia was not working due to malformed content-type on localized strings file
+
 == Moodle, 2009-02-18 ==
 
   * fix quote button on summary page
