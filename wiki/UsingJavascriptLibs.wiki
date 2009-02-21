@@ -10,4 +10,4 @@ Second, Marginalia is itself a library that can plug into different host applica
 
 It appears to me that the best solution would be for Marginalia to use a wrapper that abstracted out the functionality in needs.  The wrapper would then implement the function with whatever library the host application has chosen to use.  There's something akin to this already, where Marginalia tests for the presence of YUI before implementing autocompletion for margin notes (a feature used in the Moodle implementation).  This would still be a pain to implement though.  Multiple execution paths could complicate debugging.  And the wrappers would probably be somewhat limited and ugly, so that gains in code simplicity would be limited.
 
-I welcome thoughts on this.  Personally, I would love to use jQuery to clarify the Marginalia source.  But at this point I'm not convinced it's worth the effort to do so in a portable manner.
+I welcome thoughts on this.  Personally, I would love to use jQuery to clarify the Marginalia source.  But at this point I'm not convinced it's worth the effort necessary to do so in a portable manner.
