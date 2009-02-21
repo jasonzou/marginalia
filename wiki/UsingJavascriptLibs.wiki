@@ -1,6 +1,6 @@
 #summary Why Marginalia does not use Javascript libraries like jQuery
 
-I have been asked on a number of occasions why Marginalia does not use a standard Javascript library like jQuery, Prototype, or YUI.  Instead, it includes its own crude implementations of utility functions for managing DOM and HTML.  These libraries include code that has been heavily tested and optimized, is simple to call (and would simplify Marginalia), and has an existing base of developers who skilled in its use.  Such a library could also provide UI enhancements.
+I have been asked on a number of occasions why Marginalia does not use a standard Javascript library like jQuery, Prototype, or YUI.  Instead, it includes its own crude implementations of utility functions for managing the DOM and HTML.  These libraries include code that has been heavily tested and optimized, are simple to call (and would simplify Marginalia), and have an existing base of developers who skilled in their use.  Such a library could also provide UI enhancements.
 
 It's a good question, and it's certainly something I am considering.  There are two reasons for my hesitation.
 
