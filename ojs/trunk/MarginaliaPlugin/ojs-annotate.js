@@ -106,6 +106,14 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 			setTimeout( _flashLinkTarget, 240 );
 	//		addClass( fragment, 'link-target' );
 		}
+		
+		// Click-to-link doesn't work in IE because of its weak event model
+		if ( window.addEventListener )
+		{
+			window.addEventListener( 'focus', _enableLinkTargets, false );
+			window.addEventListener( 'focus', _updateLinks, false );
+		}
+		
 		if ( currentUser )
 			window.marginalia.showAnnotations( url, null );
 	}
