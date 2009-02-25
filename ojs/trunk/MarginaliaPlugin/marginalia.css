@@ -127,15 +127,16 @@
 	border-color: black;
 }
 
+
 .hentry button.createAnnotation {
-	height: 100%;
+/*	height: 100%; Crashes IE. Hard. But only when multiple tabs open. POS. */
 	width: 100%;
 	font-size: inherit;
 	position: absolute;
 	left: 0;
 	top: 0 ;
 	border: none;
-	background: inherit;
+	background: none;
 	cursor: pointer;
 	padding: 0;
 	margin: 0;

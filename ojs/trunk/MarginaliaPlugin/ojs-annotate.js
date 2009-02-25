@@ -29,8 +29,8 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 		}
 	} );
 	
-	var marginaliaDirect = new MarginaliaDirect( annotationService );
-	marginaliaDirect.init( );
+	//var marginaliaDirect = new MarginaliaDirect( annotationService );
+	//marginaliaDirect.init( );
 
 // Uncomment this line to turn in-browser logging on:
 //	initLogging();
@@ -44,7 +44,7 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 		// Add classes expected by Marginalia
 		domutil.addClass( mainNode, PM_POST_CLASS );
 		domutil.addClass( contentNode, PM_CONTENT_CLASS );
-
+		
 		var titleNode = domutil.childByTagClass( mainNode, 'h2', null, null );
 		if ( titleNode )
 			domutil.addClass( titleNode, PM_TITLE_CLASS );
@@ -74,26 +74,34 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 			]
 		} ) );
 		
+		var button = domutil.element( 'button', {
+				className: 'createAnnotation',
+				title: 'Click here to create an annotation',
+				onclick: ojsCreateAnnotation,
+				content: '>'
+			} );
+
 		// Create the margin notes area
 		var notes = wrapper.appendChild( domutil.element( 'div', {
 			className: 'notes',
 			content:  [ 
 				domutil.element( 'div', {
 					className: 'button-wrapper',
-					content:
-						domutil.button ( {
-							className: 'createAnnotation',
-							title: 'Click here to create an annotation',
-							onclick: ojsCreateAnnotation,
-							content: '>'
-						} )
+					content: button
 				} ),
 				domutil.element( 'ol', {
 					content:  domutil.element( 'li', { } )
 				} )
 			]
 		} ) );
-	
+		
+		/* height:100% css directive was crashing IE hard.  Took ages of
+		 * binary-search comment debugging to find it.  I haven't enough bad
+		 * things to say about IE.  The solution is to set the button height
+		 * programmatically.  Also, with this fix in place IE is mysteriously
+		 * refusing to obey border and background in the stylesheet. */
+		button.style.height = '' + wrapper.offsetHeight + 'px';
+		
 	//  Slow, but can be made to work in IE:
 	//	makeBlockElementsLinkable( content, '' );
 		
@@ -107,12 +115,9 @@ function ojsAnnotationOnLoad( serviceRoot, currentUser, csrfCookie )
 	//		addClass( fragment, 'link-target' );
 		}
 		
-		// Click-to-link doesn't work in IE because of its weak event model
-		if ( window.addEventListener )
-		{
-			window.addEventListener( 'focus', _enableLinkTargets, false );
-			window.addEventListener( 'focus', _updateLinks, false );
-		}
+		// Enable click-to-link functionality
+		domutil.addEventListener( window, 'focus', _enableLinkTargets, false );
+		domutil.addEventListener( window, 'focus', _updateLinks, false );
 		
 		if ( currentUser )
 			window.marginalia.showAnnotations( url, null );
