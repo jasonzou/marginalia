@@ -53,7 +53,16 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 	if ( userCtrl )
 	{
 		if ( userCtrl.selectedIndex >= 0 )
-			this.displayUserId = userCtrl.options[ userCtrl.selectedIndex ].value;
+		{
+			var userId = userCtrl.options[ userCtrl.selectedIndex ].value;
+			if ( userId )
+			{
+				this.displayUserId = userId;
+				this.showAnnotations = true;
+			}
+			else
+				this.showAnnotations = false;
+		}
 	}
 }
 
@@ -69,8 +78,8 @@ MoodleMarginalia.prototype.onload = function( )
 	{
 		var annotationService = new RestAnnotationService( this.annotationPath + '/annotate.php', {
 			csrfCookie: 'MoodleSessionTest' } );
-		var keywordService = new RestKeywordService( this.annotationPath + '/keywords.php');
-		keywordService.init( null, true );
+		var keywordService = new RestKeywordService( this.annotationPath + '/keywords.php', true);
+		keywordService.init( null );
 		var moodleMarginalia = this;
 		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.displayUserId == '*' ? '' : this.displayUserId, {
 			preferences: this.preferences,
