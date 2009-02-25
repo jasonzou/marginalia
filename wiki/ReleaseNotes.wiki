@@ -6,6 +6,10 @@
   * user drop-down sometimes displayed incorrect user (previous fix didn't cover all cases)
   * frequently used margin note list (tags) used for autocomplete not auto-updating until page reloaded
 
+== OJS, 2009-02-24 ==
+
+  * click-to-link not working for other windows (though did work for current window)
+
 == OJS, 2009-02-19 ==
 
   * On some web servers Marginalia was not working due to malformed content-type on localized strings file
