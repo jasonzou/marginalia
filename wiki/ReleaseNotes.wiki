@@ -1,5 +1,11 @@
 #summary Release Notes
 
+== Moodle, 2009-02-24 ==
+
+  * user drop-down broken as side-effect of previous fix
+  * user drop-down sometimes displayed incorrect user (previous fix didn't cover all cases)
+  * frequently used margin note list (tags) used for autocomplete not auto-updating until page reloaded
+
 == OJS, 2009-02-19 ==
 
   * On some web servers Marginalia was not working due to malformed content-type on localized strings file
