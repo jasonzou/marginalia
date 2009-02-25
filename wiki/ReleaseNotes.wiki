@@ -1,5 +1,10 @@
 #summary Release Notes
 
+== OJS, 2009-02-25 ==
+
+  * Work-around for IE, which was crashing when more then one tab was open.  (Due to CSS.  Yay for exploder.)
+  * Implement click-to-link for IE.
+
 == Moodle, 2009-02-24 ==
 
   * user drop-down broken as side-effect of previous fix
