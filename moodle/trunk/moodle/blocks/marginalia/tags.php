@@ -59,11 +59,27 @@ else  {
 		. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
+		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-keywords.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='tags.js'></script>\n"
 		. "<script language='Javascript' type='text/javascript'>\n"
-		. " var serviceRoot = '".s(ANNOTATION_PATH).'/annotation'."';\n"
-		. "</script>\n";
-		
+		. " var serviceRoot = '".s(ANNOTATION_PATH)."';\n"
+		. " var summaryRoot = 'summary.php?url=".urlencode($CFG->wwwroot.'/course/view.php?id='+$courseid)
+			. "&u=".urlencode($USER->username)."&match=exact';\n"
+		. " var annotationKeywords = [\n";
+	if ( $keywords )
+	{
+		for ( $i = 0;  $i < count( $keywords );  ++$i )
+		{
+			$keyword = $keywords[ $i ];
+			if ( $i > 0 )
+				$meta .= ", ";
+			$meta .= "new Keyword('".htmlspecialchars($keyword->name)."', '".htmlspecialchars($keyword->description)."')\n";
+		}
+	}
+	$meta .= "];\n"
+		. "addEvent( window, 'load', keywordsOnload );\n"
+		. "</script>";
+			
 	$navtail = get_string( 'edit_keywords_title', ANNOTATION_STRINGS );
 	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
 		$course->fullname, "$navtail", "", $meta, true, "", null);
@@ -71,14 +87,14 @@ else  {
 	if ( AN_USEKEYWORDS && $keywords && $courseid )  {
 		echo '<p>'.htmlspecialchars(get_string( 'tag_list_prompt', ANNOTATION_STRINGS ))."</p>\n";
 		echo "<ul id='keywords'>\n";
-		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
+/*		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
 			$keyword = $keywords[ $i ];
 			$url = 'summary.php?url='
 				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseid" )
 				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name).'&match=exact';
 			echo '<li><a href="'.htmlspecialchars( $url ).'">'.htmlspecialchars($keyword->name)."</a></li>";
 		}
-		echo "</ul>\n";
+*/		echo "</ul>\n";
 	}
 	
 	echo "<fieldset id='replace'>\n";

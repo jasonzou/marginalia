@@ -1,3 +1,49 @@
+function keywordsOnload( )
+{
+//	var replaceButton = document.getElementById( 'replace' );
+
+	window.keywordService = new RestKeywordService( serviceRoot + '/keywords.php', true );
+	keywordService.init( annotationKeywords );
+	refreshKeywords( );
+	
+	window.annotationService = new RestAnnotationService( serviceRoot + '/annotate.php', {
+		csrfCookie: 'MoodleSessionTest' } );
+	
+	addEvent( '#replace input', 'change', _clearReplaceCount );
+	addEvent( '#replace input', 'keypress', _keypressReplaceNote );
+	addEvent( '#replace button', 'click', _replaceNotes );
+}
+
+function refreshKeywords( )
+{
+	var list = document.getElementById( 'keywords' );
+	var items = domutil.childrenByTagClass( list, 'li' );
+	for ( var i = 0;  i < items.length;  ++i )
+		list.removeChild( items[ i ] );
+
+	keywordService.keywords.sort( compareKeywords );
+	var keywords = keywordService.keywords;
+	for ( var i = 0;  i < keywords.length;  ++i )
+	{
+		var keyword = keywords[ i ];
+		list.appendChild( domutil.element( 'li', {
+			content: domutil.element( 'a', {
+				href: summaryRoot + '&q=' + encodeURIComponent( keyword.name ),
+				content: keyword.name } )
+			} ) );
+	}
+}
+
+function compareKeywords( k1, k2 )
+{
+	if ( k1.name < k2.name )
+		return -1;
+	else if ( k1.name > k2.name )
+		return 1;
+	else
+		return 0;
+}
+
 function _keypressReplaceNote( event )
 {
 	if ( event.keyCode == 13 )
@@ -26,6 +72,7 @@ function _replaceNotes( event )
 		while ( count.firstChild )
 			count.removeChild( count.firstChild );
 		count.appendChild( document.createTextNode( t ) );
+		keywordService.refresh( refreshKeywords );
 	}
 	annotationService.bulkUpdate( oldNote.value, newNote.value, f );	
 }

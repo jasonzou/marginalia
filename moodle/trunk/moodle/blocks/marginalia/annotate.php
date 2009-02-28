@@ -161,7 +161,7 @@ class moodle_annotation_service extends AnnotationService
 	{
 		global $CFG, $USER;
 		
-		$where = "userid='".addslashes($USER->username)."' AND note='".addslashes($oldnote)."'";
+		$where = "userid='".addslashes($USER->id)."' AND note='".addslashes($oldnote)."'";
 
 		// Count how many replacements will be made
 		$query = 'SELECT count(id) AS n FROM '.$CFG->prefix.AN_DBTABLE." WHERE $where";
