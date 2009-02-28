@@ -1,5 +1,9 @@
 #summary Release Notes
 
+== Moodle, 2009-02-27 ==
+
+  * Fix search and replace function on tags page
+
 == OJS, 2009-02-25 ==
 
   * Work-around for IE, which was crashing when more then one tab was open.  (Due to CSS.  Yay for exploder.)
