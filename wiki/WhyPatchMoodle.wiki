@@ -21,7 +21,7 @@ I believe the need for patches could be eliminated if Moodle did the following:
   * Emit usernames in forum posts.
   * Add support for the message parameter to forum/post.php.
 
-Other things would be nice, but that's a bare minimum.  I believe the above tasks could be implemented as follows:
+Other things would be nice, but that's a bare minimum.  I believe the above tasks could then be implemented as follows:
 
   * Use the DOM to make changes to page HTML, as is done in the OJS version of Marginalia.  (Supporting browsers with Javascript switched off is not much of an issue as the vast majority of Marginalia's features - some quoting and the summary page excepted - are impossible without JS.)
   * Modify Marginalia to be configure to find forum post metadata without the need for predefined classes (e.g. use CSS selectors)
