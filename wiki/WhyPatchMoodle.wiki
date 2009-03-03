@@ -9,7 +9,8 @@ As of March 2009, Marginalia patches Moodle to do the following:
   * Add code to discuss.php to determine configuration parameters and emit them for the initialization Javascript
   * Add the Marginalia buttons and quote buttons in forum/lib.php
   * Set appropriate class values on forum posts so that Marginalia can extract metadata
-  * Include username in database queries for the author of a forum post and include it in the HTML generated for each post
+  * Include username and date in database queries for the author of a forum post
+  * Emit username and date in ISO format in each post's HTML
   * Add forum/permalink.php, so that each forum post can be linked to individually
   * Add a message parameter to forum/post.php so that the quote button can pass in initial HTML when the user creates a new post
   * Add a function call to user.php so that when a user is deleted, his or her annotations are also deleted
@@ -18,7 +19,7 @@ As of March 2009, Marginalia patches Moodle to do the following:
 I believe the need for patches could be eliminated if Moodle did the following:
 
   * Allow plugins to add load Javascript and CSS into existing pages.  My suggestion would be a standard Moodle method for registering Javascript and CSS files against specific base URLs.  Then each page would pull in the files listed against it.  For performance and clarity, it would also be good to register initialization callbacks.
-  * Emit usernames in forum posts.
+  * Emit usernames and ISO dates in forum posts.
   * Add support for the message parameter to forum/post.php.
 
 Other things would be nice, but that's a bare minimum.  I believe the above tasks could then be implemented as follows:
