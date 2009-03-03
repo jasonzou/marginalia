@@ -2,7 +2,7 @@
 
 Ideally, Marginalia would be installed in Moodle just like any other plugin. However, currently that is not possible.  Marginalia needs to add content and behavior to forum pages, and Moodle provides no hooks to do that.
 
-Marginalia patches Moodle to do the following:
+As of March 2009, Marginalia patches Moodle to do the following:
 
   * Load Marginalia's Javascript and CSS on forum pages (discuss.php, lib.php)
   * Add Javascript to the head of forum pages to initialize Marginalia (placing JS in the head can result in quite significant speed benefits compared to placing it in the document body)
