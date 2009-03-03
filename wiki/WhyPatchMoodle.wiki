@@ -17,9 +17,9 @@ Marginalia patches Moodle to do the following:
 
 I believe the need for patches could be eliminated if Moodle did the following:
 
-  * Allow plugins to add load Javascript and CSS into existing pages.
-  * Emit usernames in forum posts
-  * Add support for the message parameter to forum/post.php
+  * Allow plugins to add load Javascript and CSS into existing pages.  My suggestion would be a standard Moodle method for registering Javascript and CSS files against specific base URLs.  Then each page would pull in the files listed against it.  For performance and clarity, it would also be good to register initialization callbacks.
+  * Emit usernames in forum posts.
+  * Add support for the message parameter to forum/post.php.
 
 Other things would be nice, but that's a bare minimum.  I believe the above tasks could be implemented as follows:
 
