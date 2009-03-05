@@ -1,7 +1,16 @@
+/*
+ * Smartquote functions used in Moodle
+ * built on CookieBus
+ */
 
 Smartquote = {
+	/**
+	 * Enable all smartquote buttons on the page
+	 * Buttons are found in posts with selector button.smartquote
+	 */
 	enableSmartquote: function( wwwroot, postPageInfo, skipContent )
 	{
+		// Use passed-in value for speed if possible
 		if ( ! postPageInfo )
 			postPageInfo = PostPageInfo.getPostPageInfo( document );
 
@@ -11,27 +20,26 @@ Smartquote = {
 		{
 			var button = domutil.childByTagClass( posts[ i ].getElement( ), 'button', 'smartquote', skipContent );
 			if ( button )
-			{
-				var f = function( ) {
-					var content = posts[ i ].getContentElement( );
-					var postId = Smartquote.postIdFromUrl( posts[ i ].getUrl( ) );
-					button.onclick = function( ) { Smartquote.quotePostMicro( content, skipContent, wwwroot, postId ); };
-				};
-				f( );
-			}
+				Smartquote.enableSmartquoteButton( button, posts[ i ], wwwroot, skipContent );
 		}
 	},
 	
+	/**
+	 * Enable a specific smartquote button
+	 * Must be a separate function from the loop in enableSmartquote to deal
+	 * correctly with Javascript dynamic scoping and closures
+	 */
+	enableSmartquoteButton: function( button, post, wwwroot, skipContent )
+	{
+		var content = post.getContentElement( );
+		var postId = Smartquote.postIdFromUrl( post.getUrl( ) );
+		var f = function( ) { Smartquote.quotePostMicro( content, skipContent, wwwroot, postId ); };
+		addEvent( button, 'click', f );
+	},
 	
 	/**
-	 * Return a function for handling a smartquote button click
+	 * Calculate a post ID based on its URL
 	 */
-	getOnSmartquoteHandler: function( content )
-	{
-		var moodleMarginalia = this;
-		return function( ) { moodleMarginalia.onSmartquote( content ); };
-	},
-
 	postIdFromUrl: function( url )
 	{
 		var matches = url.match( /^.*\/mod\/forum\/permalink\.php\?p=(\d+)/ );
@@ -41,6 +49,12 @@ Smartquote = {
 			return 0;
 	},
 	
+	/**
+	 * Get a quote (selected text) from a postMicro with a given ID
+	 * Returns the quote as HTML with metadata included.  Note, however, that
+	 * any HTML tags in the selected text are stripped, and whitespace is
+	 * collapsed.
+	 */
 	getPostMicroQuote: function( content, skipContent, wwwroot, postId )
 	{
 		// Test for selection support (W3C or IE)
@@ -86,6 +100,12 @@ Smartquote = {
 		return leadIn + '<blockquote><p>' + domutil.htmlEncode( quote ) + '</p></blockquote>';
 	},
 	
+	
+	/**
+	 * Called when a quote button is clicked on a postMicro.  Extracts the
+	 * selected text, builds HTML with metadata, and publishes it on the
+	 * CookieBus.
+	 */
 	quotePostMicro: function( content, skipContent, wwwroot, postId )
 	{
 //		console.log( 'quote' );
@@ -196,6 +216,10 @@ Smartquote = {
 				selection.collapseToEnd( );
 			}
 		} );
+		
+		// Don't forget to unsubscribe if the window is unloaded
+		addEvent( window, 'unload', function( ) { bus.unsubscribe( ); } );
+		
 		return bus;
 	}
 };

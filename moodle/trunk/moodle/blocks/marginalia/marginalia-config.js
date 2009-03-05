@@ -30,17 +30,17 @@ ANNOTATION_ACCESS_DEFAULT = 'public';	// default access
 
 function initLogging( )
 {
-	var log = window.log = new ErrorLogger( true, true );
+	ErrorLogger.initLogging( true, false );
 	
 	// Set these to true to view certain kinds of events
 	// Most of these are only useful for debugging specific areas of code.
 	// annotation-service, however, is particularly useful for most debugging
-	log.setTrace( 'annotation-service', true );	// XMLHttp calls to the annotation service
+	log.setTrace( 'annotation-service', false );	// XMLHttp calls to the annotation service
 	log.setTrace( 'word-range', false );			// Word Range calculations (e.g. converting from Text Range)
-	log.setTrace( 'xpath-range', true );			// Trace XPath ranges
-	log.setTrace( 'find-quote', true );			// Check if quote matches current state of document
+	log.setTrace( 'xpath-range', false );			// Trace XPath ranges
+	log.setTrace( 'find-quote', false );			// Check if quote matches current state of document
 	log.setTrace( 'node-walk', false );			// Used for going through nodes in document order
-	log.setTrace( 'show-highlight', true );		// Text highlighting calculations
+	log.setTrace( 'show-highlight', false );		// Text highlighting calculations
 	log.setTrace( 'align-notes', false );			// Aligning margin notes with highlighting
 	log.setTrace( 'range-compare', false );		// Compare range positions
 	log.setTrace( 'range-string', false );			// Show conversions of word ranges to/from string
@@ -52,6 +52,7 @@ function initLogging( )
 	log.setTrace( 'range-timing', false );			// Calculate the speed of range calculations
 	log.setTrace( 'highlight-timing', false );	// Calculate the speed of highlight display
 	log.setTrace( 'actions', false );				// Insertion of action text
-	log.setTrace( 'markers', true );				// left margin marker calculations
-	log.setTrace( 'showNote', true );
+	log.setTrace( 'markers', false );				// left margin marker calculations
+	log.setTrace( 'showNote', false );
+	log.setTrace( 'stripMarkup', false );
 }

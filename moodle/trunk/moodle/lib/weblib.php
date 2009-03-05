@@ -33,7 +33,7 @@
  * - datalib.php - functions that access the database.
  * - moodlelib.php - general-purpose Moodle functions.
  * @author Martin Dougiamas
- * @version  $Id$
+ * @version  $Id$Â
  * @license http://www.gnu.org/copyleft/gpl.html GNU Public License
  * @package moodlecore
  */
@@ -4920,7 +4920,6 @@ function use_html_editor($name='', $editorhidebuttons='', $id='') {
 	echo "if ( Smartquote && Smartquote.subscribeHtmlArea )\n"
 		. "{\n"
 		. "  var bus = Smartquote.subscribeHtmlArea( $editor );\n"
-		. "  addEvent(window,'unload', function(){ bus.unsubscribe(); });\n"
 		. "}\n";
     echo '//]]>'."\n";
     echo '</script>'."\n";
