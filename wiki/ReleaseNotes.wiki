@@ -1,5 +1,12 @@
 #summary Release Notes
 
+== Moodle, 2009-03-05 ==
+
+  * Update install to work with Moodle 1.9.4 version as of today.  Should cause patch to break with earlier versions of Moodle 1.9 (though this is not hard to fix manually).
+  * Replace autocomplete drop-down with typeahead, made possible by newer YUI in 1.9.4
+  * Database update code now fixes mistakenly escaped quotes in annotations
+  * Fix bug that could cause some highlights not to be stripped when displaying annotations by different users
+
 == Moodle, 2009-02-27 ==
 
   * Fix search and replace function on tags page
