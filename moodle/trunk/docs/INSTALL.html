@@ -17,6 +17,11 @@ steps, or you may mangle your data. You can tell that you have an old release
 because the install directory is <kbd>moodle/annotation</kbd> rather than 
 <kbd>moodle/local/annotation</kbd>.</p>
 
+<p>If you run into problems, please let me know.  I don't have the resources to
+test on many configurations, so you're probably not the only one.  I can't fix
+what I don't know about.  My email 
+address, sans punctuation, is <code>geof geof net</code>.</p>
+
 <h2>Fresh Installation</h2>
 
 <p>The installation requires the following:</p>
@@ -60,8 +65,8 @@ patch -b -p 1 &lt;moodle19.patch
 </pre>
 
 <p>The digit after the <code>-p</code> is the number, not the letter L.  The 
-<code>-b</code> option is not strictly necessary, but it allows you to run the
-uninstall script.</p>
+<code>-b</code> option is not strictly necessary, but it makes it easier to 
+(manually) uninstall Marginalia by keeping copies of unpatched files.</p>
 
 <p>You should not see any errors.  However, the official release of Moodle is constantly
 changing, so there is a possibility that this patch will not match your Moodle version.

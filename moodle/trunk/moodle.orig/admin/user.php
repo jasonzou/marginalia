@@ -1,4 +1,4 @@
-<?php // $Id: user.php,v 1.109.2.2 2008/01/26 16:56:23 poltawski Exp $
+<?php // $Id: user.php,v 1.109.2.4 2008/07/10 08:36:02 skodak Exp $
 
     require_once('../config.php');
     require_once($CFG->libdir.'/adminlib.php');
@@ -202,7 +202,18 @@
 
         $mainadmin = get_admin();
 
-        $table->head = array ("$firstname / $lastname", $email, $city, $country, $lastaccess, "", "", "");
+        $override = new object();
+        $override->firstname = 'firstname';
+        $override->lastname = 'lastname';
+        $fullnamelanguage = get_string('fullnamedisplay', '', $override);
+        if (($CFG->fullnamedisplay == 'firstname lastname') or
+            ($CFG->fullnamedisplay == 'firstname') or
+            ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'firstname lastname' )) {
+            $fullnamedisplay = "$firstname / $lastname";
+        } else { // ($CFG->fullnamedisplay == 'language' and $fullnamelanguage == 'lastname firstname') 
+            $fullnamedisplay = "$lastname / $firstname";
+        }
+        $table->head = array ($fullnamedisplay, $email, $city, $country, $lastaccess, "", "", "");
         $table->align = array ("left", "left", "left", "left", "left", "center", "center", "center");
         $table->width = "95%";
         foreach ($users as $user) {

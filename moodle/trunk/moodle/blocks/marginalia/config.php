@@ -29,6 +29,14 @@ define( 'AN_ADMINVIEWALL', true );
 
 // Show summary column headings at the top of each section, rather than at
 // the bottom of the whole table.
-define( 'AN_SUMMARYHEADINGSTOP', true );
+define( 'AN_SUMMARYHEADINGSTOP', false );
+
+// Replace \' with ' and \" with " in existing annotations when upgrading the db.
+// The backslashes were introduced by a bug in the code, and resulted in
+// broken annotations.  This has since been fixed.  This does introduce the
+// possibility that backslashes might be removed when they shouldn't, so this
+// can be switched off.  (I had thought I fixed this long ago Magicquotes how I 
+// hate thee.)
+define( 'AN_DBFIXBACKSLASHES', true );
 
 ?>

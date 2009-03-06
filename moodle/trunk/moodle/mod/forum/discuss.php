@@ -4,13 +4,6 @@
 //  If no post is given, displays all posts in a discussion
 
     require_once('../../config.php');
-    require_once('lib.php');
-	require_once( '../../local/annotation/config.php' );
-    require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
-    require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
-    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
-    require_once( ANNOTATION_DIR.'/lib.php' );
-    // require_once("../../local/annotation/marginalia-config.php");
 
     $d      = required_param('d', PARAM_INT);                // Discussion ID
     $parent = optional_param('parent', 0, PARAM_INT);        // If set, then display this post and all children.
@@ -36,6 +29,20 @@
     }
 
     require_course_login($course, true, $cm);
+
+/// Add ajax-related libs
+    require_js(array('yui_yahoo', 'yui_event', 'yui_dom', 'yui_connection', 'yui_json'));
+    require_js($CFG->wwwroot . '/mod/forum/rate_ajax.js');
+
+    // move this down fix for MDL-6926
+    require_once('lib.php');
+	require_js( array( 'yui_datasource' ) );
+	require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
+    require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
+    require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
+    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
+    require_once( ANNOTATION_DIR.'/lib.php' );
+    // require_once("../../local/annotation/marginalia-config.php");
 
     $modcontext = get_context_instance(CONTEXT_MODULE, $cm->id);
     require_capability('mod/forum:viewdiscussion', $modcontext, NULL, true, 'noviewdiscussionspermission', 'forum');
@@ -70,10 +77,14 @@
             error('Forum not visible', $return);
         }
 
+        require_capability('mod/forum:startdiscussion',
+            get_context_instance(CONTEXT_MODULE,$cmto->id));
+
         if (!forum_move_attachments($discussion, $forumto->id)) {
             notify("Errors occurred while moving attachment directories - check your file permissions");
         }
         set_field('forum_discussions', 'forum', $forumto->id, 'id', $discussion->id);
+        set_field('forum_read', 'forumid', $forumto->id, 'discussionid', $discussion->id);
         add_to_log($course->id, 'forum', 'move discussion', "discuss.php?d=$discussion->id", $discussion->id, $cmto->id);
 
         require_once($CFG->libdir.'/rsslib.php');
@@ -124,10 +135,9 @@
     }
 
     if ($mark == 'read' or $mark == 'unread') {
-        if (forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum) &&
-            $CFG->forum_usermarksread) {
+        if ($CFG->forum_usermarksread && forum_tp_can_track_forums($forum) && forum_tp_is_tracked($forum)) {
             if ($mark == 'read') {
-                forum_tp_add_read_record($USER->id, $postid, $discussion->id, $forum->id);
+                forum_tp_add_read_record($USER->id, $postid);
             } else {
                 // unread
                 forum_tp_delete_read_records($USER->id, $postid);
@@ -144,7 +154,7 @@
     }
 
     // Begin Annotation Code to set $meta
-    $meta = marginalia_header_html(  );
+    $meta = moodle_marginalia::header_html(  );
     // I'm perverting the meta argument here, but I can't figure out how otherwise
 	// to emit a stylesheet link.  #geof#
 	
@@ -154,52 +164,19 @@
 	
     // refurl is the relative URL to this resource from the server root (i.e., it should start with '/')
     $refurl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
-	echo marginalia_init_html( $refurl );
+	echo moodle_marginalia::init_html( $refurl );
 
 
 /// Check to see if groups are being used in this forum
 /// If so, make sure the current person is allowed to see this discussion
-/// Also, if we know they should be able to reply, then explicitly set $canreply
+/// Also, if we know they should be able to reply, then explicitly set $canreply for performance reasons
 
-    if ($forum->type == 'news') {
-        $capname = 'mod/forum:replynews';
-    } else {
-        $capname = 'mod/forum:replypost';
-    }
-
-    $canreply = false;
     if (isguestuser() or !isloggedin() or has_capability('moodle/legacy:guest', $modcontext, NULL, false)) {
         // allow guests and not-logged-in to see the link - they are prompted to log in after clicking the link
         $canreply = ($forum->type != 'news'); // no reply in news forums
 
-    } else if (has_capability($capname, $modcontext)) {
-        $groupmode = groups_get_activity_groupmode($cm);
-        if ($groupmode) {
-            if (has_capability('moodle/site:accessallgroups', $modcontext)) {
-                $canreply = true;
-            } else {
-                if ($groupmode == SEPARATEGROUPS) {
-                    require_login();
-                    if ($discussion->groupid == -1) {
-                        // can not reply to discussions for "All participants" in separate mode without accessallgroups cap
-                    } else if (groups_is_member($discussion->groupid)) {
-                        $canreply = true;
-                    } else {
-                        // this should not happen
-                        print_heading("Sorry, you can't see this discussion because you are not in this group");
-                        print_footer($course);
-                        die;
-                    }
-
-                } else if ($groupmode == VISIBLEGROUPS) {
-                    if ($discussion->groupid == -1 or groups_is_member($discussion->groupid)) {
-                        $canreply = true;
-                    }
-                }
-            }
-        } else {
-            $canreply = true;
-        }
+    } else {
+        $canreply = forum_user_can_post($forum, $discussion, $USER, $cm, $course, $modcontext);
     }
 
 /// Print the controls across the top
@@ -227,7 +204,8 @@
             $section = -1;
             $forummenu = array();
             foreach ($modinfo->instances['forum'] as $forumcm) {
-                if (!$forumcm->uservisible) {
+                if (!$forumcm->uservisible || !has_capability('mod/forum:startdiscussion',
+                    get_context_instance(CONTEXT_MODULE,$forumcm->id))) {
                     continue;
                 }
 
@@ -243,7 +221,8 @@
             if (!empty($forummenu)) {
                 echo "<div style=\"float:right;\">";
                 echo popup_form("$CFG->wwwroot/mod/forum/", $forummenu, "forummenu", "",
-                                 get_string("movethisdiscussionto", "forum"), "", "", true);
+                                 get_string("movethisdiscussionto", "forum"), "", "", true,'self','',NULL,
+                                 get_string('move'));
                 echo "</div>";
             }
         }
@@ -251,9 +230,9 @@
 	
 	// Annotation controls (help, user dropdown, link to summary page)
 	echo "</td>\n<td id='annotation-controls'>";
-	show_marginalia_help( 'forum' );
-	show_marginalia_user_dropdown( $refurl, true );
-	show_marginalia_summary_link( $refurl, $USER->username );
+	moodle_marginalia::show_help( 'forum' );
+	moodle_marginalia::show_user_dropdown( $refurl, true );
+	echo moodle_marginalia::summary_link_html( $refurl, $USER->username );
     echo "</td></tr></table>";
 
     if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {
