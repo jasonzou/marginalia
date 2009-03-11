@@ -121,12 +121,12 @@ class moodle_marginalia
 			." var url = '".s($refurl)."';\n"
 			.' var userId = \''.s($USER->username)."';\n"
 			.' moodleMarginalia = new MoodleMarginalia( annotationPath, url, moodleRoot, userId, '.$sprefs.', {'."\n";
-		if ( $showsplashpref == 'true' )
-			$meta .= '  splash: \''.get_string('splash',ANNOTATION_STRINGS).'\'';
 		$meta .= ' useSmartquote: '.s(AN_USESMARTQUOTE)
 			.",\n".' allowAnyUserPatch: '.($allowAnyUserPatch ? 'true' : 'false' )
-			.",\n smartquoteIcon: '".AN_SMARTQUOTEICON."'"
-			.'  } );'."\n"
+			.",\n smartquoteIcon: '".AN_SMARTQUOTEICON."'";
+		if ( $showsplashpref == 'true' )
+			$meta .= ',  splash: \''.get_string('splash',ANNOTATION_STRINGS).'\'';
+		$meta .= '  } );'."\n"
 			." moodleMarginalia.onload();\n"
 			."}\n"
 			."addEvent(window,'load',myOnload);\n"

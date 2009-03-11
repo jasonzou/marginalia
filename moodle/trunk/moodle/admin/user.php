@@ -3,7 +3,7 @@
     require_once('../config.php');
     require_once($CFG->libdir.'/adminlib.php');
     require_once($CFG->dirroot.'/user/filters/lib.php');
-    require_once($CFG->dirroot.'/local/annotation/lib.php');
+    require_once($CFG->dirroot.'/blocks/marginalia/lib.php');
 
     $delete       = optional_param('delete', 0, PARAM_INT);
     $confirm      = optional_param('confirm', '', PARAM_ALPHANUM);   //md5 confirmation hash
