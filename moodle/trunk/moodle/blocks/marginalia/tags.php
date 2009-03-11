@@ -84,18 +84,12 @@ else  {
 	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
 		$course->fullname, "$navtail", "", $meta, true, "", null);
 		
-	if ( AN_USEKEYWORDS && $keywords && $courseid )  {
-		echo '<p>'.htmlspecialchars(get_string( 'tag_list_prompt', ANNOTATION_STRINGS ))."</p>\n";
-		echo "<ul id='keywords'>\n";
-/*		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
-			$keyword = $keywords[ $i ];
-			$url = 'summary.php?url='
-				.urlencode( $CFG->wwwroot."/course/view.php?id=$courseid" )
-				.'&u='.urlencode($USER->username).'&q='.urlencode($keyword->name).'&match=exact';
-			echo '<li><a href="'.htmlspecialchars( $url ).'">'.htmlspecialchars($keyword->name)."</a></li>";
-		}
-*/		echo "</ul>\n";
-	}
+
+	echo "<div id='keyword-display'>\n";
+	echo '<p>'.htmlspecialchars(get_string( 'tag_list_prompt', ANNOTATION_STRINGS ))."</p>\n";
+	echo "<ul id='keywords'>\n";
+		echo "</ul>\n";
+	echo "</div>\n";
 	
 	echo "<fieldset id='replace'>\n";
 	echo " <legend>".get_string('note_replace_legend',ANNOTATION_STRINGS)."</legend>\n";

@@ -23,6 +23,8 @@ function refreshKeywords( )
 
 	keywordService.keywords.sort( compareKeywords );
 	var keywords = keywordService.keywords;
+	var keywordDisplay = document.getElementById( 'keyword-display' );
+	keywordDisplay.style.display = keywords.length ? 'block' : 'none';
 	for ( var i = 0;  i < keywords.length;  ++i )
 	{
 		var keyword = keywords[ i ];
