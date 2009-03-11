@@ -1,5 +1,10 @@
 #summary Release Notes
 
+== Moodle, 2009-03-11 ==
+
+  * A bad path crept back in to admin/user.php
+  * New users of Marginalia couldn't get it to work due to a bug in the Javascript that displayed introductory instructions to them.  Existing users had no problems.
+
 == Moodle, 2009-03-05 ==
 
   * Update install to work with Moodle 1.9.4 version as of today.  Should cause patch to break with earlier versions of Moodle 1.9 (though this is not hard to fix manually).
