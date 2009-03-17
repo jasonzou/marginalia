@@ -2,7 +2,7 @@
 
 == Moodle, 2009-03-16 ==
 
-  * Recent 1.9 Moodle releases added a div element to wrap post content.  This was being included when calculating highlight positions.  It shouldn't be.  This may break some highlights if you created them with an affected version of Moodle and a recent Beta of Marginalia.  As this affects only beta releases and I don't know whether anyone is affected, I have not included an automated fix.  If you do need a fix, you can search for start_xpath and end_xpath fields in the database for any beginning with "html:div[1]/".  For these annotation rows, you will also see that start_block and end_block begin with "0001."  Strip these prefixes and you should be fine.
+  * Recent 1.9 Moodle releases added a div element to wrap post content.  This was being included when calculating highlight positions.  It shouldn't be.  This may break some highlights if you created them with an affected version of Moodle and a recent Beta of Marginalia.  As this affects only beta releases and I don't know whether anyone is affected, I have not included an automated fix.  If you do need a fix, you can search for start_xpath and end_xpath fields in the database for any beginning with "`html:div[1]/`".  For these annotation rows, you will also see that start_block and end_block begin with "`0001.`".  Strip these prefixes and you should be fine.
 
 == Moodle, 2009-03-11 ==
 
