@@ -13,7 +13,7 @@
     $name    = optional_param('name', '', PARAM_CLEAN);
     $confirm = optional_param('confirm', 0, PARAM_INT);
     $groupid = optional_param('groupid', null, PARAM_INT);
-
+	$messageinit = optional_param('message',0,PARAM_CLEANHTML);	// #geof#
 
     //these page_params will be passed as hidden variables later in the form.
     $page_params = array('reply'=>$reply, 'forum'=>$forum, 'edit'=>$edit);
@@ -110,7 +110,7 @@
         $post->parent     = 0;
         $post->subject    = '';
         $post->userid     = $USER->id;
-        $post->message     = $messageInit ? $messageInit : '';	// #geof#
+        $post->message     = $messageinit ? $messageinit : '';	// #geof#
 
         if (isset($groupid)) {
             $post->groupid = $groupid;
@@ -178,7 +178,7 @@
         $post->parent      = $parent->id;
         $post->subject     = $parent->subject;
         $post->userid      = $USER->id;
-        $post->message     = $messageInit ? $messageInit : '';	// #geof#
+        $post->message     = $messageinit ? $messageinit : '';	// #geof#
 
         $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
@@ -455,11 +455,6 @@
     $mform_post = new mod_forum_post_form('post.php', array('course'=>$course, 'cm'=>$cm, 'coursecontext'=>$coursecontext, 'modcontext'=>$modcontext, 'forum'=>$forum, 'post'=>$post));
 
     if ($fromform = $mform_post->get_data()) {
-
-	// #geof#
-	$messageinit = optional_param('message',0,PARAM_CLEANHTML);
-
-
         require_login($course, false, $cm);
 
         if (empty($SESSION->fromurl)) {

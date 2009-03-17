@@ -1,7 +1,7 @@
 <?php
 
 // The smartquote icon symbol(s)
-define( 'AN_SMARTQUOTEICON', '\u275b\u275c' );	// 267a: recycle
+define( 'AN_SMARTQUOTEICON', '\u275d' );	// \u275b\u275c: enclosed single qs, 267a: recycle
 
 // The same thing as entities because - and this stuns the hell out of me every
 // single time - PHP 5 *does not have native unicode support*!!!  Geez guys,
