@@ -447,7 +447,7 @@ class course_annotation_url_handler extends annotation_url_handler
 			. " FROM {$CFG->prefix}course WHERE id={$this->courseid}";
 		$row = get_record_sql( $query );
 		if ( False !== $row )
-			$this->titlehtml = a( $row->fullname );
+			$this->titlehtml = s( $row->fullname );
 		else
 			$this->titlehtml = get_string( 'unknown course', ANNOTATION_STRINGS );
 		$this->parenturl = null;
@@ -473,7 +473,7 @@ class course_annotation_url_handler extends annotation_url_handler
 			 . ",\n concat('{$CFG->wwwroot}/mod/forum/view.php?id=',f.id) section_url"
 			. $qstdfrom
 			 . "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseid.' '
-			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type='post' AND p.id=a.object_id "
+			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type=".AN_OTYPE_POST." AND p.id=a.object_id "
 			 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
 			. $qstdwhere
 			. $this->get_conds( $summary );

@@ -168,7 +168,7 @@ class moodle_marginalia
 		if ( $userlist )  {
 			foreach ( $userlist as $user )  {
 				if ( $user->username != $USER->username )  {
-					$selected = ( $showAnnotationspref && ( $user->userid == $annotationuserid ? "selected='selected' ":'' ) )
+					$selected = ( $showannotationspref && ( $user->userid == $annotationuserid ? "selected='selected' ":'' ) )
 						? " selected='selected' " : '';
 					echo " <option $selected"
 						."value='".s($user->username)."'>".s($user->firstname.' '.$user->lastname)."</option>\n";
