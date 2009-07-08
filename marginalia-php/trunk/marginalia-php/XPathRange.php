@@ -173,7 +173,7 @@ class XPathPoint
 	{
 		if ( '' == $xpath )
 			return true;
-		if ( preg_match( '/^.\/\/(.*)$/', $xpath, $matches ) )
+		if ( preg_match( '/^\.\/\/(.*)$/', $xpath, $matches ) )
 			$xpath = $matches[ 1 ];
 		$parts = split( '/', $xpath );
 		foreach ( $parts as $part )
@@ -193,7 +193,7 @@ class XPathPoint
 					if ( preg_match( '/^\d+$/', $test ) )
 						;
 					// Comparison of an attribute with a quoted value
-					elseif ( preg_match( '/^@[a-zA-Z0-9_-]+\s*=\s*([\'"])[^\'"]+([\'"])$/', $test, $matches ) )
+					elseif ( preg_match( '/^@[a-zA-Z0-9_-]+\s*=\s*([\'"])[a-zA-Z0-9:._-]+([\'"])$/', $test, $matches ) )
 					{
 						if ( $matches[ 1 ] == $matches[ 2 ] ) // ensure quotes match
 							;

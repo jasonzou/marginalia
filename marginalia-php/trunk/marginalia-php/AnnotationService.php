@@ -228,7 +228,7 @@ class AnnotationService
 			case 'POST':
 				if ( ! $this->currentUserId )
 					$this->httpError( 403, 'Forbidden', 'Must be logged in' );
-				else if ( $this->beginRequest( ) )
+				elseif ( $this->beginRequest( ) )
 				{
 					$this->createAnnotation( );
 					$this->endRequest( );
@@ -246,7 +246,7 @@ class AnnotationService
 				// defined by the search parameters.  However, that's kind of fishy - as I read the spec,
 				// PUT should really be replacing the identified resource.  I should be using POST.  Will
 				// fix someday (at this point, the matter seems purely theoretical).
-				if ( False === $id )
+				elseif ( False === $id )
 				{
 					$this->bulkUpdate( );
 					$this->endRequest( );

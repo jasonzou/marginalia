@@ -42,6 +42,7 @@ function listMarginaliaJavascript( )
 		,"prefs.js"
 		,"html-model.js"
 		,"domutil.js"
+		,"restutil.js"
 		,"ranges.js"
 		,"SequenceRange.js"
 		,"XPathRange.js"
