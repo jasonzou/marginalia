@@ -5,7 +5,7 @@
 Upgrades from the previous version require only the blocks/marginalia directory to be replaced.
 
   * Highlight display was sometimes failing on IE
-  * Other IE and Safari fixes, though Safari 4 still does some nasty scrolling when creating annotations
+  * Other IE and Safari fixes
   * When Moodle session key was customized (a new Moodle capability), Marginalia's CSRF protection was rejecting attempts to create, modify, and delete annotations
   * Fix course-level annotation summary
 
