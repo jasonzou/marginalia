@@ -5,7 +5,7 @@
 Fixes for IE8.
 
   * IE8 would delete the most recently displayed annotation when Enter was pressed.  This is bizarre behavior by IE, which secretly auto-selects the delete button.  I have worked around the problem.
-  * An error would pop up on IE8 when creation annotations.  There appeared to be a misconfiguration or conflict between IE8 and the YUI version in Moodle.  I have disabled autocomplete on margin notes in IE *only* to avoid the problem.
+  * An error would pop up on IE8 when creation annotations.  There appeared to be a misconfiguration or conflict between IE8 and the YUI version in Moodle.  I have disabled autocomplete on margin notes in IE to avoid the problem.  Autocomplete will still work in other browsers.
 
 == Moodle, 2009-07-10 ==
 
