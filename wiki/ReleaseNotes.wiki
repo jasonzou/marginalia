@@ -1,5 +1,9 @@
 #summary Release Notes
 
+== Moodle, 2009-10-09 ==
+
+  * when quoting across windows (i.e. into an already open reply window or tab), quote marks and semicolons were not being correctly handled
+
 == Moodle, 2009-08-28 ==
 
 Fixes for IE8.
