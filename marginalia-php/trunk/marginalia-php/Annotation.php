@@ -198,7 +198,7 @@ class Annotation
 	{ $this->lastRead = is_string( $lastread ) ? strtotime( $lastread ) : $lastread; }
 	
 	function getLastRead( )
-	{ return $this->lastread; }
+	{ return $this->lastRead; }
 	
 	/**
 	 * Convert to an Atom entry
