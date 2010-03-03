@@ -32,9 +32,9 @@
 function listMarginaliaJavascript( )
 {
 	return array (
-		"3rd-party/cssQuery.js"
-		,"3rd-party/cssQuery-level2.js"
-		,"3rd-party/cssQuery-standard.js"
+		'3rd-party/jquery.js'
+		,'3rd-party/jquery.url.js'
+		,'3rd-party/date.js'
 		,"3rd-party/shortcut.js"
 		,"3rd-party.js"
 	
