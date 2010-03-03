@@ -20,7 +20,7 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		/// Define table annotation to be created
 		$table = new XMLDBTable('marginalia');
 		
-		/// Adding fields to table annotation
+		/// Adding fields to table marginalia
 		$table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
 	//	$table->addFieldInfo('userid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
 		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
@@ -50,13 +50,13 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		$table->addFieldInfo('object_type', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 		$table->addFieldInfo('object_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 		
-		/// Adding keys to table annotation
+		/// Adding keys to table marginalia
 		$table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
 		
-		/// Adding indexes to table annotation
+		/// Adding indexes to table marginalia
 		$table->addIndexInfo('object', XMLDB_INDEX_NOTUNIQUE, array('object_type', 'object_id'));
 		
-		/// Launch create table for annotation
+		/// Launch create table for marginalia
 		$result = $result && create_table($table);
 		
 		// Check for old annotation table and convert its data over
@@ -123,6 +123,100 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		}
 		
 		// Should perhaps delete old annotation table?
+	}
+	
+	if ( $result && $oldversion < 2010012800 )  {
+		$query = "ALTER TABLE {$CFG->prefix}marginalia ADD COLUMN course int";
+		$result = $result && execute_sql( $query, false );
+		
+		$query = "UPDATE {$CFG->prefix}marginalia a"
+			.", {$CFG->prefix}forum_posts p"
+			.", {$CFG->prefix}forum_discussions d"
+			." SET a.course=d.course"
+			." WHERE a.object_id=p.id"
+			." AND d.id=p.discussion";
+
+		$query = "ALTER TABLE {$CFG->prefix}marginalia ADD COLUMN sheet_type int";
+		$result = $result && execute_sql( $query, false );
+		
+		$query = "UPDATE {$CFG->prefix}marginalia SET sheet_type=access_perms";
+		$result = $result && execute_sql( $query, false );
+		
+		// private used to have access bits 0x0;  now has access 0x1
+		$query = "UPDATE {$CFG->prefix}marginalia SET sheet_type=1 WHERE sheet_type=0";
+		$result = $result && execute_sql( $query, false );
+		
+		$query = "ALTER TABLE {$CFG->prefix}marginalia DROP COLUMN access_perms";
+		$result = $result && execute_sql( $query, false );
+
+		
+		/// Define table marginalia_event_log to be created
+		$table = new XMLDBTable('marginalia_event_log');
+		
+        $table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
+		$table->addFieldInfo('course', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('service', XMLDB_TYPE_CHAR, '64', null, XMLDB_NOTNULL, null, null, null, null);
+		$table->addFieldInfo('action', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
+		$table->addFieldInfo('description', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
+		$table->addFieldInfo('object_type', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('object_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('modified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		
+		/// Adding keys to table marginalia_event_log
+		$table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
+		
+		/// Adding indexes to table marginalia_event_log
+		$table->addIndexInfo('object', XMLDB_INDEX_NOTUNIQUE, array('object_type', 'object_id'));
+		
+		/// Launch create table for marginalia_event_log
+		$result = $result && create_table($table);
+
+
+		/// Define table marginalia_annotation_log to be created
+		$table = new XMLDBTable('marginalia_annotation_log');
+		
+        $table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
+		$table->addFieldInfo('annotation_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('event_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('course', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('access_perms', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('url', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
+		$table->addFieldInfo('start_block', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('start_xpath', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('start_line', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('start_word', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('start_char', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('end_block', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('end_xpath', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('end_line', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('end_word', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('end_char', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('note', XMLDB_TYPE_TEXT, 'small', null, null, null, null, null, null);
+		$table->addFieldInfo('quote', XMLDB_TYPE_TEXT, 'small', null, null, null, null, null, null);
+		$table->addFieldInfo('quote_title', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('quote_author_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('action', XMLDB_TYPE_CHAR, '30', null, null, null, null, null, null);
+		$table->addFieldInfo('link', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('link_title', XMLDB_TYPE_CHAR, '255', null, null, null, null, null, null);
+		$table->addFieldInfo('created', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('modified', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('object_type', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('object_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		
+		/// Adding keys to table marginalia_annotation_log
+		$table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
+		
+		/// Adding indexes to table marginalia_annotation_log
+		$table->addIndexInfo('object', XMLDB_INDEX_NOTUNIQUE, array('object_type', 'object_id'));
+		
+		/// Launch create table for marginalia_annotation_log
+		$result = $result && create_table($table);
+		
+		// Delete obsolete preferences
+	    delete_records('user_preferences', 'name', addslashes('annotations.user'));
+	    delete_records('user_preferences', 'name', addslashes('smartcopy'));
 	}
 	
 	return $result;

@@ -20,7 +20,7 @@ table td#annotation-controls {
 	font-size: smaller;
 }
 
-.hentry .notes .splash {
+.mia_margin .splash {
 	font-size: smaller;
 }
 
@@ -37,7 +37,7 @@ table td#annotation-controls {
 	position: relative;
 }
 
-.hentry td.content {
+.forumpost td.content {
 	vertical-align: top;
 }
 
@@ -58,132 +58,87 @@ table td#annotation-controls {
 	color: red;
 }
 
-/* hack button to allow for annotation creation, a result of problems with Moz positioning */
-/* it has to be a button, otherwise clicking it loses the selection */
-td.control-margin {
-	width: 1;
-	xheight: auto;
-}
-
-td.control-margin div {
-	display: none;
-}
-
-.self-annotated td.control-margin {
-	vertical-align: top;
-	width: 1em;
-	padding: 0 ;
-}
-
-.self-annotated td.control-margin div {
-	display: block;
-	width: 1em;
-	height: 100%;
-}
-
-/* There's a bug with the button:  its height is set to 100%, but when
- * the annotation notes are added they may increase the height of the table.
- * In that case, the button size does not increase to match.
- */
-.self-annotated td.control-margin button {
-	height: 100%;
-	width: 1em;
-	border: none;
-	border-left:  #eee 1px dotted;
-	border-right:  #eee 1px dotted;
-	padding: 0;
-	padding-left: 1px;
-	margin: 0;
-	background: none;
-	cursor: pointer;
-	display: block;
-	z-index: 1;
-}
-
-.self-annotated td.control-margin button span {
-	visibility: hidden;
-}
-
-/* the hover class is because of IE cluelessness */
-.self-annotated td.control-margin button:hover span,
-.self-annotated td.control-margin button.hover span {
-	visibility: inherit;
-}
-
-.self-annotated td.control-margin button:hover,
-.self-annotated td.control-margin button.hover {
-	font-weight: bold;
-	background: #fdf377;   /*should be from the theme, but I'm not sure where that's set in 1.5 yet */
-}
-
-.hentry .notes li.hover,
-.hentry .entry-content em.annotation.hover,
-.hentry .entry-content em.annotation.hover ins,
-.hentry .entry-content em.annotation.hover del {
+.mia_margin li.hover,
+.em.mia_annotation.hover,
+.em.mia_annotation.hover ins,
+.em.mia_annotation.hover del {
 	color: red;
 }
 
-/* notes in sidebar */
-.notes a.annotation-summary {
-	bottom: .25em ;
-	margin: 0 auto;
-	text-align: center;
-	font-size: 80%;
-	width: 100%;
-	display: block;
+.mia_margin-td {
+	width: 0;
 }
 
-.notes {
-	width: 0;
+.mia_annotated .mia_margin {
+	border: #f8f8f8 1px solid;
+	cursor: pointer;
+}
+
+.mia_annotated .mia_margin:hover {
+	border: #aaa 1px dotted;
 }
 
 /* this rigamarole with both changing the column width *and* hiding the elements within it
  * is because IE is a load of steaming horse manure */
-.notes ol,
-.notes a.annotation-summary,
-.notes a.range-mismatch {
+.mia_margin ol,
+.mia_margin a.range-mismatch {
 	display: none;
 }
 
-.annotated .notes {
-	width: 30% ;
+.mia_annotated .mia_margin-td {
+	width: 30%;
+}
+
+.mia_annotated .mia_margin {
 	position: relative;
 	/* unfortunately the background color has been interfering with the rounded corners
 	of the default moodle theme, so for now it's disabled */
 	/*background-color:  #f8f8f8; <?PHP echo $THEME->cellcontent2; ?>;*/
 }
 
-.annotated .notes ol,
-.annotated .notes .annotation-summary {
+.mia_annotated .mia_margin ol {
 	display: block;
+	margin-left: 1ex;
 }
 
-.notes div {
+.mia_margin {
 	position: relative;
 	padding: 1px;
 }
 
-.notes ol {
+.mia_margin ol {
 	margin: 0;
 	padding: 0 ;
 	right: 0;
+	width: 16em;
 	margin-bottom: 1.2em;
+	list-style-type: none;
 }
 
-.notes ol li {
+.mia_margin ol li {
 	clear: both;
+	position: relative;
 }
 
-.notes ol li.active {
+.mia_recent:after {
+	position: absolute;
+	top: .1em;
+	right: 100%;
+	padding-right: 2px;
+	color: red;
+	content: '*';
+}
+
+.mia_margin ol li.active {
 	color: red ;
 }
 
-.notes ol li button {
+.mia_margin ol li button {
 	background: none ;
 	font-size: 12px ;
 }
 
-.notes ol textarea {
+.mia_margin ol textarea {
 	vertical-align: top ;
 	border: none;
 	font-family: inherit;
@@ -191,36 +146,23 @@ td.control-margin div {
 }
 
 /* colors for other users' annotations
-.hentry em.annotation { background-color: #77f3fd ; }
-.hentry .content em.annotation em.annotation { background: #70d4ec; }
-.hentry .content em.annotation em.annotation em.annotation { background: #66c6d8; }
+.hentry em.mia_annotation { background-color: #77f3fd ; }
+.hentry .content em.mia_annotation em.mia_annotation { background: #70d4ec; }
+.hentry .content em.mia_annotation em.mia_annotation em.mia_annotation { background: #66c6d8; }
 */
 
 button#hide-all-annotations,
-body.annotated button#show-all-annotations {
+body.mia_annotated button#show-all-annotations {
 	display: none ;
 }
 
-body.annotated button#hide-all-annotations {
+body.mia_annotated button#hide-all-annotations {
 	display: inline;
-}
-
-#smartcopy-status {
-	position: fixed;
-	right: 1em;
-	bottom: 1em;
-	z-index: 100;
-	background: #ffffcc;
-	border: #666 1px solid;
-	padding: 1ex;
-	width: 13em;
-	font-size: small;
-	opacity: 1;
 }
 
 @media print
 {
-	.forumpost em.annotation {
+	.forumpost em.mia_annotation {
 		text-decoration: underline ;
 	}
 }

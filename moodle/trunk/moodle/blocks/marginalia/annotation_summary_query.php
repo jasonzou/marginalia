@@ -1,64 +1,115 @@
 <?php
-	
+
+// order by value for returning annotations in document order (i.e. same order
+// the highlights would be shown within the document)
+define( 'AN_SUMMARY_ORDER_DOCUMENT', 'section_type, section_name, a.url, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
+
+// order by modification time, with most recent first
+define( 'AN_SUMMARY_ORDER_TIME', 'modified DESC');
+
 /**
- * Objects of this class are immutable.  Use the for_ methods to generate
- * modified version (e.g. for links to related summaries)
+ * Objects of this class are effectively immutable (the derive method violates this, but it is called
+ * like a constructor).  Use the derive method to generate modified version (e.g. for links to related summaries)
  */
 class annotation_summary_query
 {
-	var $url;
-	var $text;
-	var $user;
-	var $ofuser;
-	var $exatcmatch;
-	var $all;
-	var $handler;		// URL handlers (implements much of this class's behavior)
+	var $url = null;
+	var $sheet_type = AN_SHEET_PRIVATE;
+	var $text = null;
+	var $user = null;
+	var $ofuser = null;
+	var $exactmatch = false;
+	var $all = false;
+	var $orderby = AN_SUMMARY_ORDER_DOCUMENT;
+	var $handler = null;		// URL handlers (implements much of this class's behavior)
 	
 	var $sql;			// The result SQL query
 	var $error;			// Any error encountered by the constructor
 	
-	function annotation_summary_query( $url, $handler, $text, $user, $ofuser, $exactmatch, $all )
+	// Call with internal names in $a
+	// If initializing from a URL, call map_params( $_GET ) first
+	function annotation_summary_query( $a )
 	{
-		$this->url = $url;
-		$this->handler = $handler;
-		$handler->summary = $this;
-		$this->text = $text;
-		$this->user = $user;
-		$this->ofuser = $ofuser;
-		$this->exactmatch = $exactmatch;
-		$this->all = $all;
-		
-		if ( $this->url && ! $this->handler )
-			$this->handler = annotation_summary_query::handler_for_url( $url );
+		if ( $a )
+			$this->from_params( $a );
 	}
 	
-	// useful if you just want to list users
-	static function from_url( $url )
+	// map URL query parameters to internal parameter names and values
+	static function map_params( $a )
 	{
-		return new annotation_summary_query( $url, null, null, null, null, false, false );
-	}
-	
-	static function from_params( )
-	{
-		$url = array_key_exists( 'url', $_GET ) ? $_GET[ 'url' ] : null;
-		$text = array_key_exists( 'q', $_GET ) ? $_GET[ 'q' ] : null;
-		$username = array_key_exists( 'u', $_GET ) ? $_GET[ 'u' ] : null;
-		$ofusername = array_key_exists( 'search-of', $_GET ) ? $_GET[ 'search-of' ] : null;
-		$exactmatch = array_key_exists( 'match', $_GET ) ? 'exact' == $_GET[ 'match' ] : false;
-		$all = array_key_exists( 'all', $_GET ) ?
-			'yes' == $_GET[ 'all' ] || 'true' == $_GET[ 'all' ] : false;
+		$b = array( );
 		
-		$user = null;
-		if ( $username )
-			$user = get_record( 'user', 'username', $username );
+		$b[ 'text' ] = array_key_exists( 'q', $a ) ? $a[ 'q' ] : null;
+		$b[ 'exactmatch' ] = array_key_exists( 'match', $a ) ? 'exact' == $a[ 'match' ] : false;
+		$b[ 'all' ] = array_key_exists( 'all', $a ) ? 'yes' == $a[ 'all' ] || 'true' == $a[ 'all' ] : false;
 			
-		$ofuser = null;
-		if ( $ofusername )
-			$ofuser = get_record( 'user', 'username', $ofusername );
+		// default sort order is document order, because that's what the marginalia front-end needs
+		$sort_order = array_key_exists( 'sort', $a ) ? $a[ 'sort' ] : null;
+		if ( 'document' == $sort_order )
+			$b[ 'orderby' ] = AN_SUMMARY_ORDER_DOCUMENT;
+		elseif ( 'time' == $sort_order )
+			$b[ 'orderby' ] = AN_SUMMARY_ORDER_TIME;
+		else
+			$b[ 'orderby' ] = AN_SUMMARY_ORDER_DOCUMENT;
 		
-		$handler = annotation_summary_query::handler_for_url( $url );
+		$sheet = array_key_exists( 'sheet', $a ) ? $a[ 'sheet' ] : null;
+		$b[ 'sheet_type' ] = $sheet ? annotation_globals::sheet_type( $sheet ) : null;
+			
+		$b[ 'userid' ] = array_key_exists( 'u', $a ) ? (int)$a[ 'u' ] : null;
+		$b[ 'ofuserid'] = array_key_exists( 'search-of', $a ) ? (int)$a[ 'search-of' ] : null;
 		
-		return new annotation_summary_query( $url, $handler, $text, $user, $ofuser, $exactmatch, $all );
+		$b[ 'url' ] = array_key_exists( 'url', $a ) ? $a[ 'url' ] : null;
+		return $b;
+	}
+	
+	// Tedious, eh?  Maybe there's some nice PHP way to do this.
+	function from_params( $a )
+	{
+		if ( array_key_exists( 'text', $a ) )
+			$this->text =  $a[ 'text' ];
+		if ( array_key_exists( 'exactmatch', $a ) )
+			$this->exactmatch = $a[ 'exactmatch' ];
+		if ( array_key_exists( 'all', $a ) )
+			$this->all = $a[ 'all' ];
+		if ( array_key_exists( 'orderby', $a ) )
+			$this->orderby = $a[ 'orderby' ];
+		if ( array_key_exists( 'sheet_type', $a ) )
+			$this->sheet_type = $a[ 'sheet_type' ];
+
+		if ( array_key_exists( 'user', $a ) )
+			$this->user = $a[ 'user' ];
+		elseif ( array_key_exists( 'userid', $a ) )
+			$this->user = get_record( 'user', 'id', (int)$a[ 'userid' ] );
+
+		if ( array_key_exists( 'ofuser', $a ) )
+			$this->ofuser = $a[ 'ofuser' ];
+		elseif ( array_key_exists( 'ofuserid', $a ) )
+			$this->ofuser = get_record( 'user', 'id', (int)$a[ 'ofuserid' ] );
+
+		if ( array_key_exists( 'url', $a ) )
+		{
+			$this->url =  $a[ 'url' ];
+			$this->handler = annotation_summary_query::handler_for_url( $this->url );
+		}
+	}
+
+	// Derive a version of this summary_query with some parameters changed
+	function derive( $a )
+	{
+		$summary_query = new annotation_summary_query( array(
+			'text' => $this->text,
+			'exactmatch' => $this->exactmatch,
+			'all' => $this->all,
+			'orderby' => $this->orderby,
+			'sheet_type' => $this->sheet_type,
+			'user' => $this->user,
+			'ofuser' => $this->ofuser,
+			'url' => $this->url
+		) );
+
+		if ( $a )
+			$summary_query->from_params( $a );
+		return $summary_query;
 	}
 
 	static function handler_for_url( $url )
@@ -84,49 +135,10 @@ class annotation_summary_query
 			return new post_annotation_url_handler( (int) $matches[ 1 ] );
 
 		else
+		{
+			echo "no handler";
 			return null;
-	}
-	
-	function for_url( $url )
-	{
-		return new annotation_summary_query( $url, annotation_summary_query::handler_for_url( $url ),
-			$this->text, $this->user, $this->ofuser, $this->exactmatch, $this->all );
-	}
-	
-	function for_user( $user )
-	{
-		return new annotation_summary_query( $this->url, $this->handler, $this->text,
-			$user, $this->ofuser, $this->exactmatch, $this->all );
-	}
-	
-	function for_ofuser( $ofuser )
-	{
-		return new annotation_summary_query( $this->url, $this->handler, $this->text,
-			$this->user, $ofuser, $this->exactmatch, $this->all );
-	}
-	
-	function for_parent( )
-	{
-		$this->handler->fetch_metadata( );
-		if ( $this->handler->parenturl )  {
-			return new annotation_summary_query( $this->handler->parenturl,
-				annotation_summary_query::handler_for_url( $this->handler->parenturl ),
-				$this->text, $this->user, $this->ofuser, $this->exactmatch, $this->all );
 		}
-		else
-			return null;
-	}
-	
-	function for_text( $text, $exact=false )
-	{
-		return new annotation_summary_query( $this->url, $this->handler, $text,
-			$this->user, $this->ofuser, $exact, $this->all );
-	}
-	
-	function for_match( $exact=false )
-	{
-		return new annotation_summary_query( $this->url, $this->handler, $this->text,
-			$this->user, $this->ofuser, $exact, $this->all );
 	}
 	
 	function titlehtml( )
@@ -135,9 +147,12 @@ class annotation_summary_query
 		return $this->handler->titlehtml;
 	}
 	
-	function fullname( $user )
+	static function fullname( $user )
 	{
-		return $user->firstname . ' ' . $user->lastname;
+		if ( $user )
+			return $user->firstname . ' ' . $user->lastname;
+		else
+			return '';
 	}
 	
 	/** Produce a natural language description of a query */
@@ -152,6 +167,13 @@ class annotation_summary_query
 		$a->author = $this->ofuser ? s( $this->fullname( $this->ofuser ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
 		$a->search = s( $this->text );
 		$a->match = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
+		
+		if ( AN_SHEET_PUBLIC == $this->sheet_type )
+			$a->sheet = get_string( 'public_sheet', ANNOTATION_STRINGS );
+		elseif ( AN_SHEET_PRIVATE == $this->sheet_type )
+			$a->sheet = get_string( 'private_sheet', ANNOTATION_STRINGS );
+		elseif ( AN_SHEET_AUTHOR == $this->sheet_type )
+			$a->sheet = get_string( 'author_sheet', ANNOTATION_STRINGS );
 		
 		if ( null != $this->text && '' != $this->text )
 			$s = $this->ofuser ? 'annotation_desc_authorsearch' : 'annotation_desc_search';
@@ -173,7 +195,8 @@ class annotation_summary_query
 		$a->title = null === $titlehtml ? $this->handler->titlehtml : $titlehtml;
 		
 		// Show link to parent search
-		$parent_summary = $this->for_parent( );
+		$this->handler->fetch_metadata( );
+		$parent_summary = $this->handler->parenturl ? $this->derive( array( 'url' => $this->handler->parenturl ) ) : null;
 		if ( $parent_summary ) {
 			$a->title = '<a class="opt-link" href="'.s( $parent_summary->summary_url( ) )
 				. '" title="'.get_string( 'unzoom_url_hover', ANNOTATION_STRINGS ).'">'
@@ -183,7 +206,7 @@ class annotation_summary_query
 		
 		// Unzoom from user to anyone
 		if ( $this->user )  {
-			$summary_anyone = $this->for_user( null );
+			$summary_anyone = $this->derive( array( 'user' => null ) );
 			$a->who = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
 				.'" title="'.get_string( 'unzoom_user_hover', ANNOTATION_STRINGS )
 				.'"><span class="current">'.s( $this->fullname( $this->user ) ).'</span><span class="alt">'
@@ -194,7 +217,7 @@ class annotation_summary_query
 		
 		// Unzoom from of user to of anyone
 		if ( $this->ofuser )  {
-			$summary_anyone = $this->for_ofuser( null );
+			$summary_anyone = $this->derive( array( 'ofuser' => null ) );
 			$a->author = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
 				.'" title="'.get_string( 'unzoom_author_hover', ANNOTATION_STRINGS )
 				.'"><span class="current">'.s( $this->fullname( $this->ofuser ) ).'</span><span class="alt">'
@@ -206,7 +229,7 @@ class annotation_summary_query
 		$a->search = $this->text;
 		
 		// Toggle exact match
-		$summary_match = $this->for_match( ! $this->exactmatch );
+		$summary_match = $this->derive( array( 'exactmatch' => ! $this->exactmatch ) );
 		$hover = get_string( $this->exactmatch ? 'unzoom_match_hover' : 'zoom_match_hover', ANNOTATION_STRINGS );
 		$m1 = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		$m2 = get_string( $this->exactmatch ? 'containing' : 'matching', ANNOTATION_STRINGS );
@@ -225,97 +248,54 @@ class annotation_summary_query
 		return $desc;
 	}
 	
-	/**
-	 * This takes a list of handlers, each of which corresponds to a particular type of
-	 * query (e.g. discussion forum), along with search fields for performing a search.
-	 * It returns the SQL query string.
-	 *
-	 * $searchAccess can be public, private, or empty.  Public annotations are available to
-	 *  *everyone*, not just course members or Moodle users.
-	 */
-	function sql( $orderby )
+	/** Callback used by handlers to get standard query WHERE clause conditions */
+	function get_sql_conds( )
 	{
-		global $CFG, $USER;
+		global $USER;
 		
-		// The query is a UNION of separate queries, one for each type of annotation
-		// This is unfortunate:  with a common table structure, one for parent-child
-		// URL relationships, another with URL properties (title and owner would
-		// suffice), would forgo UNIONs and simplify this code.
-		
-		// Users can only see their own annotations or the public annotations of others
-		// This is an awfully complex combination of conditions.  I'm wondering if that's
-		// a design flaw.
-		$accesscond = null;
-		$descusers = '';
-		
-		// this was originally intended to allow more than one handler to respond to a request.
-		// That may still be necessary someday, but perhaps a compound handler would be the
-		// best way to respond to it.  I eliminated the handler list because YAGNI.
-		$handler = $this->handler;
-
-		// Conditions under which someone else's annotation would be visible to this user
-		$accessvisible = "a.access_perms & ".AN_ACCESS_PUBLIC;
-		if ( array_key_exists( 'username', $USER ) )  {
-			$accessvisible .= " OR a.userid=".$USER->id
-				. " OR a.access_perms & ".AN_ACCESS_AUTHOR." AND a.quote_author_id=".$USER->id;
+		$accessvisible = '';
+		// If not logged in, only the public sheet is visible
+		if ( ! isloggedin( ) )
+		{
+			if ( AN_SHEET_PUBLIC == $this->sheet_type )
+				$accessvisible = 'a.sheet_type='.AN_SHEET_PUBLIC;
+			else
+				$accessvisible = '1=0';
+		}
+		// If a sheet is specified, we need to check that the annotation is on that
+		// sheet and that this user has appropriate access.
+		elseif ( $this->sheet_type )
+		{
+			$accessvisible = 'a.sheet_type='.$this->sheet_type;
+			if ( AN_SHEET_PRIVATE == $this->sheet_type )
+				$accessvisible .= ' AND a.userid='.$USER->id;
+			elseif ( AN_SHEET_AUTHOR == $this->sheet_type )
+				$accessvisible .= ' AND (a.userid='.$USER->id.' OR a.quote_author_id='.$USER->id.')';
+		}
+		// If a sheet is *not* specified, we need to be more general
+		else
+		{
+			$accessvisible = 'a.sheet_type='.AN_SHEET_PUBLIC
+				.' OR a.userid='.$USER->id
+				.' OR (a.sheet_type='.AN_SHEET_AUTHOR.' AND a.quote_author_id='.$USER->id.')';
 		}
 		
 		// If the all flag is set, see if this is an admin user with permission to
 		// export all annotations.
 		if ( $this->all )  {
 			$sitecontext = get_context_instance( CONTEXT_SYSTEM );
-			$all = AN_ADMINVIEWALL && ( has_capability( 'moodle/legacy:admin', $sitecontext )
-				or has_capability( 'moodle/site:doanything', $sitecontext) );
-			if ( $all )
+			if ( has_capability( 'blocks/marginalia:view_log', $sitecontext ) )
 				$accessvisible = '1=1';
 		}
-		
-		// Filter annotations according to their owners
-		
-		// Admin only (used especially for research): transcend usual privacy limitations
-		if ( null == $this->user )
-			$accesscond = " ($accessvisible) ";
-		else  {
-			if ( ! isloggedin( ) || $USER->id != $this->user->id )
-				$accesscond = "($accessvisible)";
-			if ( $accesscond )
-				$accesscond .= ' AND ';
-			$accesscond .= "a.userid=".$this->user->id;
-		}
 
-	
+		$qstdwhere = ' (' . $accessvisible . ') ';
+		
+		// Filter by annotation creator
+		if ( $this->user )
+			$qstdwhere .= ' AND a.userid='.(int)$this->user->id;
+		
 		// These are the fields to use for a search;  specific annotations may add more fields
 		$stdsearchfields = array( 'a.note', 'a.quote', 'u.firstname', 'u.lastname' );
-		
-		$prefix = $CFG->prefix;
-		
-		// Do handler-specific stuff
-
-		// Check whether the range column exists (for backwards compatibility)
-		$range = '';
-
-		// These that follow are standard fields, for which no page type exceptions can apply
-		$qstdselect = "SELECT a.id AS id, a.url AS url, a.userid AS userid"
-		. ", a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char"
-		. ", a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char"
-		. ", a.link AS link, a.link_title AS link_title, a.action AS action"
-		. ", a.access_perms AS access_perms, a.created, a.modified $range"
-		. ", u.username AS username"
-		. ",\n concat(u.firstname, ' ', u.lastname) AS fullname"
-		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
-		. ",\n a.note note, a.quote, a.quote_title AS quote_title"
-		. ",\n qu.username AS quote_author_username"
-		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author_fullname"
-		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) AS quote_author_url";
-		
-		// Standard tables apply to all (but note the outer join of user, which if gone
-		// should not steal the annotation from its owner):
-		$qstdfrom = "\nFROM {$prefix}".AN_DBTABLE." a"
-			. "\n INNER JOIN {$prefix}user u ON u.id=a.userid"
-			. "\n LEFT OUTER JOIN {$prefix}user qu on qu.id=a.quote_author_id";
-		
-		// This search is always limited by access
-		$qstdwhere = "\nWHERE ($accesscond)";
 
 		// Searching limits also;  fields searched are not alone those of the annotation:
 		// add to them also those a page of this type might use.
@@ -323,6 +303,7 @@ class annotation_summary_query
 			if ( $this->exactmatch )
 				$qstdwhere .= "\n   AND a.note='".addslashes($this->text)."'";
 			else  {
+				$handler = $this->handler;
 				$searchcond = '';
 				$addsearchfields = $handler->get_search_fields( );
 				$searchcond = '';
@@ -338,37 +319,88 @@ class annotation_summary_query
 				$qstdwhere .= "\n   AND ($searchcond)";
 			}
 		}
-		
-		// The handler must construct the query, which might be a single SELECT or a UNION of multiple SELECTs
-		$q = $handler->get_sql( $this, $qstdselect, $qstdfrom, $qstdwhere, $orderby );
-		
-		return $q;
+
+		// This search is always limited by permissions and sheet
+		return $qstdwhere;
 	}
 	
-	/** Get query to list users with public annotations on this discussion */
-	function list_users_sql( )
+	/** Callback used by handlers to get standard query FROM clause tables */
+	function get_sql_tables( )
 	{
 		global $CFG;
-		return "SELECT u.id, u.username, u.firstname, u.lastname "
-			. "\nFROM {$CFG->prefix}user u "
-			. "\nINNER JOIN {$CFG->prefix}".AN_DBTABLE." a ON a.userid=u.id "
-			. $this->handler->get_tables( )
-			. "\nWHERE a.access_perms & ".AN_ACCESS_PUBLIC;
+		
+		// Standard tables apply to all (but note the outer join of user, which if gone
+		// should not steal the annotation from its owner):
+		return ' '.$CFG->prefix.AN_DBTABLE." a"
+			. "\n INNER JOIN {$CFG->prefix}user u ON u.id=a.userid"
+			. "\n LEFT OUTER JOIN {$CFG->prefix}user qu on qu.id=a.quote_author_id";
+	}
+	
+	/** Callback used by handlers to get standard query SELECT clause fields */	
+	function get_sql_fields( )
+	{
+		global $CFG;
+		
+		return " a.id AS id, a.url AS url, a.userid AS userid"
+		. ", a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char"
+		. ", a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char"
+		. ", a.link AS link, a.link_title AS link_title, a.action AS action"
+		. ", a.sheet_type AS sheet_type"
+		. ", a.created AS created, a.modified AS modified"
+		. ", u.username AS username"
+		. ",\n concat(u.firstname, ' ', u.lastname) AS fullname"
+		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
+		. ",\n a.note note, a.quote, a.quote_title AS quote_title"
+		. ",\n qu.username AS quote_author_username"
+		. ",\n qu.id AS quote_author_id"
+		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author_fullname"
+		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) AS quote_author_url";
+	}
+
+	/** Return a query for performing a search */
+	function sql( )
+	{
+		// The query is a UNION of separate queries, one for each type of annotation
+		// This is unfortunate:  with a common table structure, one for parent-child
+		// URL relationships, another with URL properties (title and owner would
+		// suffice), would forgo UNIONs and simplify this code.
+		
+		// this was originally intended to allow more than one handler to respond to a request.
+		// That may still be necessary someday, but perhaps a compound handler would be the
+		// best way to respond to it.  I eliminated the handler list because YAGNI.
+		$handler = $this->handler;
+		
+		// The handler must construct the query, which might be a single SELECT or a UNION of multiple SELECTs
+		return $handler->get_sql( $this );
+	}
+	
+	/** Generate SQL for finding out how many records exist for a query */
+	function count_sql( )
+	{
+		$handler = $this->handler;
+		return $handler->get_count_sql( $this );
 	}
 	
 	/** Generate a summary URL corresponding to this query */
-	function summary_url( )
+	function summary_url( $first=0 )
 	{
 		global $CFG;
+		
 		$s = ANNOTATION_PATH."/summary.php?url=".urlencode($this->url);
+		if ( null != $this->sheet_type )
+			$s .= '&sheet='.urlencode(annotation_globals::sheet_str( $this->sheet_type ) );
 		if ( null != $this->text && '' != $this->text )
 			$s .= '&q='.urlencode($this->text);
 		if ( null != $this->user )
-			$s .= '&u='.urlencode($this->user->username);
+			$s .= '&u='.urlencode($this->user->id);
 		if ( null != $this->ofuser )
-			$s .= '&search-of='.urlencode($this->ofuser->username);
+			$s .= '&search-of='.urlencode($this->ofuser->id);
 		if ( $this->exactmatch )
 			$s .= '&match=exact';
+		if ( $first )
+			$s .= '&first='.$first; // doesn't cast first to int, as it might be a substitution like {first}
+		if ( AN_SUMMARY_ORDER_TIME == $this->orderby )
+			$s .= '&sort=time';
 		return $s;
 	}
 	
@@ -382,7 +414,6 @@ class annotation_summary_query
 	}
 }
 
-
 class annotation_url_handler
 {
 	function annotation_url_handler( )
@@ -391,19 +422,21 @@ class annotation_url_handler
 	// This pulls together the query from the standard portions (which are passed in)
 	// and from the handler-specific portions.  Some handlers may override this, e.g. in order
 	// to construct a UNION.
-	function get_sql( $summary, $qstdselect, $qstdfrom, $qstdwhere, $orderby )
+	function get_sql( $summary )
 	{
-		$q = $qstdselect
-			. $this->get_fields( )
-			. "\n" . $qstdfrom
-			. $this->get_tables( )
-			. "\n" . $qstdwhere
-			. $this->get_conds( $summary );
-		if ( $orderby )
-			$q .= "\nORDER BY $orderby";
-		return $q;
+		return 'SELECT' . $summary->get_sql_fields( ) . $this->get_fields( )
+			. "\n FROM" . $summary->get_sql_tables( ) . $this->get_tables( )
+			. "\n WHERE" . $summary->get_sql_conds( ) . $this->get_conds( $summary )
+			. ( $summary->orderby ? "\nORDER BY $summary->orderby" : '' );
 	}
-			
+	
+	function get_count_sql( $summary )
+	{
+		return 'SELECT count(*)'
+			. "\n FROM" . $summary->get_sql_tables( ) . $this->get_tables( )
+			. "\n WHERE" . $summary->get_sql_conds( ) . $this->get_conds( $summary );
+	}
+	
 	function get_search_fields( )
 	{
 		return array( );
@@ -454,32 +487,20 @@ class course_annotation_url_handler extends annotation_url_handler
 		$this->parenttitlehtml = null; 
 	}
 	
-	// Override the default implementation of getSql.  This must construct a UNION of multiple queries.
-	
-	function get_sql( $summary, $qstdselect, $qstdfrom, $qstdwhere, $orderby )
+	// Override the default implementation of get_sql
+	function get_sql( $summary )
 	{
 		global $CFG;
-		$q = '';
 		
-		// Conditions
-		$cond = "\n  AND a.object_type=".AN_OTYPE_POST;
-		if ( $summary->ofuser )
-			$cond .= " AND p.userid=".$summary->ofuser->id;
-
 		// First section:  discussion posts
-		$q = $qstdselect
-			 . ",\n 'forum' section_type, 'content' row_type"
-			 . ",\n f.name section_name"
-			 . ",\n concat('{$CFG->wwwroot}/mod/forum/view.php?id=',f.id) section_url"
-			. $qstdfrom
-			 . "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseid.' '
-			 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type=".AN_OTYPE_POST." AND p.id=a.object_id "
-			 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
-			. $qstdwhere
-			. $this->get_conds( $summary );
-		
-		if ( $orderby )
-			$q .= "\nORDER BY $orderby";
+		$q = "SELECT" . $summary->get_sql_fields( )
+			 . ",\n 'forum' AS section_type, 'content' AS row_type"
+			 . ",\n f.name AS section_name"
+			 . ",\n concat('{$CFG->wwwroot}/mod/forum/view.php?id=',f.id) AS section_url"
+			 . ",\n r.lastread AS lastread"
+			. "\n FROM" . $summary->get_sql_tables( ) . $this->get_tables( $summary )
+			. "\n WHERE" . $summary->get_sql_conds( ) . $this->get_conds( $summary )
+			. $summary->orderby ? "\nORDER BY $summary->orderby" : '';
 		
 		// If further types of objects can be annotated, additional SELECT statements must be added here
 		// as part of a UNION.		
@@ -487,6 +508,15 @@ class course_annotation_url_handler extends annotation_url_handler
 		return $q;
 	}
 
+	function get_tables( $summary )
+	{
+		 return
+		   "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseid.' '
+		 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type=".AN_OTYPE_POST." AND p.id=a.object_id "
+		 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
+		 . "\n INNER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
+	}
+	
 	function get_conds( $summary )
 	{
 		$cond = "\n  AND a.object_type=".AN_OTYPE_POST;
@@ -542,20 +572,24 @@ class forum_annotation_url_handler extends annotation_url_handler
 	function get_fields( )
 	{
 		global $CFG;
-		return ",\n 'discussion' section_type, 'post' row_type"
-			. ",\n d.name section_name"
-			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url";
+		return ",\n 'discussion' AS section_type, 'post' AS row_type"
+			. ",\n d.name AS section_name"
+			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url"
+			. ",\n r.lastread AS lastread";
 	}
 	
 	function get_tables( )
 	{
 		global $CFG;
+		$s = '';
 		if ( null == $this->f )
-			return "\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
+			$s = "\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
 				. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON p.discussion=d.id";
 		else
-			return 	"\n JOIN {$CFG->prefix}forum_discussions d ON d.forum=".addslashes($this->f)
+			$s = "\n JOIN {$CFG->prefix}forum_discussions d ON d.forum=".addslashes($this->f)
 				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
+		return $s
+			."\n LEFT OUTER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
 	}
 	
 	function get_conds( $summary )
@@ -631,20 +665,24 @@ class discussion_annotation_url_handler extends annotation_url_handler
 	function get_fields( )
 	{
 		global $CFG;
-		return ",\n 'discussion' section_type, 'post' row_type"
-			. ",\n d.name section_name"
-			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url";
+		return ",\n 'discussion' AS section_type, 'post' AS row_type"
+			. ",\n d.name AS section_name"
+			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url"
+			. ",\n r.lastread AS lastread";
 	}
 	
 	function get_tables( )
 	{
 		global $CFG;
+		$s = '';
 		if ( null == $this->d )
-			return "\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
+			$s = "\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
 				. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON p.discussion=d.id";
 		else
-			return 	"\n JOIN {$CFG->prefix}forum_discussions d ON d.id=".addslashes($this->d)
+			$s = "\n JOIN {$CFG->prefix}forum_discussions d ON d.id=".addslashes($this->d)
 				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
+		return $s
+			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
 	}
 	
 	function get_conds( $summary )
@@ -683,7 +721,7 @@ class post_annotation_url_handler extends annotation_url_handler
 		if ( null != $this->titlehtml )
 			return;
 		
-		$query = "SELECT p.subject pname, d.id did, d.name dname, d.course course"
+		$query = "SELECT p.subject AS pname, d.id AS did, d.name AS dname, d.course AS course"
 			. " FROM {$CFG->prefix}forum_posts AS p"
 			. " INNER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
 			. " WHERE p.id=$p";
@@ -707,18 +745,21 @@ class post_annotation_url_handler extends annotation_url_handler
 	function get_fields( )
 	{
 		global $CFG;
-		return ",\n 'post' section_type, 'post' row_type"
-			. ",\n d.name section_name"
-			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) section_url"
-			. ",\n 'post' object_type"
-			. ",\n p.id object_id";
+		return ",\n 'post' AS section_type, 'post' AS row_type"
+			. ",\n d.name AS section_name"
+			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url"
+			. ",\n 'post' AS object_type"
+			. ",\n p.id AS object_id"
+			. ",\n r.lastread AS lastread";
 	}
 	
 	function get_tables( )
 	{
 		global $CFG;
 		return 	"\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
-			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion";
+			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
+			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
+
 	}
 	
 	function get_conds( $summary )

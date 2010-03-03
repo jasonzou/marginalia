@@ -58,6 +58,7 @@ else  {
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
+		. "<script language='JavaScript' type='text/javascript' src='marginalia/restutil.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-keywords.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='tags.js'></script>\n"
@@ -80,9 +81,14 @@ else  {
 		. "addEvent( window, 'load', keywordsOnload );\n"
 		. "</script>";
 			
-	$navtail = get_string( 'edit_keywords_title', ANNOTATION_STRINGS );
-	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
-		$course->fullname, "$navtail", "", $meta, true, "", null);
+		$navlinks = array();
+		$navlinks[] = array(
+				'name' => get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
+				'type' => 'title');
+		$navigation = build_navigation( $navlinks );
+
+		print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
+		$course->fullname, $navigation, "", $meta, true, "", null);
 		
 
 	echo "<div id='keyword-display'>\n";
@@ -105,6 +111,17 @@ else  {
 	$urlparts = parse_url( $logurl );
 	$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
 	add_to_log( null, 'annotation', 'summary', 'edit-keywords.php' );
+	
+	// Marginalia logging
+	if ( AN_LOGGING )
+	{
+		$event = new object( );
+		$event->userid = $USER->id;
+		$event->service = 'annotation tags';
+		$event->action = 'view';
+		$event->modified = time( );
+		insert_record( AN_EVENTLOG_TABLE, $event, true );
+	}
 }
 
 ?>

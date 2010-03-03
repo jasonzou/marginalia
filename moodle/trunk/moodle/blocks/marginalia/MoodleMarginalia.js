@@ -34,58 +34,75 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 	this.url = url;
 	this.moodleRoot = moodleRoot;
 	this.loginUserId = userId;
+	this.sessionCookie = params.sessionCookie;
 	this.preferences = new Preferences( 
 		new RestPreferenceService( this.annotationPath + '/user-preference.php' ),
 		prefs );
-	this.showAnnotations = prefs[ AN_SHOWANNOTATIONS_PREF ];
+	this.showAnnotations = prefs[ Marginalia.P_SHOWANNOTATIONS ];
 	this.showAnnotations = this.showAnnotations == 'true';
-	this.splash = prefs[ AN_SPLASH_PREF ] == 'true' ? params[ 'splash' ] : null;
+	this.splash = prefs[ Marginalia.P_SPLASH ] == 'true' ? params[ 'splash' ] : null;
 	this.useSmartquote = params.useSmartquote;
 	this.allowAnyUserPatch = params.allowAnyUserPatch;
 	this.smartquoteIcon = params.smartquoteIcon;
+	this.handlers = params.handlers;
+	this.course = params.course;
+
+	this.selectors = {
+		post: new Selector( 'table.forumpost', 'table.forumpost table.forumpost' ),
+		post_content: new Selector( '.content .posting', '.content .content .posting' ),
+		post_title: new Selector( '.subject', '.content .subject' ),
+		post_author: new Selector( '.author a', '.content .author a' ),
+		post_authorid: null,
+		post_date: null,
+		post_url: new Selector( 'a[rel="post"]', '.content .posting a[rel="post"]', '@href' ),
+		mia_notes: new Selector( '.mia_margin', '.content .posting .mia_margin' )
+	};
+
+	this.logService = params[ 'useLog' ] ? new RestLogService( this.annotationPath + '/activity_log.php',
+		this.course, {
+		csrfCookie: this.sessionCookie } ) : null;
 	
-	// This is kind of awkward.  If the user changes the display user, then
-	// visits another page, then uses the browser back button, we need to use
-	// the new display user, not the one set when the page was loaded the first
-	// time.  So check whether the user dropdown has a value, and match it.
-	this.displayUserId = prefs[ AN_USER_PREF ];
-	var userCtrl = document.getElementById( 'anuser' );
-	if ( userCtrl )
+	this.sheet = prefs[ Marginalia.P_SHEET ];
+	
+	// Ensure the sheet drop-down relfects the actual sheet to be shown
+	// This relies on preferences being saved correctly.  Otherwise, the user may
+	// pick a different user, visit another page, click back and find that the 
+	// sheet control shows the wrong thing.
+	var sheetCtrl = document.getElementById( 'ansheet' );
+	if ( sheetCtrl )
 	{
-		if ( userCtrl.selectedIndex >= 0 )
+		for ( var i = 0;  i < sheetCtrl.options.length;  ++i )
 		{
-			var userId = userCtrl.options[ userCtrl.selectedIndex ].value;
-			if ( userId )
+			if ( sheetCtrl.options[ i ].value == this.sheet )
 			{
-				this.displayUserId = userId;
-				this.showAnnotations = true;
+				sheetCtrl.selectedIndex = i;
+				break;
 			}
-			else
-				this.showAnnotations = false;
 		}
 	}
 }
 
 MoodleMarginalia.prototype.onload = function( )
 {
-//	initLogging();
+	initLogging();
+
 
 	// Check whether this page should have annotations enabled at all
 	// The check is here rather in the PHP;  that minimizes the number of patches
 	// that need to be applied to existing Moodle code.
 	var actualUrl = '' + window.location;
-	if ( this.loginUserId && actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ ) )
+	if ( this.loginUserId && ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ )
+		|| actualUrl.match( /^.*\/mod\/forum\/post\.php.*/ ) ) )
 	{
 		var annotationService = new RestAnnotationService( this.annotationPath + '/annotate.php', {
-			csrfCookie: 'MoodleSessionTest' } );
+			csrfCookie: this.sessionCookie } );
 		var keywordService = new RestKeywordService( this.annotationPath + '/keywords.php', true);
 		keywordService.init( null );
 		var moodleMarginalia = this;
-		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.displayUserId == '*' ? '' : this.displayUserId, {
+		window.marginalia = new Marginalia( annotationService, this.loginUserId, this.sheet, {
 			preferences: this.preferences,
 			keywordService: keywordService,
 			baseUrl:  this.moodleRoot,
-			showAccess:  true,
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
@@ -95,7 +112,8 @@ MoodleMarginalia.prototype.onload = function( )
 				link: null,
 				'default':  Marginalia.newEditorFunc( YuiAutocompleteNoteEditor )
 			},
-			onMarginHeight: function( post ) { moodleMarginalia.fixControlMargin( post ); }
+			onMarginHeight: function( post ) { moodleMarginalia.fixControlMargin( post ); },
+			selectors: this.selectors
 		} );
 		
 		this.cleanUpPostContent( );
@@ -108,18 +126,39 @@ MoodleMarginalia.prototype.onload = function( )
 		// Fix all control margins
 		this.fixAllControlMargins( );
 		
-		Smartquote.enableSmartquote( this.moodleRoot, marginalia.listPosts( ), marginalia.skipContent );
+		// Enable smartquotes and quote logging
+		if ( this.useSmartquote )
+		{
+			this.smartquote = new Smartquote( this.moodleRoot, this.selectors, this.logService );
+			this.smartquote.enable( marginalia.listPosts( ), marginalia.skipContent );
+		}
 		
 //		var marginaliaDirect = new MarginaliaDirect( annotationService );
 //		marginaliaDirect.init( );
-		
+	
 		if ( this.showAnnotations && this.splash )
-			this.showSplash( );
+		{
+			var onclose = function() {
+				window.marginalia.preferences.setPreference( Marginalia.P_SPLASH, 'false', null);
+			};
+			window.marginalia.showTip( this.splash, onclose );
+		}
 	}
 };
 
+MoodleMarginalia.prototype.subscribeHtmlAreas = function( )
+{
+	if ( this.useSmartquote )
+	{
+		var subscriber = new SmartquoteSubscriber( this.logService );
+		subscriber.subscribeAllHtmlAreas( );
+	}
+}
+
+
 MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteElement, params, isEditing )
 {
+	var moodleMarginalia = this;
 	var wwwroot = this.moodleRoot;
 	buttonParams = this.useSmartquote ?
 		{
@@ -127,10 +166,9 @@ MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteE
 			title: getLocalized( 'annotation quote button' ),
 			content: this.smartquoteIcon,
 			onclick: function( ) { 
-				Smartquote.quoteAnnotation(
+				moodleMarginalia.smartquote.quoteAnnotation(
 					annotation,
 					marginalia.loginUserId,
-					wwwroot,
 					Smartquote.postIdFromUrl( annotation.getUrl( ) ) );
 			}
 		}
@@ -148,29 +186,7 @@ MoodleMarginalia.prototype.displayNote = function( marginalia, annotation, noteE
 
 MoodleMarginalia.prototype.createAnnotation = function( event, postId )
 {
-	this.hideSplash( );
-	delete this.splash;
-	window.marginalia.preferences.setPreference( AN_SPLASH_PREF, 'false', null);
 	clickCreateAnnotation( event, postId );
-};
-
-MoodleMarginalia.prototype.showSplash = function( )
-{
-	var noteMargins = cssQuery( '.hentry .notes div' );
-	if ( noteMargins.length > 0 )
-	{
-		var margin = noteMargins[ 0 ];
-		margin.appendChild( domutil.element( 'p', {
-			className: 'splash',
-			content: this.splash } ) );
-	}
-};
-
-MoodleMarginalia.prototype.hideSplash = function( )
-{
-	var splash = cssQuery( '.hentry .notes div .splash' );
-	if ( splash.length > 0 )
-		splash[ 0 ].parentNode.removeChild( splash[ 0 ] );
 };
 
 
@@ -186,10 +202,10 @@ MoodleMarginalia.prototype.hideSplash = function( )
  */
 MoodleMarginalia.prototype.fixControlMargin = function( post )
 {
-	var margin = domutil.childByTagClass( post.getElement( ), 'td', 'control-margin', PostMicro.skipPostContent );
-	var button = domutil.childByTagClass( margin, 'button', null );
-	button.style.height = '';
-	button.style.height = '' + margin.offsetHeight + 'px';
+	var td = domutil.childByTagClass( post.getElement( ), 'td', 'margin-td', PostMicro.skipPostContent );
+	var margin = domutil.childByTagClass( td, null, 'mia_margin' );
+	margin.style.height = '';
+	margin.style.height = '' + td.offsetHeight + 'px';
 };
 
 MoodleMarginalia.prototype.fixAllControlMargins = function( )
@@ -206,9 +222,11 @@ MoodleMarginalia.prototype.cleanUpPostContent = function( )
 		{
 			if ( child.nodeType == ELEMENT_NODE )
 			{
-				domutil.removeClass( child, PM_POST_CLASS );
-				domutil.removeClass( child, PM_CONTENT_CLASS );
-				domutil.removeClass( child, AN_NOTES_CLASS );
+//				domutil.removeClass( child, PM_POST_CLASS );
+//				domutil.removeClass( child, PM_CONTENT_CLASS );
+//				domutil.removeClass( child, AN_NOTES_CLASS );
+				// for now, simply clear all class names
+				child.removeAttribute( 'class' );
 				child.removeAttribute( 'id' );
 				if ( child.id )
 					delete child.id;
@@ -223,23 +241,28 @@ MoodleMarginalia.prototype.cleanUpPostContent = function( )
 	}
 }
 
-MoodleMarginalia.prototype.changeAnnotationUser = function( userControl, url )
+MoodleMarginalia.prototype.changeSheet = function( sheetControl, url )
 {
 	var marginalia = window.marginalia;
-	var userId = userControl.value;
-	this.hideSplash( )
-	marginalia.hideAnnotations( );
-	if ( null == userId || '' == userId )
-		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'false', null);
+	var sheet = sheetControl.value;
+	
+	// Check to see whether this is a special case with a named handler
+	if ( this.handlers[ sheet ] )
+		this.handlers[ sheet ]( this, marginalia );
+	// This is simply a sheet name: go to that sheet
 	else
 	{
-		marginalia.displayUserId = userId == '*' ? '' : userId;
-		marginalia.showAnnotations( url );
-		marginalia.preferences.setPreference( AN_SHOWANNOTATIONS_PREF, 'true', null);
-		marginalia.preferences.setPreference( AN_USER_PREF, userId, null );
-		if ( this.splash && ( marginalia.loginUserId == marginalia.displayUserId || '' == marginalia.displayUserId ) )
-			this.showSplash( );
-		this.fixAllControlMargins( );
+		marginalia.hideAnnotations( );
+		if ( null == sheet || '' == sheet )
+			marginalia.preferences.setPreference( Marginalia.P_SHOWANNOTATIONS, 'false', null);
+		else
+		{
+			marginalia.sheet = sheet;
+			marginalia.showAnnotations( url );
+			marginalia.preferences.setPreference( Marginalia.P_SHOWANNOTATIONS, 'true', null);
+			marginalia.preferences.setPreference( Marginalia.P_SHEET, sheet, null );
+			this.fixAllControlMargins( );
+		}
 	}
 };
 

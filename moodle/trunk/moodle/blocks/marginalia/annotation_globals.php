@@ -1,32 +1,49 @@
 <?php
 
+// Enable logging (used for research purposes)
+// When this is on, most annotation activities are logged (annotation create, update, delete,
+// view summary page, view tag page, use of th e quoting feature).
+// The user interface for seeing the log is not available unless permission is granted.
+// To enable a user to view a log, give them a role with the block/marginalia:view_log capability
+// They will then see a View Activity Log option in the annotation drop-down menu
+define( 'AN_LOGGING', true );
+
 // The smartquote icon symbol(s)
 define( 'AN_SMARTQUOTEICON', '\u275d' );	// \u275b\u275c: enclosed single qs, 267a: recycle
 
 // The same thing as entities because - and this stuns the hell out of me every
 // single time - PHP 5 *does not have native unicode support*!!!  Geez guys,
 // I remember reading about unicode in Byte Magazine in what, the 1980s?
-define( 'AN_SMARTQUOTEICON_HTML', '&#10075;&#10076;' );
+define( 'AN_SMARTQUOTEICON_HTML', '&#10077;' ); //'&#10075;&#10076;' );
 
 // Icon for filtering on the summary page
 define( 'AN_FILTERICON_HTML', '&#9754;' );  //&#9756;
 	
 define( 'ANNOTATION_STRINGS', 'block_marginalia' );
 
-define( 'AN_USER_PREF', 'annotations.user' );
+define( 'AN_SHEET_PREF', 'annotations.sheet' ); // 'annotations.user' );
 define( 'AN_SHOWANNOTATIONS_PREF', 'annotations.show' );
 define( 'AN_NOTEEDITMODE_PREF', 'annotations.note-edit-mode' );
 define( 'AN_SPLASH_PREF', 'annotations.splash' );
-define( 'SMARTCOPY_PREF', 'smartcopy' );
+//define( 'SMARTCOPY_PREF', 'smartcopy' );
 
 define( 'AN_DBTABLE', 'marginalia' );
+define( 'AN_EVENTLOG_TABLE', 'marginalia_event_log' );
+define( 'AN_ANNOTATIONLOG_TABLE', 'marginalia_annotation_log' );
 
-define( 'AN_ACCESS_PRIVATE', 0 );
-define( 'AN_ACCESS_AUTHOR', 0x1 );
-define( 'AN_ACCESS_PUBLIC', 0xffff );
+define( 'AN_SHEET_PRIVATE', 0x1 );
+define( 'AN_SHEET_AUTHOR', 0x2 );
+define( 'AN_SHEET_PUBLIC', 0xffff );
 
 // Object types
 define ( 'AN_OTYPE_POST', 1 );
+define ( 'AN_OTYPE_ANNOTATION', 2 );	// though can't annotate an annotation, this is used in logging
+define ( 'AN_OTYPE_DISCUSSION', 3 );	// used in logging
+
+// Needed by several annotation functions - if not set, PHP will throw errors into the output
+// stream which causes AJAX problems.  Doing it this way in case moodle sets the TZ at some
+// future point.  Leading @ suppresses warnings.  (Sigh... try..catch didn't work.  PHP is such a mess.)
+@date_default_timezone_set( date_default_timezone_get( ) );
 
 class annotation_globals
 {
@@ -44,7 +61,7 @@ class annotation_globals
 //		return annotation_globals::getMoodlePath( ) . ANNOTATE_SERVICE_PATH;
 	}
 	
-	FUNCTION get_keyword_service_path( )
+	function get_keyword_service_path( )
 	{
 		global $CFG;
 		return $CFG->wwwroot . ANNOTATION_PATH . '/keywords.php';
@@ -76,6 +93,7 @@ class annotation_globals
 	function get_install_date( )
 	{
 		// Hardcoded because I'm not aware of Moodle recording an install date anywhere
+		date_default_timezone_set( date_default_timezone_get( ) );
 		return strtotime( '2005-07-20' );
 	}
 	
@@ -83,6 +101,34 @@ class annotation_globals
 	{
 		return "tag:" . annotation_globals::get_host() . ',' . date( 'Y-m-d', annotation_globals::get_install_date() ) . ":annotation";
 	}
+	
+	/**
+	 * get sheet type for sheet string
+	 */
+	function sheet_type( $sheet_str )
+	{
+		if ( 'public' == $sheet_str )
+			return AN_SHEET_PUBLIC;
+		elseif ( 'author' == $sheet_str )
+			return AN_SHEET_AUTHOR;
+		else
+			return AN_SHEET_PRIVATE;
+	}
+	
+	/**
+	 * get sheet string for type and group
+	 */
+	function sheet_str( $sheet_type )
+	{
+		if ( AN_SHEET_PUBLIC == $sheet_type )
+			return 'public';
+		elseif ( AN_SHEET_PRIVATE == $sheet_type )
+			return 'private';
+		elseif ( AN_SHEET_AUTHOR == $sheet_type )
+			return 'author';
+		return '';
+	}
+
 	
 	/**
 	 * Remember: This the Annotation class does not store Moodle user IDs, so
@@ -95,18 +141,13 @@ class annotation_globals
 		
 		$annotation->setAnnotationId( $r->id );
 		
-		if ( array_key_exists( 'username', $r ) )
-			$annotation->setUserId( $r->username );
+		if ( array_key_exists( 'userid', $r ) )
+			$annotation->setUserId( $r->userid );
 		if ( array_key_exists( 'fullname', $r ) )
 			$annotation->setUserName( $r->fullname );
 		
-		if ( array_key_exists( 'access_perms', $r ) )
-		{
-			if ( $r->access_perms & AN_ACCESS_PUBLIC )
-				$annotation->setAccess( 'public' );
-			else
-				$annotation->setAccess( 'private' );
-		}
+		if ( array_key_exists( 'sheet_type', $r ) )
+			$annotation->setSheet( annotation_globals::sheet_str( $r->sheet_type ) );
 		if ( array_key_exists( 'url', $r ) )
 			$annotation->setUrl( $r->url );
 		if ( array_key_exists( 'note', $r ) )
@@ -115,8 +156,8 @@ class annotation_globals
 			$annotation->setQuote( $r->quote );
 		if ( array_key_exists( 'quote_title', $r ) )
 			$annotation->setQuoteTitle( $r->quote_title );
-		if ( array_key_exists( 'quote_author_username', $r ) )
-			$annotation->setQuoteAuthorId( $r->quote_author_username );
+		if ( array_key_exists( 'quote_author_id', $r ) )
+			$annotation->setQuoteAuthorId( $r->quote_author_id );
 		elseif ( array_key_exists( 'quote_author', $r ) )	// to support old mdl_annotation table
 			$annotation->setQuoteAuthorId( $r->quote_author );
 		if ( array_key_exists( 'quote_author_fullname', $r ) )
@@ -129,6 +170,8 @@ class annotation_globals
 			$annotation->setCreated( (int) $r->created );
 		if ( array_key_exists( 'modified', $r ) )
 			$annotation->setModified( (int) $r->modified );
+		if ( array_key_exists( 'lastread', $r ) )
+			$annotation->setLastRead( (int) $r->lastread );
 		
 		$start_line = array_key_exists( 'start_line', $r ) ? $r->start_line : 0;
 		$end_line = array_key_exists( 'end_line', $r ) ? $r->end_line : 0;
@@ -156,31 +199,34 @@ class annotation_globals
 			$range->setEnd( new XpathPoint( $r->end_xpath, $end_line, $r->end_word, $r->end_char ) );
 			$annotation->setXPathRange( $range );
 		}
-		
+			
 		return $annotation;
 	}
 		
 	function annotation_to_record( $annotation )
 	{
+		$record = new object();
+		
 		$id = $annotation->getAnnotationId( );
 		if ( $id )
 			$record->id = $id;
 		
 		// Map username to id #
-		$username = $annotation->getUserId( );
-		$user = get_record( 'user', 'username', $username );
+		$userid = $annotation->getUserId( );
+		$user = get_record( 'user', 'id', (int) $userid );
 		$record->userid = $user ? $user->id : null;
 
-		$access = $annotation->getAccess( );
-		$record->access_perms = 'public' == $access ? AN_ACCESS_PUBLIC : AN_ACCESS_PRIVATE;
+		$sheet = $annotation->getSheet( );
+		$record->sheet_type = annotation_globals::sheet_type( $sheet );
+			
 		$record->url = addslashes( $annotation->getUrl( ) );
 		$record->note = addslashes( $annotation->getNote( ) );
 		$record->quote = addslashes( $annotation->getQuote( ) );
 		$record->quote_title = addslashes( $annotation->getQuoteTitle( ) );
 		
 		// Map author username to id #
-		$username = $annotation->getQuoteAuthorId( );
-		$user = get_record( 'user', 'username', $username );
+		$userid = $annotation->getQuoteAuthorId( );
+		$user = get_record( 'user', 'id', (int) $userid );
 		$record->quote_author_id = $user ? $user->id : null;
 		
 		$record->link = addslashes( $annotation->getLink( ) );

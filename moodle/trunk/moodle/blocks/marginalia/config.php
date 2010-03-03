@@ -8,7 +8,7 @@ define( 'ANNOTATION_DIR', $CFG->dirroot.'/blocks/marginalia' );
 // When false, anyone on the Web can retrieve public annotations via an Atom feed
 define( 'ANNOTATION_REQUIRE_USER', false );
 
-define( 'MAX_NOTE_LENGTH', 250 );
+define( 'MAX_NOTE_LENGTH', 250 );		// should not exceed 255 due to DB limitations
 define( 'MAX_QUOTE_LENGTH', 1000 );
 
 // Enable tag (keyword) autocomplete
@@ -17,6 +17,14 @@ define( 'AN_USEKEYWORDS', true );
 // Enable smartquoting
 define( 'AN_USESMARTQUOTE', true );
 
+// Enable activity logging
+// The activity log (activity_log.php) is useful for research purposes.  It provides
+// a complete log of all marginalia activity, including every version of an annotation
+// as it changes over time.  To view the log, grant the block/marginalia:view_log
+// capability to a user, who will then see the Activity Log option in the annotation
+// drop-down menu.
+define( 'AN_USELOGGING', true );
+
 // Allow the admin user to update broken ranges
 // (i.e. not to modify user data, which feature the UI should never provide,
 // but the user has permission to perform administrative updates to it)
@@ -24,7 +32,8 @@ define( 'AN_ADMINUPDATE', true );
 
 // Allow an admin user to view everyone's annotations, regardless of access level
 // This is useful for research and for retrieving the annotations for backup
-// without having to query the database directly.
+// without having to query the database directly.  This capability is being
+// replaced by the activity log.  See AN_USELOGGING above.
 define( 'AN_ADMINVIEWALL', true );
 
 // Show summary column headings at the top of each section, rather than at

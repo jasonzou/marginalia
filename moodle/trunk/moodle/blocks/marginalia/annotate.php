@@ -14,21 +14,22 @@ if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
  
 class moodle_annotation extends Annotation
 {
-	function is_action_valid( $action )
+	function isActionValid( $action )
 	{
 		return null === $action || '' === $action;
 	}
 	
-	function is_access_valid( $access )
+	function isSheetValid( $sheet )
 	{
-		return ! $access || 'public' == $access || 'private' == $access
-			|| 'author' == $access || 'teacher' == $access
-			|| 'author teacher' == $access;
+		return ! $sheet || 'public' == $sheet || 'private' == $sheet
+			|| 'author' == $sheet;
 	}	
 }
 
 class moodle_annotation_service extends AnnotationService
 {
+	var $islogging = true;
+	
 	function moodle_annotation_service( $userid )
 	{
 		global $CFG;
@@ -44,17 +45,20 @@ class moodle_annotation_service extends AnnotationService
 			$userid,
 			array(
 				'baseUrl' => $CFG->wwwroot,
-				'csrfCookie' => $csrfprotect ? null : 'MoodleSessionTest',
+				'csrfCookie' => $csrfprotect ? null : 'MoodleSessionTest' . $CFG->sessioncookie,
 				'csrfCookieValue' => $csrfprotect ? null : $_SESSION['SESSION']->session_test )
 			);
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
-	function doListAnnotations( $url, $username, $block, $all )
+	function doListAnnotations( $url, $sheet, $block, $all )
 	{
 		$handler = annotation_summary_query::handler_for_url( $url );
-		$user = get_record( 'user', 'username', $username );
-		$summary = new annotation_summary_query( $url, $handler, null, $user, null, false, $all );
+		$sheet_type = annotation_globals::sheet_type( $sheet );
+		$summary = new annotation_summary_query( array(
+			'url' => $url
+			,'sheet_type' => $sheet_type
+			,'all' => $all ) );
 		if ( $summary->error )  {
 			$this->httpError( 400, 'Bad Request', 'Bad URL 1' );
 			return null;
@@ -65,7 +69,7 @@ class moodle_annotation_service extends AnnotationService
 		}
 		else
 		{
-			$querysql = $summary->sql( 'section_type, section_name, quote_title, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
+			$querysql = $summary->sql( );
 			$annotation_set = get_records_sql( $querysql );
 			$annotations = Array( );
 			if ( $annotation_set )  {
@@ -74,7 +78,7 @@ class moodle_annotation_service extends AnnotationService
 					$annotations[ $i++ ] = annotation_globals::record_to_annotation( $r );
 			}
 			$format = $this->getQueryParam( 'format', 'atom' );
-			$logurl = 'annotate.php?format='.$format.($user ? '&user='.$user->id : '').'&url='.$url;
+			$logurl = 'annotate.php?format='.$format.'&url='.$url;
 			add_to_log( $summary->handler->courseid, 'annotation', 'list', $logurl );
 			return $annotations;
 		}
@@ -90,11 +94,11 @@ class moodle_annotation_service extends AnnotationService
 			$range = ', a.range AS range ';
 */		
 		// Caller should ensure that id is numeric
-		$query = "SELECT a.id, a.userid, u.username as username, a.url,
+		$query = "SELECT a.id, a.course, a.userid, a.url,
 			  a.start_block, a.start_xpath, a.start_line, a.start_word, a.start_char,
 			  a.end_block, a.end_xpath, a.end_line, a.end_word, a.end_char,
-			  a.note, a.access_perms, a.quote, a.quote_title, a.quote_author_id,
-			  qu.username as quote_author_username,
+			  a.note, a.sheet_type, a.quote, a.quote_title, a.quote_author_id,
+			  qu.id as quote_author_userid,
 			  a.link, a.link_title, a.action,
 			  a.created, a.modified $range
 			  FROM {$this->tablePrefix}".AN_DBTABLE." a
@@ -112,6 +116,8 @@ class moodle_annotation_service extends AnnotationService
 	
 	function doCreateAnnotation( $annotation )
 	{
+		global $USER;
+		
 		if ( strlen( $annotation->getNote( ) ) > MAX_NOTE_LENGTH )
 			$this->httpError( 400, 'Bad Request', 'Note too long' );
 		elseif ( strlen( $annotation->getQuote( ) ) > MAX_QUOTE_LENGTH )
@@ -131,11 +137,46 @@ class moodle_annotation_service extends AnnotationService
 			if ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $annotation->getUrl( ), $matches ) )  {
 				$record->object_type = AN_OTYPE_POST;
 				$record->object_id = (int) $matches[ 1 ];
+				// Find the post author
+				$query = 'SELECT p.userid AS quote_author_id, p.subject AS quote_title, d.course as course'
+					." FROM {$this->tablePrefix}forum_posts p "
+					." JOIN {$this->tablePrefix}forum_discussions d ON p.discussion=d.id"
+					." WHERE p.id=".(int)$record->object_id;
+				$resultset = get_record_sql( $query );
+				if ( $resultset && count ( $resultset ) != 0 )  {
+					$record->quote_author_id = (int)$resultset->quote_author_id;
+					$record->quote_title = $resultset->quote_title;
+					$record->course = $resultset->course;
+				}
+				else  {
+					$this->httpError( 400, 'Bad Request', 'No such forum post' );
+					return 0;
+				}
 			}
+			else
+				echo "UNKNOWN URL ".$annotation->getUrl( )."\n";
 	
 			// must preprocess fields
 			$id = insert_record( AN_DBTABLE, $record, true );
 			
+			// Marginalia logging
+			if ( AN_LOGGING )
+			{
+				$event = new object( );
+				$event->userid = $USER->id;
+				$event->service = 'annotation';
+				$event->action = 'create';
+				$event->object_type = AN_OTYPE_ANNOTATION;
+				$event->object_id = $id;
+				$event->modified = $annotation->getModified( );
+				$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
+				
+				$record->annotationid = $id;
+				$record->eventid = $eventid;
+				insert_record( AN_ANNOTATIONLOG_TABLE, $record, true );
+			}
+			
+			// Moodle logging
 			if ( $id )  {
 				// TODO: fill in queryStr for the log
 				$urlquerystr = '';
@@ -149,12 +190,37 @@ class moodle_annotation_service extends AnnotationService
 	
 	function doUpdateAnnotation( $annotation )
 	{
+		global $USER;
+		
 		$urlquerystr = '';
 		$annotation->setModified( time( ) );
 		$record = annotation_globals::annotation_to_record( $annotation );
+
+		$r = update_record( AN_DBTABLE, $record );
+		
+		// Moodle logging
 		$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
 		add_to_log( null, 'annotation', 'update', $logurl, "{$annotation->id}" );
-		return update_record( AN_DBTABLE, $record );
+
+		// Marginalia log
+		if ( AN_LOGGING )
+		{
+			$event = new object( );
+			$event->userid = $USER->id;
+			$event->service = 'annotation';
+			$event->action = 'update';
+			$event->object_type = AN_OTYPE_ANNOTATION;
+			$event->object_id = $annotation->getAnnotationId( );
+			$event->modified = $annotation->getModified( );
+			$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
+			
+			$record->id = null;
+			$record->annotationid = $annotation->getAnnotationId( );
+			$record->eventid = $eventid;
+			insert_record( AN_ANNOTATIONLOG_TABLE, $record, true );
+		}
+		
+		return $r;
 	}
 	
 	function doBulkUpdate( $oldnote, $newnote )
@@ -176,13 +242,40 @@ class moodle_annotation_service extends AnnotationService
 				." WHERE $where";
 			execute_sql( $query, false );
 		}
+		if ( AN_LOGGING )
+		{
+			$event = new object( );
+			$event->userid = $USER->id;
+			$event->service = 'annotation';
+			$event->action = 'bulk_update';
+			$event->description = $n.'x: '.$oldnote.' => '.$newnote;
+			$event->object_type = null;
+			$event->object_id = null;
+			$event->modified = time( );
+			$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
+		}
 		header( 'Content-type: text/plain' );
 		return $n;
 	}
 	
 	function doDeleteAnnotation( $id )
 	{
+		global $USER;
+		
 		delete_records( AN_DBTABLE, 'id', $id );
+		
+		if ( AN_LOGGING )
+		{
+			$event = new object( );
+			$event->userid = $USER->id;
+			$event->service = 'annotation';
+			$event->action = 'delete';
+			$event->object_type = AN_OTYPE_ANNOTATION;
+			$event->object_id = $id;
+			$event->modified = time( );
+			$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
+		}
+		
 		$logurl = "annotate.php?id=$id";
 		add_to_log( null, 'annotation', 'delete', $logurl, "$id" );
 		return True;
@@ -194,7 +287,7 @@ class moodle_annotation_service extends AnnotationService
 	}
 }
 
-$service = new moodle_annotation_service( isguest() ? null : $USER->username );
+$service = new moodle_annotation_service( isguest() ? null : $USER->id );
 $service->dispatch( );
 
 ?>

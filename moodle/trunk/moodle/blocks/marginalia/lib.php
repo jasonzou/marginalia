@@ -20,23 +20,18 @@ class moodle_marginalia
 		return $value;
 	}
 	
-	public static function get_userid( )
+	/**
+	 * Get the sheet whose annotations are to be shown
+	 */
+	public static function get_sheet( )
 	{
-		global $USER;
-		// Get the users whose annotations are to be shown
-		$annotationuser = get_user_preferences( AN_USER_PREF, null );
-		if ( null == $annotationuser )  {
-			$annotationuser = isguest() ? null : $USER->username;
-			set_user_preference( AN_USER_PREF, $annotationuser );
-		}
-		return $annotationuser;
+		return moodle_marginalia::get_pref( AN_SHEET_PREF, 'public' );
 	}
 	
 	public static function get_show_annotations_pref( )
 	{
 		return moodle_marginalia::get_pref( AN_SHOWANNOTATIONS_PREF, 'false' );
 	}
-	
 	
 	/**
 	 * Return HTML for insertion in the head of a document to include Marginalia Javascript
@@ -54,6 +49,7 @@ class moodle_marginalia
 			ANNOTATION_PATH.'/marginalia-config.js',
 			ANNOTATION_PATH.'/marginalia-strings.js',
 			ANNOTATION_PATH.'/smartquote.js',
+			ANNOTATION_PATH.'/rest-log.js',
 			ANNOTATION_PATH.'/MoodleMarginalia.js' ) );
 	
 		// Bits of YUI
@@ -79,21 +75,20 @@ class moodle_marginalia
 	 * Generate the content HTML.  This contains the Javascript necessary to
 	 * initialized Marginalia.  It also require_js's a number of Javascript files.
 	 */
-	public static function init_html( $refurl )
+	public static function init_html( $refurl, $subscribe=false )
 	{
-		global $CFG, $USER;
+		global $CFG, $USER, $course;
 		
 		// Get all annotation preferences as an associative array and sets them to defaults
 		// in the database if not already present.
 		$prefs = array(
-			AN_USER_PREF => moodle_marginalia::get_userid( ),
+			AN_SHEET_PREF => moodle_marginalia::get_pref( AN_SHEET_PREF, 'public' ),
 			AN_SHOWANNOTATIONS_PREF => moodle_marginalia::get_pref( AN_SHOWANNOTATIONS_PREF, 'false' ),
 			AN_NOTEEDITMODE_PREF => moodle_marginalia::get_pref( AN_NOTEEDITMODE_PREF, 'freeform' ),
 			AN_SPLASH_PREF => moodle_marginalia::get_pref( AN_SPLASH_PREF, 'true' )
 		);
 		
 		$showannotationspref = $prefs[ AN_SHOWANNOTATIONS_PREF ];
-		$annotationuser = $prefs[ AN_USER_PREF ];
 		$showsplashpref = $prefs[ AN_SPLASH_PREF ];
 		
 		// Build a string of initial preference values for passing to Marginalia
@@ -110,26 +105,42 @@ class moodle_marginalia
 		}
 		$sprefs = '{ '.$sprefs.' }';;
 		
+		// URLs used by drop-down menu handlers
+		$summaryurl = ANNOTATION_PATH.'/summary.php?user='.(int)$USER->id.'&url='.urlencode( $refurl );
+		$tagsurl = ANNOTATION_PATH.'/tags.php?course='.(int)$course->id;
+		$logurl = ANNOTATION_PATH.'/activity_log.php?course='.(int)$course->id.'&limit=100';
+
 		$sitecontext = get_context_instance(CONTEXT_SYSTEM);
 		$allowAnyUserPatch = AN_ADMINUPDATE && (
 			has_capability( 'moodle/legacy:admin', $sitecontext ) or has_capability( 'moodle/site:doanything', $sitecontext) );
 		
-		$meta = "<script language='JavaScript' type='text/javascript'>\n"
+		$meta = "<script language='JavaScript' type='text/javascript' defer='defer'>\n"
 			."function myOnload() {\n"
 			." var moodleRoot = '".s($CFG->wwwroot)."';\n"
 			." var annotationPath = '".s(ANNOTATION_PATH)."';\n"
 			." var url = '".s($refurl)."';\n"
-			.' var userId = \''.s($USER->username)."';\n"
-			.' moodleMarginalia = new MoodleMarginalia( annotationPath, url, moodleRoot, userId, '.$sprefs.', {'."\n";
-		$meta .= ' useSmartquote: '.s(AN_USESMARTQUOTE)
-			.",\n".' allowAnyUserPatch: '.($allowAnyUserPatch ? 'true' : 'false' )
-			.",\n smartquoteIcon: '".AN_SMARTQUOTEICON."'";
+			.' var userId = \''.s($USER->id)."';\n"
+			.' window.moodleMarginalia = new MoodleMarginalia( annotationPath, url, moodleRoot, userId, '.$sprefs.', {'
+			." \n  useSmartquote: ".s(AN_USESMARTQUOTE)
+			.",\n  useLog: ".s(AN_USELOGGING)
+			.",\n  course: ".(int)$course->id
+			.",\n  allowAnyUserPatch: ".($allowAnyUserPatch ? 'true' : 'false' )
+			.",\n  smartquoteIcon: '".AN_SMARTQUOTEICON."'"
+			.",\n  sessionCookie: 'MoodleSessionTest".$CFG->sessioncookie."'"
+			.",\n  handlers: {"
+			." \n   summary: function(){ window.location = '".$summaryurl."'; }"
+			.",\n   tags: function(){ window.location = '".$tagsurl."'; }"
+//			.",\n   help: function(){ return openpopup('/help.php?module=block_marginalia&file=annotate.html'); }\n"
+			.",\n   log: function(){ window.location = '".$logurl."'; }"
+			." \n}";
 		if ( $showsplashpref == 'true' )
-			$meta .= ',  splash: \''.get_string('splash',ANNOTATION_STRINGS).'\'';
-		$meta .= '  } );'."\n"
-			." moodleMarginalia.onload();\n"
-			."}\n"
-			."addEvent(window,'load',myOnload);\n"
+			$meta .= ",\n splash: '".get_string('splash',ANNOTATION_STRINGS)."'";
+		$meta .= " \n} );\n"
+			." window.moodleMarginalia.onload();\n";
+		if ( $subscribe )
+			$meta .= "window.moodleMarginalia.subscribeHtmlAreas(".(int)$course->id.");\n";
+		$meta .= "}\n"
+			."jQuery(window).load(myOnload);\n"
 			."</script>\n";
 		return $meta;
 	}
@@ -147,40 +158,36 @@ class moodle_marginalia
 		 */
 	}
 	
-	function show_user_dropdown( $refurl )
+	function show_sheet_dropdown( $refurl )
 	{
 		global $USER;
 		
-		$summary = annotation_summary_query::from_url( $refurl );
-		$userlist = get_records_sql( $summary->list_users_sql( ) );
-		$annotationuserid = moodle_marginalia::get_userid( );
+		$sheet = moodle_marginalia::get_sheet( );
 		$showannotationspref = moodle_marginalia::get_show_annotations_pref( ) == 'true';
 		
-		echo "<select name='anuser' id='anuser' onchange='window.moodleMarginalia.changeAnnotationUser(this,\"$refurl\");'>\n";
+		echo "<select name='ansheet' id='ansheet' onchange='window.moodleMarginalia.changeSheet(this,\"$refurl\");'>\n";
+
 		$selected = $showannotationspref ? '' : " selected='selected' ";
-		echo " <option $selected value=''>".get_string('hide_annotations',ANNOTATION_STRINGS)."</option>\n";
+		echo " <option $selected value=''>".get_string('sheet_none', ANNOTATION_STRINGS)."</option>\n";
+
 		if ( ! isguest() )  {
-			$selected = ( $showannotationspref && ( $USER->username == $annotationuserid ? "selected='selected' " : '' ) )
-				? " selected='selected' " : '';
+			$selected = ( $showannotationspref && $sheet == AN_SHEET_PRIVATE ) ? "selected='selected' " : '';
 			echo " <option $selected"
-				."value='".s($USER->username)."'>".get_string('my_annotations',ANNOTATION_STRINGS)."</option>\n";
-		}
-		if ( $userlist )  {
-			foreach ( $userlist as $user )  {
-				if ( $user->username != $USER->username )  {
-					$selected = ( $showannotationspref && ( $user->userid == $annotationuserid ? "selected='selected' ":'' ) )
-						? " selected='selected' " : '';
-					echo " <option $selected"
-						."value='".s($user->username)."'>".s($user->firstname.' '.$user->lastname)."</option>\n";
-				}
-			}
+				."value='".annotation_globals::sheet_str(AN_SHEET_PRIVATE,null)."'>".get_string('sheet_private', ANNOTATION_STRINGS)."</option>\n";
 		}
 		// Show item for all users
 		if ( true )  {
-			$selected = ( $showannotationspref && ( '*' == $annotationuserid ? "selected='selected' ":'' ) )
-				? " selected='selected' " : '';
-			echo " <option $selected value='*'>".get_string('all_annotations',ANNOTATION_STRINGS)."</option>\n";
+			$selected = ( $showannotationspref && $sheet == AN_SHEET_PUBLIC ) ? "selected='selected' " : '';
+			echo " <option $selected value='".annotation_globals::sheet_str(AN_SHEET_PUBLIC,null)."'>".get_string('sheet_public', ANNOTATION_STRINGS)."</option>\n";
 		}
+		echo "  <option disabled='disabled'>——————————</option>\n";
+		echo "  <option value='summary'>".get_string('summary_link',ANNOTATION_STRINGS)."...</option>\n";
+		echo "  <option value='tags'>".get_string('edit_keywords_link',ANNOTATION_STRINGS)."...</option>\n";
+//		echo "  <option value='help'>".get_string('marginalia_help_link',ANNOTATION_STRINGS)."...</option>\n";
+		
+		$context = get_context_instance( CONTEXT_SYSTEM );
+		if ( has_capability( 'block/marginalia:view_log', $context ) )
+			echo "  <option value='log'>".get_string('log_link',ANNOTATION_STRINGS)."...</option>\n";
 		echo "</select>\n";	
 	}
 	
@@ -199,6 +206,19 @@ class moodle_marginalia
 			."'>Tags</a>\n";
 	}
 	
+	/**
+	 * Show the header controls at the top of a page
+	 * - which annotation set to show
+	 * - help button
+	 * - link to summary page
+	 */
+	function show_header_controls( $topic, $refurl, $user )
+	{
+		moodle_marginalia::show_help( 'forum' );
+		moodle_marginalia::show_sheet_dropdown( $refurl );
+//		echo moodle_marginalia::summary_link_html( $refurl, $user->username );
+    }
+    
 	
 	/**
 	 * Deletes all annotations of a specific user
@@ -212,4 +232,49 @@ class moodle_marginalia
 	{
 		return delete_records( AN_DBTABLE, 'id', $userid );
 	}
+	
+	/**
+	 * Subscribe any HTMLAreas to quote events
+	 * This should be placed *after* any script in the HTML that creates an HTMLArea, otherwise
+	 * that object will not yet exist.  Also marke <script defer="defer">
+	 */
+	function subscribe_htmlareas( )
+	{
+		global $course;
+//		echo "<script type='text/javascript' defer='defer'>"
+		return	"window.moodleMarginalia.subscribeHtmlAreas(".(int)$course->id.");\n";
+//			."\n</script>\n";
+	}
+		
+
 }
+
+class marginalia_summary_lib
+{
+	/**
+	 * Pass in a url with {first} where the first item number should go
+	 */
+	static function show_result_pages( $first, $total, $perpage, $url )
+	{
+		// Show the list of result pages
+		$npages = ceil( $total / $perpage );
+		if ( $npages > 1 )
+		{
+			$this_page = 1 + floor( ( $first - 1 ) / $perpage );
+			echo "<ol class='result-pages'>\n";
+			for ( $i = 1; $i <= $npages;  ++$i )
+			{
+				if ( $i == $this_page )
+					echo "  <li>".$i."</li>\n";
+				else
+				{
+					$page = 1 + ($i - 1) * $perpage;
+					$turl = str_replace( '{first}', $page, $url);
+					echo "  <li><a href='".s($turl)."'>$i</a></li>\n";
+				}
+			}
+			echo "</ol>\n";
+		}
+	}
+}
+

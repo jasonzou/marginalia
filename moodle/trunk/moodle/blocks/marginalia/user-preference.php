@@ -1,7 +1,10 @@
 <?php
 
     require_once("../../config.php");
+    require_once( 'annotation_globals.php' );
 	
+    global $USER;
+    
 	$url = $_SERVER[ 'REQUEST_URI' ];
 	
 	$prefname = array_key_exists( 'name', $_GET ) ? $_GET[ 'name' ] : null;
@@ -33,10 +36,22 @@
 				header( 'HTTP/1.1 204 Preference Set' );
 				$prefs = get_user_preferences( $prefname, null );
 //				echo htmlspecialchars( $prefName ) . '=' . htmlspecialchars( $value );
+
+				// Marginalia logging
+				if ( AN_LOGGING )
+				{
+					$event = new object( );
+					$event->userid = $USER->id;
+					$event->service = 'preference';
+					$event->action = 'set';
+					$event->description = "$prefname=$value";
+					$event->modified = time( );
+					insert_record( AN_EVENTLOG_TABLE, $event, true );
+				}
 			}
 			break;
 		
 		default:
 			header( 'HTTP/1.1 400 Bad Request' );
 	}
-?>
+
