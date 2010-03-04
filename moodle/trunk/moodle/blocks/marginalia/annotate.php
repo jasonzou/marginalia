@@ -51,8 +51,10 @@ class moodle_annotation_service extends AnnotationService
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
-	function doListAnnotations( $url, $sheet, $block, $all )
+	function doListAnnotations( $url, $sheet, $block, $all, $mark )
 	{
+		global $USER;
+		
 		$handler = annotation_summary_query::handler_for_url( $url );
 		$sheet_type = annotation_globals::sheet_type( $sheet );
 		$summary = new annotation_summary_query( array(
@@ -70,13 +72,51 @@ class moodle_annotation_service extends AnnotationService
 		else
 		{
 			$querysql = $summary->sql( );
+//			echo "QUERY: $querysql\n";
 			$annotation_set = get_records_sql( $querysql );
 			$annotations = Array( );
+			$annotations_read = Array( );
+			$annotations_unread = Array( );
 			if ( $annotation_set )  {
 				$i = 0;
 				foreach ( $annotation_set as $r )
-					$annotations[ $i++ ] = annotation_globals::record_to_annotation( $r );
+				{
+					$annotations[ $i ] = annotation_globals::record_to_annotation( $r );
+					$annotation = $annotations[ $i ];
+					if ( $annotation->getLastRead( ) )
+						$annotations_read[ ] = $annotation->id;
+					else
+						$annotations_unread[ ] = $annotation->id;
+					$i++;
+				}
 			}
+			
+			// Record lastread
+			if ( 'read' == $mark )
+			{
+				$now = time( );
+				
+				if ( $annotations_read && count( $annotations_read ) )
+				{
+					$query = 'UPDATE '.$this->tablePrefix.AN_READ_TABLE
+						."\n SET lastread=".(int)$now
+						."\nWHERE userid=".(int)$USER->id
+						."\n AND annotationid IN (".implode(',', $annotations_read).")";
+					execute_sql( $query, false );
+				}
+
+				if ( $annotations_unread && count( $annotations_unread ) )
+				{
+					$query = 'INSERT INTO '.$this->tablePrefix.AN_READ_TABLE
+						."\n (annotationid, userid, lastread)"
+						."\nSELECT a.id, ".(int)$USER->id.', '.(int)$now
+						."\n FROM ".$this->tablePrefix.AN_DBTABLE.' a'
+						."\n WHERE a.id IN (".implode(',', $annotations_unread).")";
+					execute_sql( $query, false );
+				}
+			}
+			
+			
 			$format = $this->getQueryParam( 'format', 'atom' );
 			$logurl = 'annotate.php?format='.$format.'&url='.$url;
 			add_to_log( $summary->handler->courseid, 'annotation', 'list', $logurl );
@@ -84,7 +124,7 @@ class moodle_annotation_service extends AnnotationService
 		}
 	}
 	
-	function doGetAnnotation( $id )
+	function doGetAnnotation( $id, $mark )
 	{
 		global $CFG;
 	
@@ -108,6 +148,23 @@ class moodle_annotation_service extends AnnotationService
 		$resultset = get_record_sql( $query );
 		if ( $resultset && count( $resultset ) != 0 )  {
 			$annotation = annotation_globals::record_to_annotation( $resultset );
+			// Record lastread
+			if ( 'read' == $mark )
+			{
+				$now = time( );
+				$query = 'UPDATE '.$this->tablePrefix.AN_READ_TABLE
+					."\n SET lastread=".(int)$now
+					."\nWHERE annotationid=".(int)$id
+					."\n AND userid=".(int)$USER->id;
+				$success = execute_sql( $query );
+				if ( ! $success )
+				{
+					$query = 'INSERT INTO '.$this->tablePrefix.AN_READ_TABLE
+					."\n (annotationid, userid, lastread)\n VALUES ("
+					."\n (".(int)$id.', '.(int)$USER->id.', '.(int)$now.')';
+					execute_sql( $query, false );
+				}
+			}
 			return $annotation;
 		}
 		else

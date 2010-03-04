@@ -106,6 +106,7 @@ MoodleMarginalia.prototype.onload = function( )
 			showBlockMarkers:  false,
 			showActions:  false,
 			onkeyCreate:  true,
+			enableRecentFlag: true,
 			allowAnyUserPatch: this.allowAnyUserPatch ? true : false,
 			displayNote: function(m,a,e,p,i) { moodleMarginalia.displayNote(m,a,e,p,i); },
 			editors: {
@@ -225,7 +226,7 @@ MoodleMarginalia.prototype.cleanUpPostContent = function( )
 //				domutil.removeClass( child, PM_POST_CLASS );
 //				domutil.removeClass( child, PM_CONTENT_CLASS );
 //				domutil.removeClass( child, AN_NOTES_CLASS );
-				// for now, simply clear all class names
+				// #geof# for now, simply clear all class names
 				child.removeAttribute( 'class' );
 				child.removeAttribute( 'id' );
 				if ( child.id )

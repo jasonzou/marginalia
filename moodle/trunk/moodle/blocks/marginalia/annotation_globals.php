@@ -30,6 +30,7 @@ define( 'AN_SPLASH_PREF', 'annotations.splash' );
 define( 'AN_DBTABLE', 'marginalia' );
 define( 'AN_EVENTLOG_TABLE', 'marginalia_event_log' );
 define( 'AN_ANNOTATIONLOG_TABLE', 'marginalia_annotation_log' );
+define( 'AN_READ_TABLE', 'marginalia_read' );
 
 define( 'AN_SHEET_PRIVATE', 0x1 );
 define( 'AN_SHEET_AUTHOR', 0x2 );

@@ -126,6 +126,12 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 	}
 	
 	if ( $result && $oldversion < 2010012800 )  {
+		// Give in to Moodle's architecture and associate each annotation with a course
+		// (I don't like that Moodle is course-centric: I think it should be user-centric instead.
+		// I see annotations as belonging to the people who create them, not the things they
+		// annotate or the courses they were created in.  A student over the course of his or her
+		// career accumulates knowledge and content, synthesizing it into new knowledge and practice.
+		// In contrast, a course-oriented system is rooted in administrative structure.) 
 		$query = "ALTER TABLE {$CFG->prefix}marginalia ADD COLUMN course int";
 		$result = $result && execute_sql( $query, false );
 		
@@ -149,6 +155,18 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		$query = "ALTER TABLE {$CFG->prefix}marginalia DROP COLUMN access_perms";
 		$result = $result && execute_sql( $query, false );
 
+		
+		/// Define marginalia_read table, which tracks which annotations have been read by which users
+		table = new XMLDBTable('marginalia_read');
+		
+        $table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
+		$table->addFieldInfo('annotationid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+		$table->addFieldInfo('lastread', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
+
+		/// Adding indexes to table marginalia_read
+		$table->addIndexInfo('object', XMLDB_INDEX_UNIQUE, array('annotationid', 'userid'));
+		
 		
 		/// Define table marginalia_event_log to be created
 		$table = new XMLDBTable('marginalia_event_log');

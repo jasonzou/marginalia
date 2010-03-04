@@ -327,13 +327,14 @@ class annotation_summary_query
 	/** Callback used by handlers to get standard query FROM clause tables */
 	function get_sql_tables( )
 	{
-		global $CFG;
+		global $CFG, $USER;
 		
 		// Standard tables apply to all (but note the outer join of user, which if gone
 		// should not steal the annotation from its owner):
 		return ' '.$CFG->prefix.AN_DBTABLE." a"
 			. "\n INNER JOIN {$CFG->prefix}user u ON u.id=a.userid"
-			. "\n LEFT OUTER JOIN {$CFG->prefix}user qu on qu.id=a.quote_author_id";
+			. "\n LEFT OUTER JOIN {$CFG->prefix}user qu on qu.id=a.quote_author_id"
+			. "\n LEFT OUTER JOIN ".$CFG->prefix.AN_READ_TABLE." r ON (r.annotationid=a.id AND r.userid=".(int)$USER->id.")";
 	}
 	
 	/** Callback used by handlers to get standard query SELECT clause fields */	
@@ -347,6 +348,7 @@ class annotation_summary_query
 		. ", a.link AS link, a.link_title AS link_title, a.action AS action"
 		. ", a.sheet_type AS sheet_type"
 		. ", a.created AS created, a.modified AS modified"
+		. ", r.lastread AS lastread"
 		. ", u.username AS username"
 		. ",\n concat(u.firstname, ' ', u.lastname) AS fullname"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
@@ -497,7 +499,6 @@ class course_annotation_url_handler extends annotation_url_handler
 			 . ",\n 'forum' AS section_type, 'content' AS row_type"
 			 . ",\n f.name AS section_name"
 			 . ",\n concat('{$CFG->wwwroot}/mod/forum/view.php?id=',f.id) AS section_url"
-			 . ",\n r.lastread AS lastread"
 			. "\n FROM" . $summary->get_sql_tables( ) . $this->get_tables( $summary )
 			. "\n WHERE" . $summary->get_sql_conds( ) . $this->get_conds( $summary )
 			. $summary->orderby ? "\nORDER BY $summary->orderby" : '';
@@ -513,8 +514,7 @@ class course_annotation_url_handler extends annotation_url_handler
 		 return
 		   "\n INNER JOIN {$CFG->prefix}forum_discussions d ON d.course=".$this->courseid.' '
 		 . "\n INNER JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND a.object_type=".AN_OTYPE_POST." AND p.id=a.object_id "
-		 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum "
-		 . "\n INNER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
+		 . "\n INNER JOIN {$CFG->prefix}forum f ON f.id=d.forum ";
 	}
 	
 	function get_conds( $summary )
@@ -574,8 +574,7 @@ class forum_annotation_url_handler extends annotation_url_handler
 		global $CFG;
 		return ",\n 'discussion' AS section_type, 'post' AS row_type"
 			. ",\n d.name AS section_name"
-			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url"
-			. ",\n r.lastread AS lastread";
+			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url";
 	}
 	
 	function get_tables( )
@@ -588,8 +587,7 @@ class forum_annotation_url_handler extends annotation_url_handler
 		else
 			$s = "\n JOIN {$CFG->prefix}forum_discussions d ON d.forum=".addslashes($this->f)
 				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
-		return $s
-			."\n LEFT OUTER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
+		return $s;
 	}
 	
 	function get_conds( $summary )
@@ -667,8 +665,7 @@ class discussion_annotation_url_handler extends annotation_url_handler
 		global $CFG;
 		return ",\n 'discussion' AS section_type, 'post' AS row_type"
 			. ",\n d.name AS section_name"
-			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url"
-			. ",\n r.lastread AS lastread";
+			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url";
 	}
 	
 	function get_tables( )
@@ -681,8 +678,7 @@ class discussion_annotation_url_handler extends annotation_url_handler
 		else
 			$s = "\n JOIN {$CFG->prefix}forum_discussions d ON d.id=".addslashes($this->d)
 				. "\n JOIN {$CFG->prefix}forum_posts p ON p.discussion=d.id AND p.id=a.object_id";
-		return $s
-			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
+		return $s;
 	}
 	
 	function get_conds( $summary )
@@ -749,16 +745,14 @@ class post_annotation_url_handler extends annotation_url_handler
 			. ",\n d.name AS section_name"
 			. ",\n concat('{$CFG->wwwroot}/mod/forum/discuss.php?d=',d.id) AS section_url"
 			. ",\n 'post' AS object_type"
-			. ",\n p.id AS object_id"
-			. ",\n r.lastread AS lastread";
+			. ",\n p.id AS object_id";
 	}
 	
 	function get_tables( )
 	{
 		global $CFG;
 		return 	"\n LEFT OUTER JOIN {$CFG->prefix}forum_posts p ON p.id=a.object_id"
-			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion"
-			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_read r on r.postid=p.id";
+			. "\n LEFT OUTER JOIN {$CFG->prefix}forum_discussions d ON d.id=p.discussion";
 
 	}
 	

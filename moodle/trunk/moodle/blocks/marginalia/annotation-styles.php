@@ -120,6 +120,11 @@ table td#annotation-controls {
 	position: relative;
 }
 
+.mia_margin ol li p {
+	background-color: #f8f8f8;
+	z-index: 10;
+}
+
 .mia_recent:after {
 	position: absolute;
 	top: .1em;
@@ -136,6 +141,15 @@ table td#annotation-controls {
 .mia_margin ol li button {
 	background: none ;
 	font-size: 12px ;
+}
+
+.mia_margin ol li .controls {
+	visibility: hidden;
+}
+
+.mia_margin ol li:hover .controls,
+.mia_margin ol li.mia_hover .controls {
+	visibility: visible;
 }
 
 .mia_margin ol textarea {

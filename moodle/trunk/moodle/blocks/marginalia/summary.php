@@ -132,7 +132,7 @@ class annotation_summary_page
 			$annotationobjs[ ] = annotation_globals::record_to_annotation( $annotationrec );
 		MarginaliaHelper::generateAnnotationFeed( $annotationobjs,
 			annotation_globals::get_feed_tag_uri( ),
-			MarginaliaHelper::getLastModified( $annotationObjs, annotation_globals::get_install_date( ) ),
+			MarginaliaHelper::getLastModified( $annotationobjs, annotation_globals::get_install_date( ) ),
 			annotation_globals::get_service_path( ),
 			annotation_globals::get_host( ),
 			$summary->get_feed_url( 'atom' ),
