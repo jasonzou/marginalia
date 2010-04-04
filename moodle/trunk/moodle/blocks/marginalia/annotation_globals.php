@@ -1,13 +1,5 @@
 <?php
 
-// Enable logging (used for research purposes)
-// When this is on, most annotation activities are logged (annotation create, update, delete,
-// view summary page, view tag page, use of th e quoting feature).
-// The user interface for seeing the log is not available unless permission is granted.
-// To enable a user to view a log, give them a role with the block/marginalia:view_log capability
-// They will then see a View Activity Log option in the annotation drop-down menu
-define( 'AN_LOGGING', true );
-
 // The smartquote icon symbol(s)
 define( 'AN_SMARTQUOTEICON', '\u275d' );	// \u275b\u275c: enclosed single qs, 267a: recycle
 
@@ -28,8 +20,6 @@ define( 'AN_SPLASH_PREF', 'annotations.splash' );
 //define( 'SMARTCOPY_PREF', 'smartcopy' );
 
 define( 'AN_DBTABLE', 'marginalia' );
-define( 'AN_EVENTLOG_TABLE', 'marginalia_event_log' );
-define( 'AN_ANNOTATIONLOG_TABLE', 'marginalia_annotation_log' );
 define( 'AN_READ_TABLE', 'marginalia_read' );
 
 define( 'AN_SHEET_PRIVATE', 0x1 );
@@ -38,8 +28,8 @@ define( 'AN_SHEET_PUBLIC', 0xffff );
 
 // Object types
 define ( 'AN_OTYPE_POST', 1 );
-define ( 'AN_OTYPE_ANNOTATION', 2 );	// though can't annotate an annotation, this is used in logging
-define ( 'AN_OTYPE_DISCUSSION', 3 );	// used in logging
+define ( 'AN_OTYPE_ANNOTATION', 2 );
+define ( 'AN_OTYPE_DISCUSSION', 3 );
 
 // Needed by several annotation functions - if not set, PHP will throw errors into the output
 // stream which causes AJAX problems.  Doing it this way in case moodle sets the TZ at some

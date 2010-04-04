@@ -284,7 +284,7 @@ class annotation_summary_query
 		// export all annotations.
 		if ( $this->all )  {
 			$sitecontext = get_context_instance( CONTEXT_SYSTEM );
-			if ( has_capability( 'blocks/marginalia:view_log', $sitecontext ) )
+			if ( has_capability( 'blocks/marginalia:view_all', $sitecontext ) )
 				$accessvisible = '1=1';
 		}
 

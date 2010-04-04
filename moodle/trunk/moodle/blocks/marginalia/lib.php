@@ -108,7 +108,6 @@ class moodle_marginalia
 		// URLs used by drop-down menu handlers
 		$summaryurl = ANNOTATION_PATH.'/summary.php?user='.(int)$USER->id.'&url='.urlencode( $refurl );
 		$tagsurl = ANNOTATION_PATH.'/tags.php?course='.(int)$course->id;
-		$logurl = ANNOTATION_PATH.'/activity_log.php?course='.(int)$course->id.'&limit=100';
 
 		$sitecontext = get_context_instance(CONTEXT_SYSTEM);
 		$allowAnyUserPatch = AN_ADMINUPDATE && (
@@ -184,10 +183,6 @@ class moodle_marginalia
 		echo "  <option value='summary'>".get_string('summary_link',ANNOTATION_STRINGS)."...</option>\n";
 		echo "  <option value='tags'>".get_string('edit_keywords_link',ANNOTATION_STRINGS)."...</option>\n";
 //		echo "  <option value='help'>".get_string('marginalia_help_link',ANNOTATION_STRINGS)."...</option>\n";
-		
-		$context = get_context_instance( CONTEXT_SYSTEM );
-		if ( has_capability( 'block/marginalia:view_log', $context ) )
-			echo "  <option value='log'>".get_string('log_link',ANNOTATION_STRINGS)."...</option>\n";
 		echo "</select>\n";	
 	}
 	
@@ -257,23 +252,26 @@ class marginalia_summary_lib
 	static function show_result_pages( $first, $total, $perpage, $url )
 	{
 		// Show the list of result pages
-		$npages = ceil( $total / $perpage );
-		if ( $npages > 1 )
+		if ( $perpage )	//0 => no list, because everything is shown
 		{
-			$this_page = 1 + floor( ( $first - 1 ) / $perpage );
-			echo "<ol class='result-pages'>\n";
-			for ( $i = 1; $i <= $npages;  ++$i )
+			$npages = ceil( $total / $perpage );
+			if ( $npages > 1 )
 			{
-				if ( $i == $this_page )
-					echo "  <li>".$i."</li>\n";
-				else
+				$this_page = 1 + floor( ( $first - 1 ) / $perpage );
+				echo "<ol class='result-pages'>\n";
+				for ( $i = 1; $i <= $npages;  ++$i )
 				{
-					$page = 1 + ($i - 1) * $perpage;
-					$turl = str_replace( '{first}', $page, $url);
-					echo "  <li><a href='".s($turl)."'>$i</a></li>\n";
+					if ( $i == $this_page )
+						echo "  <li>".$i."</li>\n";
+					else
+					{
+						$page = 1 + ($i - 1) * $perpage;
+						$turl = str_replace( '{first}', $page, $url);
+						echo "  <li><a href='".s($turl)."'>$i</a></li>\n";
+					}
 				}
+				echo "</ol>\n";
 			}
-			echo "</ol>\n";
 		}
 	}
 }

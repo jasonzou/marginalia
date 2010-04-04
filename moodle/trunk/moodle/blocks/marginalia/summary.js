@@ -41,7 +41,7 @@ function AnnotationSummary( wwwroot, params )
 	this.loginUserId = params.loginUserId;
 	this.csrfCookie = null;
 	this.useLog = false;
-	this.logService = null;
+	this.extService = params.extService;
 	
 	for ( var param in params )
 	{
@@ -68,15 +68,7 @@ function AnnotationSummary( wwwroot, params )
 		}
 	}
 	
-	if ( this.useLog )
-	{
-		this.logService = new RestLogService( this.wwwroot + '/blocks/marginalia/activity_log.php',
-			this.course, {
-				csrfCookie: this.sessionCookie
-		} );
-	}
-	
-	this.smartquote = new Smartquote( this.wwwroot, null, this.logService );
+	this.smartquote = new Smartquote( this.wwwroot, null, this.extService );
 }
 
 AnnotationSummary.prototype.deleteAnnotation = function( id, annotationid )

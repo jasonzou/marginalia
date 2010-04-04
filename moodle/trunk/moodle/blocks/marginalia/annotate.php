@@ -28,11 +28,13 @@ class moodle_annotation extends Annotation
 
 class moodle_annotation_service extends AnnotationService
 {
-	var $islogging = true;
+	var $extService = null;
 	
-	function moodle_annotation_service( $userid )
+	function moodle_annotation_service( $userid, $extService=null )
 	{
 		global $CFG;
+		
+		$this->extService = $extService;
 
 		// Note: Cross-site request forgery protection requires cookies, so it will not be
 		// activated if $CFG->usesid=true
@@ -91,7 +93,7 @@ class moodle_annotation_service extends AnnotationService
 				}
 			}
 			
-			// Record lastread
+			// Record lastread (and possibly firstread)
 			if ( 'read' == $mark )
 			{
 				$now = time( );
@@ -108,14 +110,19 @@ class moodle_annotation_service extends AnnotationService
 				if ( $annotations_unread && count( $annotations_unread ) )
 				{
 					$query = 'INSERT INTO '.$this->tablePrefix.AN_READ_TABLE
-						."\n (annotationid, userid, lastread)"
-						."\nSELECT a.id, ".(int)$USER->id.', '.(int)$now
+						."\n (annotationid, userid, firstread, lastread)"
+						."\nSELECT a.id, ".(int)$USER->id.', '.(int)$now.', '.(int)$now
 						."\n FROM ".$this->tablePrefix.AN_DBTABLE.' a'
 						."\n WHERE a.id IN (".implode(',', $annotations_unread).")";
 					execute_sql( $query, false );
 				}
 			}
 			
+			if ( $this->extService )
+			{
+				$extService = $this->extService;
+				$extService->listAnnotations( $url, $sheet, $block, $all, $mark );
+			}
 			
 			$format = $this->getQueryParam( 'format', 'atom' );
 			$logurl = 'annotate.php?format='.$format.'&url='.$url;
@@ -161,7 +168,7 @@ class moodle_annotation_service extends AnnotationService
 				{
 					$query = 'INSERT INTO '.$this->tablePrefix.AN_READ_TABLE
 					."\n (annotationid, userid, lastread)\n VALUES ("
-					."\n (".(int)$id.', '.(int)$USER->id.', '.(int)$now.')';
+					."\n (".(int)$id.', '.(int)$USER->id.', '.(int)$now.', '.(int)$now.')';
 					execute_sql( $query, false );
 				}
 			}
@@ -216,25 +223,24 @@ class moodle_annotation_service extends AnnotationService
 			// must preprocess fields
 			$id = insert_record( AN_DBTABLE, $record, true );
 			
-			// Marginalia logging
-			if ( AN_LOGGING )
-			{
-				$event = new object( );
-				$event->userid = $USER->id;
-				$event->service = 'annotation';
-				$event->action = 'create';
-				$event->object_type = AN_OTYPE_ANNOTATION;
-				$event->object_id = $id;
-				$event->modified = $annotation->getModified( );
-				$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
-				
-				$record->annotationid = $id;
-				$record->eventid = $eventid;
-				insert_record( AN_ANNOTATIONLOG_TABLE, $record, true );
-			}
-			
-			// Moodle logging
 			if ( $id )  {
+				// Record that this user has read the annotation.
+				// This may be superfluous, as the read flag is not shown for the current user,
+				// but for consistency it seems like a good idea.
+				$record = object( );
+				$record->annotationid = $id;
+				$record->userid = $USER->id;
+				$record->firstread = $time;
+				$record->lastread = $time;
+				insert_record( AN_READ_TABLE, $record, true );
+
+				if ( $this->extService )
+				{
+					$extService = $this->extService;
+					$extService->createAnnotation( $annotation, $record );
+				}
+				
+				// Moodle logging
 				// TODO: fill in queryStr for the log
 				$urlquerystr = '';
 				$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
@@ -255,28 +261,16 @@ class moodle_annotation_service extends AnnotationService
 
 		$r = update_record( AN_DBTABLE, $record );
 		
+		if ( $this->extService )
+		{
+			$extService = $this->extService;
+			$extService->updateAnnotation( $annotation, $record );
+		}
+		
 		// Moodle logging
 		$logurl = 'annotate.php' . ( $urlquerystr ? '?'.$urlquerystr : '' );
 		add_to_log( null, 'annotation', 'update', $logurl, "{$annotation->id}" );
 
-		// Marginalia log
-		if ( AN_LOGGING )
-		{
-			$event = new object( );
-			$event->userid = $USER->id;
-			$event->service = 'annotation';
-			$event->action = 'update';
-			$event->object_type = AN_OTYPE_ANNOTATION;
-			$event->object_id = $annotation->getAnnotationId( );
-			$event->modified = $annotation->getModified( );
-			$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
-			
-			$record->id = null;
-			$record->annotationid = $annotation->getAnnotationId( );
-			$record->eventid = $eventid;
-			insert_record( AN_ANNOTATIONLOG_TABLE, $record, true );
-		}
-		
 		return $r;
 	}
 	
@@ -299,18 +293,13 @@ class moodle_annotation_service extends AnnotationService
 				." WHERE $where";
 			execute_sql( $query, false );
 		}
-		if ( AN_LOGGING )
+		
+		if ( $this->extService )
 		{
-			$event = new object( );
-			$event->userid = $USER->id;
-			$event->service = 'annotation';
-			$event->action = 'bulk_update';
-			$event->description = $n.'x: '.$oldnote.' => '.$newnote;
-			$event->object_type = null;
-			$event->object_id = null;
-			$event->modified = time( );
-			$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
+			$extService = $this->extService;
+			$extService->bulkUpdateAnnotations( $oldnote, $newnote, $n );
 		}
+
 		header( 'Content-type: text/plain' );
 		return $n;
 	}
@@ -320,19 +309,14 @@ class moodle_annotation_service extends AnnotationService
 		global $USER;
 		
 		delete_records( AN_DBTABLE, 'id', $id );
+		delete_records( AN_READ_TABLE, 'annotationid', $id );
 		
-		if ( AN_LOGGING )
+		if ( $this->extService )
 		{
-			$event = new object( );
-			$event->userid = $USER->id;
-			$event->service = 'annotation';
-			$event->action = 'delete';
-			$event->object_type = AN_OTYPE_ANNOTATION;
-			$event->object_id = $id;
-			$event->modified = time( );
-			$eventid = insert_record( AN_EVENTLOG_TABLE, $event, true );
+			$extService = $this->extService;
+			$extService->deleteAnnotation( $id );
 		}
-		
+
 		$logurl = "annotate.php?id=$id";
 		add_to_log( null, 'annotation', 'delete', $logurl, "$id" );
 		return True;
@@ -344,7 +328,6 @@ class moodle_annotation_service extends AnnotationService
 	}
 }
 
-$service = new moodle_annotation_service( isguest() ? null : $USER->id );
+$service = new moodle_annotation_service( isguest() ? null : $USER->id, null );
 $service->dispatch( );
 
-?>

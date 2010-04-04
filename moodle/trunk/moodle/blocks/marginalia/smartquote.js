@@ -3,11 +3,11 @@
  * built on CookieBus
  */
 
-function Smartquote( wwwroot, selectors, logService )
+function Smartquote( wwwroot, selectors, extService )
 {
 	this.wwwroot = wwwroot;
 	this.selectors = selectors;
-	this.logService = logService;
+	this.extService = extService;
 }
 
 /**
@@ -124,8 +124,8 @@ Smartquote.prototype.quotePostMicro = function( content, skipContent, postId )
 //			console.log( 'publish: ' + pub );
 		bus.publish( pub );
 	
-		if ( this.logService )
-			this.logService.createLogEvent( 'smartquote', 'send', pub, 'forum_post', postId );
+		if ( this.extService )
+			this.extService.createEvent( 'smartquote', 'send', pub, 'forum_post', postId );
 	}
 	else if ( this.wwwroot && postId )
 	{
@@ -135,8 +135,8 @@ Smartquote.prototype.quotePostMicro = function( content, skipContent, postId )
 		window.location = this.wwwroot + '/mod/forum/post.php?reply=' + postId
 			+ '&message=' + restutil.encodeURIParameter( pub + '&nbsp;<p>');
 	
-		if ( this.logService )
-			this.logService.createLogEvent( 'smartquote', 'new post', pub, 'forum_post', postId );
+		if ( this.extService )
+			this.extService.createEvent( 'smartquote', 'new post', pub, 'forum_post', postId );
 	}
 }
 	
@@ -177,8 +177,8 @@ Smartquote.prototype.quoteAnnotation = function( annotation, loginUserId, postId
 	if ( bus.getSubscriberCount( ) > 0 )
 	{
 		bus.publish( pub );
-		if ( this.logService )
-			this.logService.createLogEvent( 'smartquote', 'send', quote, 'annotation', annotation.getId() );
+		if ( this.extService )
+			this.extService.createEvent( 'smartquote', 'send', quote, 'annotation', annotation.getId() );
 	}
 	else if ( this.wwwroot && postId )
 	{
@@ -188,15 +188,15 @@ Smartquote.prototype.quoteAnnotation = function( annotation, loginUserId, postId
 		window.location = this.wwwroot + '/mod/forum/post.php?reply=' + postId
 			+ '&message=' + restutil.encodeURIParameter( pub + "&nbsp;<p>" );
 	
-		if ( this.logService )
-			this.logService.createLogEvent( 'smartquote', 'new post', quote, 'annotation', annotation.getId() );
+		if ( this.extService )
+			this.extService.createEvent( 'smartquote', 'new post', quote, 'annotation', annotation.getId() );
 	}
 }
 	
 
-function SmartquoteSubscriber( logService )
+function SmartquoteSubscriber( extService )
 {
-	this.logService = logService;
+	this.extService = extService;
 }
 
 /**
@@ -263,8 +263,8 @@ SmartquoteSubscriber.prototype.subscribeHtmlArea = function( editor, object_type
 		}
 		
 			
-		if ( subscriber.logService )
-			subscriber.logService.createLogEvent( 'smartquote', 'receive', pub.value, object_type, object_id );
+		if ( subscriber.extService )
+			subscriber.extService.createEvent( 'smartquote', 'receive', pub.value, object_type, object_id );
 	} );
 	
 	// Don't forget to unsubscribe if the window is unloaded

@@ -1,7 +1,7 @@
 <?php // $Id$
 
 $string['splash'] = 'This is the annotation margin.  Click the ? next to My Annotations at the top right of your screen to find out more, or select Hide Annotations in the drop down list to hide this annotation margin.';
-$string['create_button'] = 'Click here or type Enter to create a new annotation for selected text.';
+$string['create_margin'] = 'Select text and click here or type Enter to create a new annotation.';
 $string['summary_link'] = 'Annotation Summary';
 $string['summary_link_title'] = 'Go to your annotation summary';
 $string['sheet_private'] = 'My Private Annotations';
@@ -40,7 +40,6 @@ $string['whole_course'] = 'whole course';
 $string['unknown_post'] = 'unknown discussion post';
 $string['post_name'] = 'discussion post "$a->name"';
 $string['annotation_help'] = 'creating and using annotations';
-$string['log_link'] = 'Marginalia Activity Log';
 
 /* Summary page */
 $string['containing'] = 'text containing';
@@ -90,6 +89,3 @@ $string['note_replace_button'] = 'Replace Notes';
 $string['note_update_count'] = 'Notes updated: ';
 $string['tag_list_prompt'] = 'You have used the following notes multiple times.  Click on a link to view a summary of annotations with that note.';
 
-/* Activity log */
-$string['activity_log_title'] = 'Marginalia Activity Log';
-?>

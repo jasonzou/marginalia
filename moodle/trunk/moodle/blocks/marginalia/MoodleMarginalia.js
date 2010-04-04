@@ -46,6 +46,7 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 	this.smartquoteIcon = params.smartquoteIcon;
 	this.handlers = params.handlers;
 	this.course = params.course;
+	this.smartquoteService = params.smartquoteService;
 
 	this.selectors = {
 		post: new Selector( 'table.forumpost', 'table.forumpost table.forumpost' ),
@@ -58,10 +59,6 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 		mia_notes: new Selector( '.mia_margin', '.content .posting .mia_margin' )
 	};
 
-	this.logService = params[ 'useLog' ] ? new RestLogService( this.annotationPath + '/activity_log.php',
-		this.course, {
-		csrfCookie: this.sessionCookie } ) : null;
-	
 	this.sheet = prefs[ Marginalia.P_SHEET ];
 	
 	// Ensure the sheet drop-down relfects the actual sheet to be shown
@@ -94,8 +91,6 @@ MoodleMarginalia.prototype.onload = function( )
 	if ( this.loginUserId && ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ )
 		|| actualUrl.match( /^.*\/mod\/forum\/post\.php.*/ ) ) )
 	{
-		var annotationService = new RestAnnotationService( this.annotationPath + '/annotate.php', {
-			csrfCookie: this.sessionCookie } );
 		var keywordService = new RestKeywordService( this.annotationPath + '/keywords.php', true);
 		keywordService.init( null );
 		var moodleMarginalia = this;
@@ -130,7 +125,7 @@ MoodleMarginalia.prototype.onload = function( )
 		// Enable smartquotes and quote logging
 		if ( this.useSmartquote )
 		{
-			this.smartquote = new Smartquote( this.moodleRoot, this.selectors, this.logService );
+			this.smartquote = new Smartquote( this.moodleRoot, this.selectors, this.smartquoteService );
 			this.smartquote.enable( marginalia.listPosts( ), marginalia.skipContent );
 		}
 		
@@ -151,7 +146,7 @@ MoodleMarginalia.prototype.subscribeHtmlAreas = function( )
 {
 	if ( this.useSmartquote )
 	{
-		var subscriber = new SmartquoteSubscriber( this.logService );
+		var subscriber = new SmartquoteSubscriber( this.smartquoteService );
 		subscriber.subscribeAllHtmlAreas( );
 	}
 }
