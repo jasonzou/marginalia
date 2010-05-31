@@ -91,6 +91,8 @@ MoodleMarginalia.prototype.onload = function( )
 	if ( this.loginUserId && ( actualUrl.match( /^.*\/mod\/forum\/discuss\.php\?d=(\d+)/ )
 		|| actualUrl.match( /^.*\/mod\/forum\/post\.php.*/ ) ) )
 	{
+		var annotationService = new RestAnnotationService( this.annotationPath + '/annotate.php', {
+			csrfCookie: 'MoodleSessionTest' } );
 		var keywordService = new RestKeywordService( this.annotationPath + '/keywords.php', true);
 		keywordService.init( null );
 		var moodleMarginalia = this;

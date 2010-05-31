@@ -36,8 +36,38 @@ define ( 'AN_OTYPE_DISCUSSION', 3 );
 // future point.  Leading @ suppresses warnings.  (Sigh... try..catch didn't work.  PHP is such a mess.)
 @date_default_timezone_set( date_default_timezone_get( ) );
 
+// These should be members of annotation_globals, but currently that is never constructed.  So to get
+// this fixed quickly I'm making them globals.  Yeech.  I would think Moodle might cache the capabilities
+// to make has_capability fast, but it doesn't.  #geof#
+$mia_globs_viewfullnames = False;
+$mia_globs_viewfullnames_set = False;
+
 class annotation_globals
 {
+	function fullname($user)
+	{
+		global $mia_globs_viewfullnames, $mia_globs_viewfullnames_set;
+		
+		// must be able to handle null user
+		if ( ! $user )
+			return 'NONE';
+		if ( ! $mia_globs_viewfullnames_set )
+		{
+			$context = get_context_instance( CONTEXT_SYSTEM );
+			$mia_globs_viewfullnames = has_capability( 'moodle/site:viewfullnames', $context );
+			$mia_globs_viewfullnames_set = True;
+		}
+		return fullname( $user, $mia_globs_viewfullnames );
+	}
+	
+	function fullname2( $firstname, $lastname )
+	{
+		$u = new object();
+		$u->firstname = $firstname;
+		$u->lastname = $lastname;
+		return $this->fullname($u);
+	}
+	
 	function get_host( )
 	{
 		global $CFG;
@@ -134,8 +164,8 @@ class annotation_globals
 		
 		if ( array_key_exists( 'userid', $r ) )
 			$annotation->setUserId( $r->userid );
-		if ( array_key_exists( 'fullname', $r ) )
-			$annotation->setUserName( $r->fullname );
+		if ( array_key_exists( 'firstname', $r ) )
+			$annotation->setUserName( $this->fullname2( $r->firstname, $r->lastname ) );
 		
 		if ( array_key_exists( 'sheet_type', $r ) )
 			$annotation->setSheet( annotation_globals::sheet_str( $r->sheet_type ) );
@@ -151,8 +181,8 @@ class annotation_globals
 			$annotation->setQuoteAuthorId( $r->quote_author_id );
 		elseif ( array_key_exists( 'quote_author', $r ) )	// to support old mdl_annotation table
 			$annotation->setQuoteAuthorId( $r->quote_author );
-		if ( array_key_exists( 'quote_author_fullname', $r ) )
-			$annotation->setQuoteAuthorName( $r->quote_author_fullname );
+		if ( array_key_exists( 'quote_author_firstname', $r ) )
+			$annotation->setQuoteAuthorName( $this->fullname2( $r->quote_author_firstname, $r->quote_author_lastname ) );
 		if ( array_key_exists( 'link', $r ) )
 			$annotation->setLink( $r->link );
 		if ( array_key_exists( 'link_title', $r ) )

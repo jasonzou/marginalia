@@ -112,16 +112,9 @@ else  {
 	$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
 	add_to_log( null, 'annotation', 'summary', 'edit-keywords.php' );
 	
-	// Marginalia logging
-	if ( AN_LOGGING )
-	{
-		$event = new object( );
-		$event->userid = $USER->id;
-		$event->service = 'annotation tags';
-		$event->action = 'view';
-		$event->modified = time( );
-		insert_record( AN_EVENTLOG_TABLE, $event, true );
-	}
+	$logger = moodle_marginalia::get_logger();
+	if ( $logger && $logger->is_active())
+		$logger->viewTags();
 }
 
 ?>

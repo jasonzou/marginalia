@@ -5,6 +5,23 @@ require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 
 class moodle_marginalia
 {
+	static $logger = null;
+	
+	public static function get_logger()
+	{
+		if ( ! moodle_marginalia::$logger )
+		{
+			// Load up the logger, if available
+			$logblock = get_record('block', 'name', 'marginalia_log');
+			if ( $logblock )
+			{
+				require_once( $CFG->dirroot.'/blocks/marginalia_log/log.php' );
+				moodle_marginalia::$logger = new marginalia_log();
+			}
+		}
+		return moodle_marginalia::$logger;
+	}
+
 	/**
 	 * Get an annotations preference value;  if the preference doesn't exist, create it
 	 * so that the Javascript client will have permission to set it later (to prevent
@@ -49,8 +66,11 @@ class moodle_marginalia
 			ANNOTATION_PATH.'/marginalia-config.js',
 			ANNOTATION_PATH.'/marginalia-strings.js',
 			ANNOTATION_PATH.'/smartquote.js',
-			ANNOTATION_PATH.'/rest-log.js',
 			ANNOTATION_PATH.'/MoodleMarginalia.js' ) );
+		
+		$logger = moodle_marginalia::get_logger();
+		if ( $logger && $logger->is_active() )
+			require_js( ANNOTATION_PATH.'/rest-log.js' );
 	
 		// Bits of YUI
 		require_js( array(
@@ -113,6 +133,10 @@ class moodle_marginalia
 		$allowAnyUserPatch = AN_ADMINUPDATE && (
 			has_capability( 'moodle/legacy:admin', $sitecontext ) or has_capability( 'moodle/site:doanything', $sitecontext) );
 		
+		$logger = moodle_marginalia::get_logger();
+		$logstr = $logger && $logger->is_active()
+			? "log: function(){ window.location = '".$logurl."'; }" : '';
+		
 		$meta = "<script language='JavaScript' type='text/javascript' defer='defer'>\n"
 			."function myOnload() {\n"
 			." var moodleRoot = '".s($CFG->wwwroot)."';\n"
@@ -121,7 +145,7 @@ class moodle_marginalia
 			.' var userId = \''.s($USER->id)."';\n"
 			.' window.moodleMarginalia = new MoodleMarginalia( annotationPath, url, moodleRoot, userId, '.$sprefs.', {'
 			." \n  useSmartquote: ".s(AN_USESMARTQUOTE)
-			.",\n  useLog: ".s(AN_USELOGGING)
+			.",\n  useLog: ".($logger && $logger->is_active() ? 'true' : 'false')
 			.",\n  course: ".(int)$course->id
 			.",\n  allowAnyUserPatch: ".($allowAnyUserPatch ? 'true' : 'false' )
 			.",\n  smartquoteIcon: '".AN_SMARTQUOTEICON."'"
@@ -130,7 +154,7 @@ class moodle_marginalia
 			." \n   summary: function(){ window.location = '".$summaryurl."'; }"
 			.",\n   tags: function(){ window.location = '".$tagsurl."'; }"
 //			.",\n   help: function(){ return openpopup('/help.php?module=block_marginalia&file=annotate.html'); }\n"
-			.",\n   log: function(){ window.location = '".$logurl."'; }"
+			.",\n   ".$logstr
 			." \n}";
 		if ( $showsplashpref == 'true' )
 			$meta .= ",\n splash: '".get_string('splash',ANNOTATION_STRINGS)."'";

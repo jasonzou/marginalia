@@ -29,11 +29,13 @@ class moodle_annotation extends Annotation
 class moodle_annotation_service extends AnnotationService
 {
 	var $extService = null;
+	var $mia_globals = null;
 	
 	function moodle_annotation_service( $userid, $extService=null )
 	{
 		global $CFG;
 		
+		$this->mia_globals = new annotation_globals( );
 		$this->extService = $extService;
 
 		// Note: Cross-site request forgery protection requires cookies, so it will not be
@@ -51,6 +53,7 @@ class moodle_annotation_service extends AnnotationService
 				'csrfCookieValue' => $csrfprotect ? null : $_SESSION['SESSION']->session_test )
 			);
 		$this->tablePrefix = $CFG->prefix;
+		
 	}
 	
 	function doListAnnotations( $url, $sheet, $block, $all, $mark )
@@ -83,7 +86,7 @@ class moodle_annotation_service extends AnnotationService
 				$i = 0;
 				foreach ( $annotation_set as $r )
 				{
-					$annotations[ $i ] = annotation_globals::record_to_annotation( $r );
+					$annotations[ $i ] = $this->mia_globals->record_to_annotation( $r );
 					$annotation = $annotations[ $i ];
 					if ( $annotation->getLastRead( ) )
 						$annotations_read[ ] = $annotation->id;
@@ -154,7 +157,7 @@ class moodle_annotation_service extends AnnotationService
 			WHERE a.id = $id";
 		$resultset = get_record_sql( $query );
 		if ( $resultset && count( $resultset ) != 0 )  {
-			$annotation = annotation_globals::record_to_annotation( $resultset );
+			$annotation = $this->mia_globals->record_to_annotation( $resultset );
 			// Record lastread
 			if ( 'read' == $mark )
 			{
@@ -227,7 +230,7 @@ class moodle_annotation_service extends AnnotationService
 				// Record that this user has read the annotation.
 				// This may be superfluous, as the read flag is not shown for the current user,
 				// but for consistency it seems like a good idea.
-				$record = object( );
+				$record = new object( );
 				$record->annotationid = $id;
 				$record->userid = $USER->id;
 				$record->firstread = $time;
@@ -328,6 +331,16 @@ class moodle_annotation_service extends AnnotationService
 	}
 }
 
-$service = new moodle_annotation_service( isguest() ? null : $USER->id, null );
+// Load up the logger, if available
+$logblock = get_record('block', 'name', 'marginalia_log');
+$logger = null;
+if ( $logblock )
+{
+	require_once( $CFG->dirroot.'/blocks/marginalia_log/log.php' );
+ 	$logger = new marginalia_log();
+}
+
+$service = new moodle_annotation_service( isguest() ? null : $USER->id,
+	$logger && $logger->is_active() ? $logger : null );
 $service->dispatch( );
 

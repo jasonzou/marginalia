@@ -33,6 +33,10 @@ class block_marginalia extends block_base
 		// Other code should therefore be careful not to join on non-existent users
 		$query = "DELETE FROM {$CFG->prefix}marginalia WHERE userid NOT IN (SELECT id FROM {$CFG->prefix}user)";
 		execute_sql( $query, false );
+		// This will catch all read records for non-existent users and annotations, though the latter should
+		// already have been deleted with the annotation.
+		$query = "DELETE FROM {$CFG->prefix}marginalia_read WHERE annotationid NOT IN (SELECT id FROM {$CFG->prefix}marginalia)";
+		execute_sql( $query, false );
 	}
 }
 

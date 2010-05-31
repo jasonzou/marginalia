@@ -13,6 +13,7 @@ define( 'AN_SUMMARY_ORDER_TIME', 'modified DESC');
  */
 class annotation_summary_query
 {
+	var $mia_globals;
 	var $url = null;
 	var $sheet_type = AN_SHEET_PRIVATE;
 	var $text = null;
@@ -30,6 +31,7 @@ class annotation_summary_query
 	// If initializing from a URL, call map_params( $_GET ) first
 	function annotation_summary_query( $a )
 	{
+		$this->mia_globals = new annotation_globals( );
 		if ( $a )
 			$this->from_params( $a );
 	}
@@ -53,7 +55,7 @@ class annotation_summary_query
 			$b[ 'orderby' ] = AN_SUMMARY_ORDER_DOCUMENT;
 		
 		$sheet = array_key_exists( 'sheet', $a ) ? $a[ 'sheet' ] : null;
-		$b[ 'sheet_type' ] = $sheet ? annotation_globals::sheet_type( $sheet ) : null;
+		$b[ 'sheet_type' ] = $sheet ? $this->mia_globals->sheet_type( $sheet ) : null;
 			
 		$b[ 'userid' ] = array_key_exists( 'u', $a ) ? (int)$a[ 'u' ] : null;
 		$b[ 'ofuserid'] = array_key_exists( 'search-of', $a ) ? (int)$a[ 'search-of' ] : null;
@@ -147,14 +149,6 @@ class annotation_summary_query
 		return $this->handler->titlehtml;
 	}
 	
-	static function fullname( $user )
-	{
-		if ( $user )
-			return $user->firstname . ' ' . $user->lastname;
-		else
-			return '';
-	}
-	
 	/** Produce a natural language description of a query */
 	function desc( $titlehtml=null )
 	{
@@ -163,8 +157,8 @@ class annotation_summary_query
 		$this->handler->fetch_metadata( );
 		
 		$a->title = null === $titlehtml ? $this->handler->titlehtml : $titlehtml;
-		$a->who = $this->user ? s( $this->fullname( $this->user ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
-		$a->author = $this->ofuser ? s( $this->fullname( $this->ofuser ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
+		$a->who = $this->user ? s( $this->mia_globals->fullname( $this->user ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
+		$a->author = $this->ofuser ? s( $this->mia_globals->fullname( $this->ofuser ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
 		$a->search = s( $this->text );
 		$a->match = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		
@@ -209,7 +203,7 @@ class annotation_summary_query
 			$summary_anyone = $this->derive( array( 'user' => null ) );
 			$a->who = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
 				.'" title="'.get_string( 'unzoom_user_hover', ANNOTATION_STRINGS )
-				.'"><span class="current">'.s( $this->fullname( $this->user ) ).'</span><span class="alt">'
+				.'"><span class="current">'.s( $this->mia_globals->fullname( $this->user ) ).'</span><span class="alt">'
 				.get_string( 'anyone', ANNOTATION_STRINGS ).'</a></a>';
 		}
 		else
@@ -220,7 +214,7 @@ class annotation_summary_query
 			$summary_anyone = $this->derive( array( 'ofuser' => null ) );
 			$a->author = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
 				.'" title="'.get_string( 'unzoom_author_hover', ANNOTATION_STRINGS )
-				.'"><span class="current">'.s( $this->fullname( $this->ofuser ) ).'</span><span class="alt">'
+				.'"><span class="current">'.s( $this->mia_globals->fullname( $this->ofuser ) ).'</span><span class="alt">'
 				.get_string( 'anyone', ANNOTATION_STRINGS ).'</span></a>';
 		}
 		else
@@ -350,12 +344,14 @@ class annotation_summary_query
 		. ", a.created AS created, a.modified AS modified"
 		. ", r.lastread AS lastread"
 		. ", u.username AS username"
-		. ",\n concat(u.firstname, ' ', u.lastname) AS fullname"
+		. ",\n u.firstname AS firstname, u.lastname AS lastname"
+//		. ",\n concat(u.firstname, ' ', u.lastname) AS fullname"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',u.id) AS note_author_url"
 		. ",\n a.note note, a.quote, a.quote_title AS quote_title"
 		. ",\n qu.username AS quote_author_username"
 		. ",\n qu.id AS quote_author_id"
-		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author_fullname"
+		. ",\n qu.firstname as quote_author_firstname, qu.lastname AS quote_author_lastname"
+//		. ",\n concat(qu.firstname, ' ', qu.lastname) AS quote_author_fullname"
 		. ",\n concat('$CFG->wwwroot/user/view.php?id=',qu.id) AS quote_author_url";
 	}
 

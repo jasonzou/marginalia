@@ -24,12 +24,16 @@ if ($CFG->forcelogin) {
 
 class annotation_summary_page
 {
+	var $mia_globals;
 	var $first;
 	var $maxrecords = 50;
+	var $logger = null;
 	
 	function annotation_summary_page( $first=1 )
 	{
+		$this->mia_globals = new annotation_globals( );
 		$this->first = $first;
+		$this->logger = moodle_marginalia::get_logger();
 	}
 	
 	function show_header( )
@@ -62,9 +66,11 @@ class annotation_summary_page
 		require_js( ANNOTATION_PATH.'/marginalia/annotation.js' );
 		require_js( ANNOTATION_PATH.'/marginalia/restutil.js' );
 		require_js( ANNOTATION_PATH.'/marginalia/rest-annotate.js' );
-		require_js( ANNOTATION_PATH.'/rest-log.js' );
 		require_js( ANNOTATION_PATH.'/smartquote.js' );
 		require_js( ANNOTATION_PATH.'/summary.js' );
+		
+		if ( $this->logger && $this->logger->is_active())
+			require_js( ANNOTATION_PATH.'/rest-log.js' );
 
 		$meta = "<link rel='stylesheet' type='text/css' href='".s( ANNOTATION_PATH )."/summary-styles.php'/>\n";
 		
@@ -84,7 +90,7 @@ class annotation_summary_page
 				. "window.annotationSummary = new AnnotationSummary('$swwwroot', {"
 				." \n annotationService: annotationService"
 				.",\n userid: ".(int)$USER->id
-				.",\n useLog: ".( AN_USELOGGING ? 'true' : 'false' )
+				.",\n useLog: ".($this->logger && $this->logger->is_active() ? 'true' : 'false' )
 				.",\n csrfCookie: 'MoodleSessionTest".$CFG->sessioncookie."'"
 				."} );\n"
 				. "window.preferences = new Preferences( new RestPreferenceService('$sannotationpath/user-preference.php' ) );\n"
@@ -183,9 +189,9 @@ class annotation_summary_page
 		echo "<fieldset>\n";
 		echo "<label for=''>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
 		if ( $summary->ofuser )
-			echo "<input type='hidden' name='search-of' id='search-of' value='".s(annotation_summary_query::fullname($summary->ofuser))."'/>\n";
+			echo "<input type='hidden' name='search-of' id='search-of' value='".s($this->mia_globals->fullname($summary->ofuser))."'/>\n";
 		if ( $summary->user )
-			echo "<input type='hidden' name='u' id='u' value='".s(annotation_summary_query::fullname($summary->user))."'/>\n";
+			echo "<input type='hidden' name='u' id='u' value='".s($this->mia_globals->fullname($summary->user))."'/>\n";
 		echo "<input type='text' id='search-text' name='q' value='".s($summary->text)."'/>\n";
 		echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
 		echo "<input type='hidden' name='url' value='".s($summary->url)."'/>\n";
@@ -276,17 +282,18 @@ class annotation_summary_page
 					echo "<th rowspan='$nrows'>";
 					$url = MarginaliaHelper::isUrlSafe( $url ) ? $url : '';
 					$a->row_type = $annotation->row_type;
-					$a->author = $annotation->quote_author_fullname;
+					$a->author = $this->mia_globals->fullname2( $annotation->quote_author_firstname, $annotation->quote_author_lastname );
 					echo "<a class='url' href='".s($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 					echo s( $annotation->quote_title ) . '</a>';
 
-					echo "<br/>by <span class='quote-author'>".s( $annotation->quote_author_fullname )."</span>\n";
+					echo "<br/>by <span class='quote-author'>".
+						s( $a->author )."</span>\n";
 					
 					// Link to filter only annotations by this user
 					if ( ! $summary->ofuser || $annotation->quote_author_username != $summary->ofuser->username )  {
 						$tsummary = $summary->derive( array( 'ofuserid' => $annotation->quote_author_id ) );
 						$turl = $tsummary->summary_url( );
-						$a->fullname = $annotation->quote_author_fullname;
+						$a->fullname = $this->mia_globals->fullname2( $annotation->quote_author_firstname, $annotation->quote_author_lastname );
 						echo $this->zoom_link( $tsummary->summary_url( ), get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $a) );
 					}
 					echo "</th>\n";
@@ -338,7 +345,7 @@ class annotation_summary_page
 				}
 				
 				// User name (or "me" for current user)
-				$displayusername = s( $annotation->fullname );
+				$displayusername = s( $this->mia_globals->fullname2( $annotation->firstname, $annotation->lastname ) );
 				$hiddenusername = '';
 				$class = 'user-name';
 				
@@ -360,7 +367,7 @@ class annotation_summary_page
 				if ( ! $summary->user || $annotation->userid != $summary->user->username )  {
 					$tsummary = $summary->derive( array( 'userid' => $annotation->userid) );
 					$turl = $tsummary->summary_url( );
-					$a->fullname = $annotation->fullname;
+					$a->fullname = $this->mia_globals->fullname2( $annotation->firstname, $annotation->lastname );
 					echo $this->zoom_link( $tsummary->summary_url( ), get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $a) );
 				}
 				echo "</td>\n";
@@ -448,16 +455,8 @@ class annotation_summary_page
 		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $summary->desc(null) );
 
 		// Marginalia logging
-		if ( AN_LOGGING )
-		{
-			$event = new object( );
-			$event->userid = $USER->id;
-			$event->service = 'annotation summary';
-			$event->action = $summary->summary_url( );
-			$event->description = $summary->desc( );
-			$event->modified = time( );
-			insert_record( AN_EVENTLOG_TABLE, $event, true );
-		}
+		if ( $this->logger && $this->logger->is_active() )
+			$this->logger->summarizeAnnotations($summary->summary_url(), $summary->desc());
 	}
 	
 	function show_column_headings( $summary, $className )

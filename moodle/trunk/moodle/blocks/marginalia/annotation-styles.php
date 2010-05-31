@@ -125,17 +125,8 @@ table td#annotation-controls {
 	z-index: 10;
 }
 
-.mia_recent:after {
-	position: absolute;
-	top: .1em;
-	right: 100%;
-	padding-right: 2px;
-	color: red;
-	content: '*';
-}
-
 .mia_margin ol li.active {
-	color: red ;
+	color: #d00 ;
 }
 
 .mia_margin ol li button {
@@ -180,5 +171,3 @@ body.mia_annotated button#hide-all-annotations {
 		text-decoration: underline ;
 	}
 }
-
-
