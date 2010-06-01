@@ -207,7 +207,7 @@ SmartquoteSubscriber.prototype.subscribeAllHtmlAreas = function( object_type, ob
 	for ( name in window )
 	{
 		var field = window[ name ];
-		if ( field && HTMLArea && field.constructor == HTMLArea )
+		if ( field && window.HTMLArea && field.constructor == window.HTMLArea )
 			this.subscribeHtmlArea( window[ name ] );
 	}
 }

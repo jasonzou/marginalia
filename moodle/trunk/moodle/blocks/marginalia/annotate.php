@@ -5,7 +5,7 @@ require_once( 'config.php' );
 require_once( 'marginalia-php/Annotation.php' );
 require_once( 'marginalia-php/AnnotationService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
-require_once( 'annotation_globals.php' );
+require_once( 'lib.php' );
 require_once( 'annotation_summary_query.php' );
 
 if ( $CFG->forcelogin || ANNOTATION_REQUIRE_USER )
@@ -29,23 +29,22 @@ class moodle_annotation extends Annotation
 class moodle_annotation_service extends AnnotationService
 {
 	var $extService = null;
-	var $mia_globals = null;
 	
 	function moodle_annotation_service( $userid, $extService=null )
 	{
 		global $CFG;
 		
-		$this->mia_globals = new annotation_globals( );
 		$this->extService = $extService;
 
 		// Note: Cross-site request forgery protection requires cookies, so it will not be
 		// activated if $CFG->usesid=true
 		$csrfprotect = ! empty( $CFG->usesid ) && $CFG->usesid;
 		
+		$moodlemia = moodle_marginalia::get_instance( );
 		AnnotationService::AnnotationService( 
-			annotation_globals::get_host(),
-			annotation_globals::get_service_path(),
-			annotation_globals::get_install_date(),
+			$moodlemia->get_host(),
+			$moodlemia->get_service_path(),
+			$moodlemia->get_install_date(),
 			$userid,
 			array(
 				'baseUrl' => $CFG->wwwroot,
@@ -60,8 +59,9 @@ class moodle_annotation_service extends AnnotationService
 	{
 		global $USER;
 		
+		$moodlemia = moodle_marginalia::get_instance( );
 		$handler = annotation_summary_query::handler_for_url( $url );
-		$sheet_type = annotation_globals::sheet_type( $sheet );
+		$sheet_type = $moodlemia->sheet_type( $sheet );
 		$summary = new annotation_summary_query( array(
 			'url' => $url
 			,'sheet_type' => $sheet_type
@@ -86,7 +86,7 @@ class moodle_annotation_service extends AnnotationService
 				$i = 0;
 				foreach ( $annotation_set as $r )
 				{
-					$annotations[ $i ] = $this->mia_globals->record_to_annotation( $r );
+					$annotations[ $i ] = $moodlemia->record_to_annotation( $r );
 					$annotation = $annotations[ $i ];
 					if ( $annotation->getLastRead( ) )
 						$annotations_read[ ] = $annotation->id;
@@ -138,6 +138,8 @@ class moodle_annotation_service extends AnnotationService
 	{
 		global $CFG;
 	
+		$moodlemia = moodle_marginalia::get_instance( );
+		
 		// Check whether the range column exists (for backwards compatibility)
 		$range = '';
 /*		if ( column_type( $this->tablePrefix.'annotation', 'range' ) )
@@ -157,7 +159,7 @@ class moodle_annotation_service extends AnnotationService
 			WHERE a.id = $id";
 		$resultset = get_record_sql( $query );
 		if ( $resultset && count( $resultset ) != 0 )  {
-			$annotation = $this->mia_globals->record_to_annotation( $resultset );
+			$annotation = $moodlemia->record_to_annotation( $resultset );
 			// Record lastread
 			if ( 'read' == $mark )
 			{
@@ -191,19 +193,23 @@ class moodle_annotation_service extends AnnotationService
 			$this->httpError( 400, 'Bad Request', 'Quote too long' );
 		else
 		{
+			$moodlemia = moodle_marginalia::get_instance( );
+
 			$time = time( );
 			$annotation->setCreated( $time );
 			$annotation->setModified( $time );
-			$record = annotation_globals::annotation_to_record( $annotation );
+			$record = $moodlemia->annotation_to_record( $annotation );
 			
 			// Figure out the object type and ID from the url
 			// Doing this here avoids infecting the caller with application-specific mumbo-jumbo
 			// The cost of doing it here is low because annotations are created one-by one.  In essence,
 			// this is really caching derived fields in the database to make queries easier.  (If only
 			// MySQL had added views before v5).
-			if ( preg_match( '/^.*\/mod\/forum\/permalink\.php\?p=(\d+)/', $annotation->getUrl( ), $matches ) )  {
-				$record->object_type = AN_OTYPE_POST;
-				$record->object_id = (int) $matches[ 1 ];
+			$oid = $moodlemia->oid_from_url( $annotation->getUrl( ) );
+			if ( $oid )
+			{
+				$record->object_type = $oid->object_type;
+				$record->object_id = $oid->object_id;
 				// Find the post author
 				$query = 'SELECT p.userid AS quote_author_id, p.subject AS quote_title, d.course as course'
 					." FROM {$this->tablePrefix}forum_posts p "
@@ -258,9 +264,10 @@ class moodle_annotation_service extends AnnotationService
 	{
 		global $USER;
 		
+		$moodlemia = moodle_marginalia::get_instance( );
 		$urlquerystr = '';
 		$annotation->setModified( time( ) );
-		$record = annotation_globals::annotation_to_record( $annotation );
+		$record = $moodlemia->annotation_to_record( $annotation );
 
 		$r = update_record( AN_DBTABLE, $record );
 		

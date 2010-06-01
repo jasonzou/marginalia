@@ -1,5 +1,34 @@
 <?php
 
+/*
+ * annotation_summary_query.php
+ *
+ * Marginalia has been developed with funding and support from
+ * BC Campus, Simon Fraser University, and the Government of
+ * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
+ * units and individuals within those organizations.  Many 
+ * thanks to all of them.  See CREDITS.html for details.
+ * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
+ * http://www.geof.net/code/annotation
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 2
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * $Id$
+ */
+ 
+ 
 // order by value for returning annotations in document order (i.e. same order
 // the highlights would be shown within the document)
 define( 'AN_SUMMARY_ORDER_DOCUMENT', 'section_type, section_name, a.url, start_block, start_line, start_word, start_char, end_block, end_line, end_word, end_char' );
@@ -13,7 +42,7 @@ define( 'AN_SUMMARY_ORDER_TIME', 'modified DESC');
  */
 class annotation_summary_query
 {
-	var $mia_globals;
+	var $moodlemia;
 	var $url = null;
 	var $sheet_type = AN_SHEET_PRIVATE;
 	var $text = null;
@@ -31,7 +60,7 @@ class annotation_summary_query
 	// If initializing from a URL, call map_params( $_GET ) first
 	function annotation_summary_query( $a )
 	{
-		$this->mia_globals = new annotation_globals( );
+		$this->moodlemia = moodle_marginalia::get_instance( );
 		if ( $a )
 			$this->from_params( $a );
 	}
@@ -55,7 +84,7 @@ class annotation_summary_query
 			$b[ 'orderby' ] = AN_SUMMARY_ORDER_DOCUMENT;
 		
 		$sheet = array_key_exists( 'sheet', $a ) ? $a[ 'sheet' ] : null;
-		$b[ 'sheet_type' ] = $sheet ? $this->mia_globals->sheet_type( $sheet ) : null;
+		$b[ 'sheet_type' ] = $sheet ? $this->moodlemia->sheet_type( $sheet ) : null;
 			
 		$b[ 'userid' ] = array_key_exists( 'u', $a ) ? (int)$a[ 'u' ] : null;
 		$b[ 'ofuserid'] = array_key_exists( 'search-of', $a ) ? (int)$a[ 'search-of' ] : null;
@@ -157,8 +186,8 @@ class annotation_summary_query
 		$this->handler->fetch_metadata( );
 		
 		$a->title = null === $titlehtml ? $this->handler->titlehtml : $titlehtml;
-		$a->who = $this->user ? s( $this->mia_globals->fullname( $this->user ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
-		$a->author = $this->ofuser ? s( $this->mia_globals->fullname( $this->ofuser ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
+		$a->who = $this->user ? s( $this->moodlemia->fullname( $this->user ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
+		$a->author = $this->ofuser ? s( $this->moodlemia->fullname( $this->ofuser ) ) : get_string( 'anyone', ANNOTATION_STRINGS );
 		$a->search = s( $this->text );
 		$a->match = get_string( $this->exactmatch ? 'matching' : 'containing', ANNOTATION_STRINGS );
 		
@@ -203,7 +232,7 @@ class annotation_summary_query
 			$summary_anyone = $this->derive( array( 'user' => null ) );
 			$a->who = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
 				.'" title="'.get_string( 'unzoom_user_hover', ANNOTATION_STRINGS )
-				.'"><span class="current">'.s( $this->mia_globals->fullname( $this->user ) ).'</span><span class="alt">'
+				.'"><span class="current">'.s( $this->moodlemia->fullname( $this->user ) ).'</span><span class="alt">'
 				.get_string( 'anyone', ANNOTATION_STRINGS ).'</a></a>';
 		}
 		else
@@ -214,7 +243,7 @@ class annotation_summary_query
 			$summary_anyone = $this->derive( array( 'ofuser' => null ) );
 			$a->author = '<a class="opt-link" href="'.s( $summary_anyone->summary_url( ) )
 				.'" title="'.get_string( 'unzoom_author_hover', ANNOTATION_STRINGS )
-				.'"><span class="current">'.s( $this->mia_globals->fullname( $this->ofuser ) ).'</span><span class="alt">'
+				.'"><span class="current">'.s( $this->moodlemia->fullname( $this->ofuser ) ).'</span><span class="alt">'
 				.get_string( 'anyone', ANNOTATION_STRINGS ).'</span></a>';
 		}
 		else
@@ -386,7 +415,7 @@ class annotation_summary_query
 		
 		$s = ANNOTATION_PATH."/summary.php?url=".urlencode($this->url);
 		if ( null != $this->sheet_type )
-			$s .= '&sheet='.urlencode(annotation_globals::sheet_str( $this->sheet_type ) );
+			$s .= '&sheet='.urlencode($this->moodlemia->sheet_str( $this->sheet_type ) );
 		if ( null != $this->text && '' != $this->text )
 			$s .= '&q='.urlencode($this->text);
 		if ( null != $this->user )
