@@ -18,7 +18,6 @@ MARGINALIA_MOODLE_DIR = $(MOODLE_DIR)/blocks/marginalia
 MARGINALIA_MOODLE_FILES = \
  $(MARGINALIA_MOODLE_DIR)/annotate.php \
  $(MARGINALIA_MOODLE_DIR)/annotation-styles.php \
- $(MARGINALIA_MOODLE_DIR)/annotation_globals.php \
  $(MARGINALIA_MOODLE_DIR)/annotation_summary_query.php \
  $(MARGINALIA_MOODLE_DIR)/block_marginalia.php \
  $(MARGINALIA_MOODLE_DIR)/config.php \
@@ -73,7 +72,7 @@ release:  zipcontents docs
 zipdir:
 	mkdir -p $(ZIPDIR)/util
 	mkdir -p $(ZIPDIR)/doc
-	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia//marginalia/3rd-party
+	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/marginalia/3rd-party
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/marginalia-php
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/lang/en_utf8/help/marginalia
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/db
