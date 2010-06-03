@@ -1,4 +1,4 @@
-<?php // $Id: post.php,v 1.154.2.17 2009/01/14 04:55:10 dongsheng Exp $
+<?php // $Id: post.php,v 1.154.2.18 2009/10/13 20:53:57 skodak Exp $
 
 //  Edit and save a new post to a discussion
 
@@ -13,9 +13,13 @@
     $name    = optional_param('name', '', PARAM_CLEAN);
     $confirm = optional_param('confirm', 0, PARAM_INT);
     $groupid = optional_param('groupid', null, PARAM_INT);
-	$messageinit = optional_param('message',0,PARAM_CLEANHTML);	// #geof#
 
-    //these page_params will be passed as hidden variables later in the form.
+
+    // #marginalia begin
+    $messageinit = optional_param( 'message', 0, PARAM_CLEANHTML );
+    // #marginalia end
+    
+	//these page_params will be passed as hidden variables later in the form.
     $page_params = array('reply'=>$reply, 'forum'=>$forum, 'edit'=>$edit);
 
     $sitecontext = get_context_instance(CONTEXT_SYSTEM);
@@ -110,7 +114,7 @@
         $post->parent     = 0;
         $post->subject    = '';
         $post->userid     = $USER->id;
-        $post->message     = $messageinit ? $messageinit : '';	// #geof#
+        $post->message     = $messageinit ? $messageinit : '';	// #marginalia
 
         if (isset($groupid)) {
             $post->groupid = $groupid;
@@ -178,7 +182,7 @@
         $post->parent      = $parent->id;
         $post->subject     = $parent->subject;
         $post->userid      = $USER->id;
-        $post->message     = $messageinit ? $messageinit : '';	// #geof#
+        $post->message     = $messageinit ? $messageinit : '';	// #marginalia
 
         $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
@@ -446,15 +450,20 @@
     // fix for MDL-6926
     course_setup($course->id);
     require_once('post_form.php');
+    
+    // #marginalia begin
     require_once('../../blocks/marginalia/config.php');
     require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
     require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
     require_once( ANNOTATION_DIR.'/annotation_globals.php' );
     require_once( ANNOTATION_DIR.'/lib.php' );
+    // #marginalia end
 
     $mform_post = new mod_forum_post_form('post.php', array('course'=>$course, 'cm'=>$cm, 'coursecontext'=>$coursecontext, 'modcontext'=>$modcontext, 'forum'=>$forum, 'post'=>$post));
 
     if ($fromform = $mform_post->get_data()) {
+
+
         require_login($course, false, $cm);
 
         if (empty($SESSION->fromurl)) {
@@ -463,13 +472,14 @@
             $errordestination = $SESSION->fromurl;
         }
 
-		// Strip out any annotation class names.
-		$expr = '/(<[^>]+\s)class=[\\\\]?[\'\"][^>\'\"]*\bannotation\b[^>\'\"]*[\\\\]?[\'\"]/';
-		$post->message = preg_replace( $expr, '$1', $post->message );
-		// It would be good to also strip out annotation highlighting, but that's tricky.
-		// #/geof#
+        // #marginalia begin
+        // Strip out any annotation class names.
+        $expr = '/(<[^>]+\s)class=[\\\\]?[\'\"][^>\'\"]*\bannotation\b[^>\'\"]*[\\\\]?[\'\"]/';
+        $post->message = preg_replace( $expr, '$1', $post->message );
+        // It would be good to also strip out annotation highlighting, but that's tricky.
+		// #marginalia end
 
-        // TODO add attachment processing
+		// TODO add attachment processing
         //$fromform->attachment = isset($_FILES['attachment']) ? $_FILES['attachment'] : NULL;
 
         trusttext_after_edit($fromform->message, $modcontext);
@@ -504,9 +514,9 @@
 
             // MDL-11818
             if (($forum->type == 'single') && ($updatepost->parent == '0')){ // updating first post of single discussion type -> updating forum intro
-                $forum->intro = $updatepost->message;
+                $forum->intro = stripslashes($updatepost->message);
                 $forum->timemodified = time();
-                if (!update_record("forum", $forum)) {
+                if (!update_record("forum", addslashes_recursive($forum))) {
                     print_error("couldnotupdate", "forum", $errordestination);
                 }
             }
@@ -676,20 +686,39 @@
 
     $forcefocus = empty($reply) ? NULL : 'message';
 
-    // The Javascript is required for smartquotes to work.  #geof#
-	$meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/blocks/marginalia/annotation-styles.php'/>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/log.js'></script>\n"
-    	."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/3rd-party.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/domutil.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/ranges.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/post-micro.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/smartquote.js'></script>\n"
-		."<script language='JavaScript' type='text/javascript'>\n"
-		."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwroot."'); } );\n"
-		."</script>\n";
-	// It is incredibly inefficient to use the CookieBus to send this quote.  However... avoiding that means finding
-	// the editor object, which has been given a random name by the library.  *That* would mean heavier modification
-	// to other Moodle code, which would make Marginalia harder to integrate and maintain.  So.  This is it.
+    // #marginalia begin
+    // #geof# #marginalia begin
+    require_js( array( 'yui_datasource' ) );
+    require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
+    require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
+    require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
+    require_once( ANNOTATION_DIR.'/lib.php' );
+
+    // Begin Annotation Code to set $meta
+    $marginalia = moodle_marginalia::get_instance( );
+    $meta = $marginalia->header_html( );
+    // I'm perverting the meta argument here, but I can't figure out how otherwise
+	// to emit a stylesheet link.  #geof#
+    // #geof# #marginalia end
+
+/*    // The Javascript is required for smartquotes to work.
+    $meta = "<link rel='stylesheet' type='text/css' href='$CFG->wwwroot/blocks/marginalia/annotation-styles.php'/>\n"
+        ."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/log.js'></script>\n"
+        ."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/3rd-party.js'></script>\n"
+        ."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/domutil.js'></script>\n"
+        ."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/ranges.js'></script>\n"
+        ."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/marginalia/post-micro.js'></script>\n"
+        ."<script language='JavaScript' type='text/javascript' src='$CFG->wwwroot/blocks/marginalia/smartquote.js'></script>\n"
+        ."<script language='JavaScript' type='text/javascript'>\n"
+        ."  addEvent( window, 'load', function() { Smartquote.enableSmartquote( '".$CFG->wwwroot."'); } );\n"
+        ."</script>\n";
+
+	// #marginalia end
+        
+*/    // It is incredibly inefficient to use the CookieBus to send this quote.  However... avoiding that means finding
+    // the editor object, which has been given a random name by the library.  *That* would mean heavier modification
+    // to other Moodle code, which would make Marginalia harder to integrate and maintain.  So.  This is it.
+    // #marginalia end
 
     $navlinks = array();
     if ($post->parent) {
@@ -702,7 +731,20 @@
 
     print_header("$course->shortname: $strdiscussionname ".
                   format_string($toppost->subject), $course->fullname,
-                  $navigation, $mform_post->focus($forcefocus), $meta, true, "", navmenu($course, $cm));
+                  $navigation, $mform_post->focus($forcefocus), $meta, true, "", navmenu($course, $cm));	// #marginalia
+
+    // #marginalia begin
+    // relative URL to this resource from the server root (should start with '/')
+    $refurl = "/mod/forum/permalink.php?p=".(int)$parent->id;
+	echo $marginalia->init_html( $refurl, true );
+
+    // Annotation controls (help, user dropdown, link to summary page)
+    echo "<div id='annotation-controls' style='text-align: right'>";
+    $marginalia->show_header_controls( 'forum', $refurl, $USER );
+    echo "</div>\n";
+    $marginalia->subscribe_htmlareas( );
+    // #marginalia end
+    
 
 // checkup
     if (!empty($parent) && !forum_user_can_see_post($forum, $discussion, $post, null, $cm)) {
@@ -807,7 +849,6 @@
 
 
     $mform_post->display();
-
 
     print_footer($course);
 

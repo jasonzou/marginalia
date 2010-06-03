@@ -36,13 +36,14 @@
 
     // move this down fix for MDL-6926
     require_once('lib.php');
-	require_js( array( 'yui_datasource' ) );
-	require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
+    
+    // #geof# #marginalia begin
+    require_js( array( 'yui_datasource' ) );
+    require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
     require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
     require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
-    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
     require_once( ANNOTATION_DIR.'/lib.php' );
-    // require_once("../../local/annotation/marginalia-config.php");
+    // #geof# #marginalia end
 
     $modcontext = get_context_instance(CONTEXT_MODULE, $cm->id);
     require_capability('mod/forum:viewdiscussion', $modcontext, NULL, true, 'noviewdiscussionspermission', 'forum');
@@ -153,19 +154,23 @@
         $navlinks[] = array('name' => format_string($post->subject), 'type' => 'title');
     }
 
+    // #marginalia begin
     // Begin Annotation Code to set $meta
-    $meta = moodle_marginalia::header_html(  );
+    $marginalia = moodle_marginalia::get_instance( );
+    $meta = $marginalia->header_html(  );
     // I'm perverting the meta argument here, but I can't figure out how otherwise
 	// to emit a stylesheet link.  #geof#
-	
-    $navigation = build_navigation($navlinks, $cm);
-    print_header("$course->shortname: ".format_string($discussion->name), $course->fullname,
-                     $navigation, "", $meta, true, $searchform, navmenu($course, $cm));
-	
-    // refurl is the relative URL to this resource from the server root (i.e., it should start with '/')
-    $refurl = "/mod/forum/discuss.php?d=$d";  // used to start with $rootpath
-	echo moodle_marginalia::init_html( $refurl );
+	// #marginalia end
 
+	$navigation = build_navigation($navlinks, $cm);
+    print_header("$course->shortname: ".format_string($discussion->name), $course->fullname,
+                     $navigation, "", $meta, true, $searchform, navmenu($course, $cm));  // #marginalia
+
+    // #marginalia begin
+    // relative URL to this resource from the server root (should start with '/')
+    $refurl = "/mod/forum/discuss.php?d=$d";
+    echo $marginalia->init_html( $refurl );
+    // #marginalia end
 
 /// Check to see if groups are being used in this forum
 /// If so, make sure the current person is allowed to see this discussion
@@ -227,12 +232,11 @@
             }
         }
     }
-	
-	// Annotation controls (help, user dropdown, link to summary page)
-	echo "</td>\n<td id='annotation-controls'>";
-	moodle_marginalia::show_help( 'forum' );
-	moodle_marginalia::show_user_dropdown( $refurl, true );
-	echo moodle_marginalia::summary_link_html( $refurl, $USER->username );
+    // #marginalia begin
+    // Annotation controls (help, user dropdown, link to summary page)
+    echo "</td>\n<td id='annotation-controls'>";
+    $marginalia->show_header_controls( 'forum', $refurl, $USER );
+    // #marginalia end
     echo "</td></tr></table>";
 
     if (!empty($forum->blockafter) && !empty($forum->blockperiod)) {

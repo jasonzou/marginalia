@@ -1,9 +1,11 @@
 <?php  // $Id$
 
 require_once($CFG->libdir.'/filelib.php');
+// #marginalia begin
 require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/marginalia-constants.php' );
-require_once( ANNOTATION_DIR.'/annotation_globals.php' );
+require_once( ANNOTATION_DIR.'/lib.php' );
+// #marginalia end
 
 /// CONSTANTS ///////////////////////////////////////////////////////////
 
@@ -101,6 +103,8 @@ function forum_add_instance($forum) {
  * @return bool success
  */
 function forum_update_instance($forum) {
+    global $USER;
+
     $forum->timemodified = time();
     $forum->id           = $forum->instance;
 
@@ -154,6 +158,7 @@ function forum_update_instance($forum) {
         $post->subject  = $forum->name;
         $post->message  = $forum->intro;
         $post->modified = $forum->timemodified;
+        $post->userid   = $USER->id;    // MDL-18599, so that current teacher can take ownership of activities
 
         if (! update_record('forum_posts', ($post))) {
             error('Could not update the first post');
@@ -946,13 +951,30 @@ function forum_make_mail_html($course, $forum, $discussion, $post, $userfrom, $u
  * @return object A standard object with 2 variables: info (number of posts for this user) and time (last modified)
  */
 function forum_user_outline($course, $user, $mod, $forum) {
-    if ($count = forum_count_user_posts($forum->id, $user->id)) {
-        if ($count->postcount > 0) {
-            $result = new object();
-            $result->info = get_string("numposts", "forum", $count->postcount);
-            $result->time = $count->lastpost;
-            return $result;
+    global $CFG;
+    require_once("$CFG->libdir/gradelib.php");
+    $grades = grade_get_grades($course->id, 'mod', 'forum', $forum->id, $user->id);
+    if (empty($grades->items[0]->grades)) {
+        $grade = false;
+    } else {
+        $grade = reset($grades->items[0]->grades);
+    }
+
+    $count = forum_count_user_posts($forum->id, $user->id);
+
+    if ($count && $count->postcount > 0) {
+        $result = new object();
+        $result->info = get_string("numposts", "forum", $count->postcount);
+        $result->time = $count->lastpost;
+        if ($grade) {
+            $result->info .= ', ' . get_string('grade') . ': ' . $grade->str_long_grade;
         }
+        return $result;
+    } else if ($grade) {
+        $result = new object();
+        $result->info = get_string('grade') . ': ' . $grade->str_long_grade;
+        $result->time = $grade->dategraded;
+        return $result;
     }
     return NULL;
 }
@@ -963,6 +985,16 @@ function forum_user_outline($course, $user, $mod, $forum) {
  */
 function forum_user_complete($course, $user, $mod, $forum) {
     global $CFG,$USER;
+    require_once("$CFG->libdir/gradelib.php");
+
+    $grades = grade_get_grades($course->id, 'mod', 'forum', $forum->id, $user->id);
+    if (!empty($grades->items[0]->grades)) {
+        $grade = reset($grades->items[0]->grades);
+        echo '<p>'.get_string('grade').': '.$grade->str_long_grade.'</p>';
+        if ($grade->str_feedback) {
+            echo '<p>'.get_string('feedback').': '.$grade->str_feedback.'</p>';
+        }
+    }
 
     if ($posts = forum_get_user_posts($forum->id, $user->id)) {
 
@@ -1020,7 +1052,7 @@ function forum_user_complete($course, $user, $mod, $forum) {
  */
 function forum_print_overview($courses,&$htmlarray) {
     global $USER, $CFG;
-    $LIKE = sql_ilike();
+    //$LIKE = sql_ilike();//no longer using like in queries. MDL-20578
 
     if (empty($courses) || !is_array($courses) || count($courses) == 0) {
         return array();
@@ -1040,7 +1072,7 @@ function forum_print_overview($courses,&$htmlarray) {
     }
     $sql = substr($sql,0,-3); // take off the last OR
 
-    $sql .= ") AND l.module = 'forum' AND action $LIKE 'add post%' "
+    $sql .= ") AND l.module = 'forum' AND action = 'add post' "
         ." AND userid != ".$USER->id." GROUP BY cmid,l.course,instance";
 
     if (!$new = get_records_sql($sql)) {
@@ -1504,7 +1536,7 @@ function forum_scale_used_anywhere($scaleid) {
 function forum_get_post_full($postid) {
     global $CFG;
 
-    return get_record_sql("SELECT p.*, d.forum, u.firstname, u.lastname, u.username, u.email, u.picture, u.imagealt
+    return get_record_sql("SELECT p.*, d.forum, u.firstname, u.lastname, u.email, u.picture, u.imagealt
                              FROM {$CFG->prefix}forum_posts p
                                   JOIN {$CFG->prefix}forum_discussions d ON p.discussion = d.id
                                   LEFT JOIN {$CFG->prefix}user u ON p.userid = u.id
@@ -1520,7 +1552,7 @@ function forum_get_post_full($postid) {
 function forum_get_discussion_posts($discussion, $sort, $forumid) {
     global $CFG;
 
-    return get_records_sql("SELECT p.*, $forumid AS forum, u.firstname, u.lastname, u.username, u.email, u.picture, u.imagealt
+    return get_records_sql("SELECT p.*, $forumid AS forum, u.firstname, u.lastname, u.email, u.picture, u.imagealt
                               FROM {$CFG->prefix}forum_posts p
                          LEFT JOIN {$CFG->prefix}user u ON p.userid = u.id
                              WHERE p.discussion = $discussion
@@ -1547,7 +1579,7 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
         $tr_join = "LEFT JOIN {$CFG->prefix}forum_read fr ON (fr.postid = p.id AND fr.userid = $USER->id)";
     }
 
-    if (!$posts = get_records_sql("SELECT p.*, u.firstname, u.lastname, u.username, u.email, u.picture, u.imagealt $tr_sel
+    if (!$posts = get_records_sql("SELECT p.*, u.firstname, u.lastname, u.email, u.picture, u.imagealt $tr_sel
                                      FROM {$CFG->prefix}forum_posts p
                                           LEFT JOIN {$CFG->prefix}user u ON p.userid = u.id
                                           $tr_join
@@ -1585,7 +1617,7 @@ function forum_get_all_discussion_posts($discussionid, $sort, $tracking=false) {
 function forum_get_child_posts($parent, $forumid) {
     global $CFG;
 
-    return get_records_sql("SELECT p.*, $forumid AS forum, u.firstname, u.lastname, u.username, u.email, u.picture, u.imagealt
+    return get_records_sql("SELECT p.*, $forumid AS forum, u.firstname, u.lastname, u.email, u.picture, u.imagealt
                               FROM {$CFG->prefix}forum_posts p
                          LEFT JOIN {$CFG->prefix}user u ON p.userid = u.id
                              WHERE p.parent = '$parent'
@@ -2805,9 +2837,9 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         //        print_user_picture($post->userid, $courseid, $post->picture);
         echo '</td>';
         if ($post->parent) {
-            echo '<td class="topic">';
+            echo '<td class="topic" colspan="3">';
         } else {
-            echo '<td class="topic starter">';
+            echo '<td class="topic starter" colspan="3">';
         }
         echo '<div class="subject">'.get_string('forumsubjecthidden','forum').'</div>';
         echo '<div class="author">';
@@ -2855,7 +2887,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     }
 
     echo '<a id="p'.$post->id.'"></a>';
-    echo '<table cellspacing="0" class="forumpost'.$read_style.' '.PM_POST_CLASS.'" id="m'.$post->id.'">';
+    echo '<table cellspacing="0" class="forumpost'.$read_style.'" id="m'.$post->id.'">';	// #marginalia
 
     // Picture
     $postuser = new object();
@@ -2870,31 +2902,22 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     echo '</td>';
 
     if ($post->parent) {
-        echo '<td class="topic" colspan="3">';
+        echo '<td class="topic" colspan="3">';	// #marginalia
     } else {
-        echo '<td class="topic starter" colspan="3">';
+        echo '<td class="topic starter" colspan="3">';	// #marginalia
     }
 
     if (!empty($post->subjectnoformat)) {
-        echo '<div class="subject '.PM_TITLE_CLASS.'">'.$post->subject.'</div>';
+        echo '<div class="subject">'.$post->subject.'</div>';
     } else {
-        echo '<div class="subject '.PM_TITLE_CLASS.'">'.format_string($post->subject).'</div>';
+        echo '<div class="subject">'.format_string($post->subject).'</div>';
     }
 
-    // #GEOF# Annotations must use a unique value for the user ID
-    // This should be a string, and it should be human-readable and suitable for
-    // outside consumption.  I'm therefore using username rather than ID.
-    // If Moodle displayed these values, the fields wouldn'n need to be hidden.
-    $rootpath = $CFG->wwwroot; //parse_url( $CFG->wwwroot );
-    //$rootpath = $rootpath[ 'path' ];
-    $refurl = "$rootpath/mod/forum/permalink.php?p=$post->id";
-    $discussurl = "$rootpath/mod/forum/discuss.php?d=$post->discussion"; // used for summary link
-	// This class author, used by Marginalia, must preceed the one below, used by Moodle.
-	// Unfortunately I can't use that one - it's marked author but it is not, in fact, the author
-	// - it also includes "by", the date, etc.  (grrr) #geof#
-    echo "<span style='display:none' class='" . PM_AUTHOR_CLASS . "' title='".htmlspecialchars( $post->username )."'>" . htmlspecialchars($post->firstname.' '.$post->lastname) . "</span>\n";
-    echo "<abbr style='display:none' class='" . PM_DATE_CLASS . "' title='" . date( 'Ymd', $post->modified ) . 'T' . date( 'HiO', $post->modified ) . "'></abbr>\n";
-    echo "<a style='display:none' rel='" . PM_URL_REL . "' href='$refurl'></a>\n";
+	// #marginalia begin
+	$rootpath = $CFG->wwwroot;
+	$refurl = "$rootpath/mod/forum/permalink.php?p=$post->id";
+	echo "<a style='display:none' rel='post' href='$refurl'></a>\n";
+	// #marginalia end
 
     echo '<div class="author">';
     $fullname = fullname($postuser, $cm->cache->caps['moodle/site:viewfullnames']);
@@ -2902,10 +2925,6 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     $by->name = '<a href="'.$CFG->wwwroot.'/user/view.php?id='.
                 $post->userid.'&amp;course='.$course->id.'">'.$fullname.'</a>';
     $by->date = userdate($post->modified);
-
-    // This, I presume, is to localize string display.  Unfortunately it's
-    // unstructured text, so I can't insert the necessary <abbr> element with the date.
-    // Instead that's done in a hidden tag above.
     print_string('bynameondate', 'forum', $by);
     echo '</div></td></tr>';
 
@@ -2929,7 +2948,7 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
 
 // Actual content
 
-    echo '</td><td class="content" valign="top">'."\n";
+    echo '</td><td class="content" valign="top">'."\n";	// #marginalia
 
     if ($post->attachment) {
         echo '<div class="attachments">';
@@ -2947,12 +2966,12 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         // Print shortened version
         echo format_text(forum_shorten_post($post->message), $post->format, $options, $course->id);
         $numwords = count_words(strip_tags($post->message));
-        echo '<div class="posting ' . PM_CONTENT_CLASS . '"><a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'">';
+        echo '<div class="posting"><a href="'.$CFG->wwwroot.'/mod/forum/discuss.php?d='.$post->discussion.'">';
         echo get_string('readtherest', 'forum');
         echo '</a> ('.get_string('numwords', '', $numwords).')...</div>';
     } else {
         // Print whole message
-        echo '<div class="posting ' . PM_CONTENT_CLASS . '">';
+        echo '<div class="posting">';
         if ($highlight) {
             echo highlight($highlight, format_text($post->message, $post->format, $options, $course->id));
         } else {
@@ -3024,10 +3043,12 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         $commands[] = '<a href="'.$CFG->wwwroot.'/mod/forum/post.php?delete='.$post->id.'">'.$strdelete.'</a>';
     }
 
-	// The span below is to allow text-decoration:underline, which doesn't seem
-	// to work otherwise (Firefox bug?)
-	$commands[] = "<button class='smartquote'><span>Quote</span></button>";
-	
+    // #marginalia begin
+    // The span below is to allow text-decoration:underline, which doesn't seem
+    // to work otherwise (Firefox bug?)
+    $commands[] = "<button class='smartquote'><span>Quote</span></button>";
+    // #marginalia end
+
     if ($reply) {
         $commands[] = '<a href="'.$CFG->wwwroot.'/mod/forum/post.php?reply='.$post->id.'">'.$strreply.'</a>';
     }
@@ -3113,20 +3134,16 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     if ($footer) {
         echo '<div class="footer">'.$footer.'</div>';
     }
-//	if ( $canannotate )
-//	{
-		echo "</td><td class='control-margin'><div><button type='button' "
-			." title='".htmlspecialchars( get_string( 'create_button', ANNOTATION_STRINGS ) )."'" 
-			." onclick='window.moodleMarginalia.createAnnotation(event,\"m$post->id\")'><span>&gt;</span></button></div></td>\n";
-		echo "<td class='".AN_NOTES_CLASS."' valign='top'><div>";
-		echo "<ol></ol>\n";
-		echo "</div></td>\n";
-//	}
-//	else
-//		echo "<td></td><td></td>";
+
+    // #marginalia begin
+    echo "</td><td valign='top' class='margin-td'><div class='mia_margin'>"
+    	."<ol title='".get_string('create_margin',ANNOTATION_STRINGS)."'>"
+    	."<li class='mia_dummyfirst'></li></ol></div></td>\n";
+	// #marginalia end
+	
     echo '</tr></table>'."\n\n";
 
-    if ($istracked && !$CFG->forum_usermarksread && !$post_read) {
+	if ($istracked && !$CFG->forum_usermarksread && !$post_read) {
         forum_tp_mark_post_read($USER->id, $post, $forum->id);
     }
 
@@ -3438,19 +3455,26 @@ function forum_get_ratings_count($postid, $scale, $ratings=NULL) {
     }
 
     $count = count($ratings);
-    $maxgradeidx = max(array_keys($scale)); // For numerical grades, the index is the same as the real grade value {0..n}
-                                            // and $scale looks like Array( 0 => '0/n', 1 => '1/n', ..., n => 'n/n' )
-                                            // For scales, the index is the order of the scale item {1..n}
-                                            // and $scale looks like Array( 1 => 'poor', 2 => 'weak', 3 => 'good' )
     if (! array_key_exists(0, $scale)) {
         $scaleused = true;
     } else {
         $scaleused = false;
     }
 
-    if (($count == 0) && ($scaleused)) {    // If no rating given yet and we use a scale
-        return get_string('noratinggiven', 'forum');
-    } elseif ($count > $maxgradeidx) {      // The count exceeds the max grade
+    if ($count == 0) {
+        if ($scaleused) {    // If no rating given yet and we use a scale
+            return get_string('noratinggiven', 'forum');
+        } else {
+            return '';
+        }
+    }
+
+    $maxgradeidx = max(array_keys($scale)); // For numerical grades, the index is the same as the real grade value {0..n}
+                                            // and $scale looks like Array( 0 => '0/n', 1 => '1/n', ..., n => 'n/n' )
+                                            // For scales, the index is the order of the scale item {1..n}
+                                            // and $scale looks like Array( 1 => 'poor', 2 => 'weak', 3 => 'good' )
+
+    if ($count > $maxgradeidx) {      // The count exceeds the max grade
         $a = new stdClass();
         $a->count = $count;
         $a->grade = $scale[$maxgradeidx];
@@ -3480,7 +3504,6 @@ function forum_get_ratings_max($postid, $scale, $ratings=NULL) {
     }
 
     $count = count($ratings);
-    $max = max($ratings);
 
     if ($count == 0 ) {
         return "";
@@ -3490,8 +3513,9 @@ function forum_get_ratings_max($postid, $scale, $ratings=NULL) {
         return $scale[$rating];
 
     } else {
+        $max = max($ratings);
 
-     if (isset($scale[$max])) {
+        if (isset($scale[$max])) {
             return $scale[$max]." ($count)";
         } else {
             return "$max ($count)";    // Should never happen, hopefully
@@ -3516,7 +3540,6 @@ function forum_get_ratings_min($postid, $scale,  $ratings=NULL) {
     }
 
     $count = count($ratings);
-    $min = min($ratings);
 
     if ($count == 0 ) {
         return "";
@@ -3526,6 +3549,7 @@ function forum_get_ratings_min($postid, $scale,  $ratings=NULL) {
         return $scale[$rating]; //this works for min
 
     } else {
+        $min = min($ratings);
 
         if (isset($scale[$min])) {
             return $scale[$min]." ($count)";
@@ -3744,7 +3768,12 @@ function forum_file_area_name($post) {
  *
  */
 function forum_file_area($post) {
-    return make_upload_directory( forum_file_area_name($post) );
+    $path = forum_file_area_name($post);
+    if ($path) {
+        return make_upload_directory($path);
+    } else {
+        return false;
+    }
 }
 
 /**
@@ -4629,20 +4658,20 @@ function forum_user_can_see_post($forum, $discussion, $post, $user=NULL, $cm=NUL
 
     // retrieve objects (yuk)
     if (is_numeric($forum)) {
-        debugging('missinf full forum', DEBUG_DEVELOPER);
+        debugging('missing full forum', DEBUG_DEVELOPER);
         if (!$forum = get_record('forum','id',$forum)) {
             return false;
         }
     }
 
     if (is_numeric($discussion)) {
-        debugging('missinf full discussion', DEBUG_DEVELOPER);
+        debugging('missing full discussion', DEBUG_DEVELOPER);
         if (!$discussion = get_record('forum_discussions','id',$discussion)) {
             return false;
         }
     }
     if (is_numeric($post)) {
-        debugging('missinf full post', DEBUG_DEVELOPER);
+        debugging('missing full post', DEBUG_DEVELOPER);
         if (!$post = get_record('forum_posts','id',$post)) {
             return false;
         }
@@ -5028,6 +5057,7 @@ function forum_print_discussion($course, $cm, $forum, $discussion, $post, $mode,
                 echo '<form id="form" method="post" action="rate.php">';
                 echo '<div class="ratingform">';
                 echo '<input type="hidden" name="forumid" value="'.$forum->id.'" />';
+                echo '<input type="hidden" name="sesskey" value="'.sesskey().'" />';
                 $ratingsformused = true;
             }
 
@@ -5173,6 +5203,7 @@ function forum_print_posts_threaded($course, &$cm, $forum, $discussion, $parent,
                 }
             } else {
                 if (!forum_user_can_see_post($forum, $discussion, $post, NULL, $cm)) {
+                    echo "</div>\n";
                     continue;
                 }
                 $by = new object();
@@ -5484,21 +5515,21 @@ function forum_add_user_default_subscriptions($userid, $context) {
     switch ($context->contextlevel) {
 
         case CONTEXT_SYSTEM:   // For the whole site
-             if ($courses = get_records('course')) {
-                 foreach ($courses as $course) {
-                     $subcontext = get_context_instance(CONTEXT_COURSE, $course->id);
-                     forum_add_user_default_subscriptions($userid, $subcontext);
-                 }
+             $rs = get_recordset('course', '', '', '', 'id');
+             while ($course = rs_fetch_next_record($rs)) {
+                 $subcontext = get_context_instance(CONTEXT_COURSE, $course->id);
+                 forum_add_user_default_subscriptions($userid, $subcontext);
              }
+             rs_close($rs);
              break;
 
         case CONTEXT_COURSECAT:   // For a whole category
-             if ($courses = get_records('course', 'category', $context->instanceid)) {
-                 foreach ($courses as $course) {
-                     $subcontext = get_context_instance(CONTEXT_COURSE, $course->id);
-                     forum_add_user_default_subscriptions($userid, $subcontext);
-                 }
-             }
+            $rs = get_recordset('course', 'category', $context->instanceid, '', 'id');
+            while ($course = rs_fetch_next_record($rs)) {
+                $subcontext = get_context_instance(CONTEXT_COURSE, $course->id);
+                forum_add_user_default_subscriptions($userid, $subcontext);
+            }
+            rs_close($rs);
              if ($categories = get_records('course_categories', 'parent', $context->instanceid)) {
                  foreach ($categories as $category) {
                      $subcontext = get_context_instance(CONTEXT_COURSECAT, $category->id);
