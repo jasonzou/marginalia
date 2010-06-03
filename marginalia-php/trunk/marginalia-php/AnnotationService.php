@@ -295,12 +295,13 @@ class AnnotationService
 		$block = $this->getQueryParam( 'block', null );
 		$block = $block ? new SequencePoint( $block ) : null;
 		$all = $this->getQueryParam( 'all', 'no' ) == 'yes' ? true : false;
+		$mark = $this->getQueryParam( 'mark', null );
 		
 /*		if ( $url == null || $url == '' )
 			$this->httpError( 400, 'Bad Request', 'Bad URL' );
 		else
 		{
-*/			$annotations = $this->doListAnnotations( $url, $sheet, $block, $all );
+*/			$annotations = $this->doListAnnotations( $url, $sheet, $block, $all, $mark );
 			
 			if ( null === $annotations )
 				$this->httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
@@ -333,8 +334,9 @@ class AnnotationService
 	function getAnnotation( $id )
 	{
 		$format = (int) $this->getQueryParam( 'format', null );
+		$mark = $this->getQueryParam( 'mark', null );
 
-		$annotation = $this->doGetAnnotation( $id );
+		$annotation = $this->doGetAnnotation( $id, $mark );
 			
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found Error', 'No such annotation' );
