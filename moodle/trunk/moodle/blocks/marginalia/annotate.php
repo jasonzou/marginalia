@@ -343,7 +343,7 @@ $logblock = get_record('block', 'name', 'marginalia_log');
 $logger = null;
 if ( $logblock )
 {
-	require_once( $CFG->dirroot.'/blocks/marginalia_log/log.php' );
+	require_once( $CFG->dirroot.'/blocks/marginalia_log/lib.php' );
  	$logger = new marginalia_log();
 }
 

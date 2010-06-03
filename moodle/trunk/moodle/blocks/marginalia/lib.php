@@ -88,13 +88,25 @@ class moodle_marginalia
 		global $CFG;
 		
 		// Load up the logger, if available
-		$logblock = get_record('block', 'name', 'marginalia_log');
-		if ( $logblock )
+		$blocks = get_records('block');
+		if ( $blocks )
 		{
-			require_once( $CFG->dirroot.'/blocks/marginalia_log/log.php' );
-			$this->logger = new marginalia_log( );
-			if ( $this->logger->is_active( ) )
-				array_push( $this->plugins, $this->logger );
+			$prefix = 'marginalia_';
+			$prefixlen = strlen( 'marginalia_' );
+			foreach ( $blocks as $block )
+			{
+				if ( substr( $block->name, 0, $prefixlen ) == $prefix )
+				{
+					require_once( $CFG->dirroot.'/blocks/'.$block->name.'/lib.php' );
+					$plugin = new $block->name( );
+					if ( $plugin->is_active( ) )
+					{
+						array_push( $this->plugins, $plugin );
+						if ( $block->name == 'marginalia_log' )
+							$this->logger = $plugin;
+					}
+				}
+			}
 		}
 	}
 

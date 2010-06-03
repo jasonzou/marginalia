@@ -69,6 +69,10 @@ table td#annotation-controls {
 	width: 0;
 }
 
+.mia_annotated .margin-td {
+	width: 16em;
+}
+
 .mia_annotated .mia_margin {
 	border: #f8f8f8 1px solid;
 	cursor: pointer;
