@@ -46,6 +46,7 @@ HELP_FILES = \
 
 DB_DIR = $(MARGINALIA_MOODLE_DIR)/db
 DB_FILES = \
+ $(DB_DIR)/access.php \
  $(DB_DIR)/install.xml \
  $(DB_DIR)/upgrade.php
  
