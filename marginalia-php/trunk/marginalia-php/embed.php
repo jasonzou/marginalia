@@ -62,7 +62,6 @@ function listMarginaliaJavascript( )
 		,"rest-annotate.js"
 		,"rest-prefs.js"
 		,"rest-keywords.js"
-		,"marginalia-direct.js"
 	);
 }
 	
