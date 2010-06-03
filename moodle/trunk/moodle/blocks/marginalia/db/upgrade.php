@@ -165,6 +165,9 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		$table->addFieldInfo('firstread', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 		$table->addFieldInfo('lastread', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 
+		/// Adding keys to table marginalia_read
+		$table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
+
 		/// Adding indexes to table marginalia_read
 		$table->addIndexInfo('object', XMLDB_INDEX_UNIQUE, array('annotationid', 'userid'));
 		

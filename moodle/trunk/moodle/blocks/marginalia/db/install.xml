@@ -51,6 +51,9 @@
         <FIELD NAME="firstread" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="userid" NEXT="lastread"/>
         <FIELD NAME="lastread" TYPE="int" LENGTH="10" NOTNULL="true" UNSIGNED="true" SEQUENCE="false" ENUM="false" PREVIOUS="lastread"/>
       </FIELDS>
+      <KEYS>
+        <KEY NAME="primary" TYPE="primary" FIELDS="id"/>
+      </KEYS>
       <INDEXES>
         <INDEX NAME="lastread" UNIQUE="true" FIELDS="annotationid, userid"/>
       </INDEXES>
