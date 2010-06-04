@@ -733,15 +733,19 @@
                   $navigation, $mform_post->focus($forcefocus), $meta, true, "", navmenu($course, $cm));	// #marginalia
 
     // #marginalia begin
-    // relative URL to this resource from the server root (should start with '/')
-    $refurl = "/mod/forum/permalink.php?p=".(int)$parent->id;
-	echo $marginalia->init_html( $refurl, true );
-
-    // Annotation controls (help, user dropdown, link to summary page)
-    echo "<div id='annotation-controls' style='text-align: right'>";
-    $marginalia->show_header_controls( 'forum', $refurl, $USER );
-    echo "</div>\n";
-    $marginalia->subscribe_htmlareas( );
+    // only if this is a reply to another post
+    if ( $reply )
+    {
+		// relative URL to this resource from the server root (should start with '/')
+		$refurl = "/mod/forum/permalink.php?p=".(int)$parent->id;
+		echo $marginalia->init_html( $refurl, true );
+	
+		// Annotation controls (help, user dropdown, link to summary page)
+		echo "<div id='annotation-controls' style='text-align: right'>";
+		$marginalia->show_header_controls( 'forum', $refurl, $USER );
+		echo "</div>\n";
+		$marginalia->subscribe_htmlareas( );
+	}
     // #marginalia end
     
 
