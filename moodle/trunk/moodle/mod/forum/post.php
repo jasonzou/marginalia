@@ -455,7 +455,6 @@
     require_once('../../blocks/marginalia/config.php');
     require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
     require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
-    require_once( ANNOTATION_DIR.'/annotation_globals.php' );
     require_once( ANNOTATION_DIR.'/lib.php' );
     // #marginalia end
 
