@@ -1,6 +1,6 @@
 #summary Release Notes
 
-== Moodle, upcoming as of March 2010 ==
+== Moodle, upcoming as of June 2010 ==
 
 Many interface refinements.
 
