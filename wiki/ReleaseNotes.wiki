@@ -7,54 +7,26 @@
   delayed chiefly because of a lack of resources for testing (on different
   browsers and for upgrades from previous versions).
   
-  * This release works with and requires Moodle 2.  I will no longer be adding
-    features for Moodle 1.9.
-  * The patch footprint is dramatically smaller.  It doesn't touch anything
-    outside mod/forum.
-  * The create annotation button in the margin has been eliminated.  Clicking
-    on a blank space in the margin performs the create annotation function now.
-  * The public/private button has been replaced by a drop-down sheet menu at
-    the top of the page.  This makes many things possible in the future.  It
-    also establishes the principle that if you and I are looking at the same
-    sheet (public or private or any future one) our screens should look almost
-    exactly the same and we should both have the same sense of how much space
-    remains for margin notes.
-  * That menu also includes the summary link and help link to minimize screen
-    real-estate needed and clarify the relationship of those controls.
+  * This release works with and requires Moodle 2.  I will no longer be adding features for Moodle 1.9.
+  * The patch footprint is dramatically smaller.  It doesn't touch anything outside mod/forum.
+  * The create annotation button in the margin has been eliminated.  Clicking on a blank space in the margin performs the create annotation function now.
+  * The public/private button has been replaced by a drop-down sheet menu at the top of the page.  This makes many things possible in the future.  It also establishes the principle that if you and I are looking at the same sheet (public or private or any future one) our screens should look almost exactly the same and we should both have the same sense of how much space remains for margin notes.
+  * That menu also includes the summary link and help link to minimize screen real-estate needed and clarify the relationship of those controls.
   * Annotation controls are only displayed when the mouse hovers over the note.
-  * A character count-down to tell the user how much space is left when typing
-    a margin note.  Short note errors were a major user complaint.
+  * A character count-down to tell the user how much space is left when typing a margin note.  Short note errors were a major user complaint.
   * Annotation is enabled on the page for creating a reply to an existing post.
-  * URLs in margin notes are automatically turned into hyperlinks.  For
-    security reasons, this only happens if they use the http or https protocols
-    and the domain is displayed as the link text so users know whether it looks
-    suspicious (Slashdot's approach).
+  * URLs in margin notes are automatically turned into hyperlinks.  For security reasons, this only happens if they use the http or https protocols and the domain is displayed as the link text so users know whether it looks suspicious (Slashdot's approach).
   * Proper use of usernames everywhere as per Moodle configuration.
-  * The Atom feed is gone - it's not much use if it only shows public
-    annotations.
-  * The tags page is gone.  It was pretty much vestigial anyway, though that
-    means no more search and replace.
-  * New annotations are marked with a red star so users can find recent
-    comments.
+  * The Atom feed is gone - it's not much use if it only shows public annotations.
+  * The tags page is gone.  It was pretty much vestigial anyway, though that means no more search and replace.
+  * New annotations are marked with a red star so users can find recent comments.
   * Improved integration with Moodle's database code, security model, etc.
-  * Full localization support for strings used by the Javascript front-end.
-    Still no other languages though.  Add languages to blocks/marginalia/lang
-    as per the Moodle standard.
-  * Change indication of association between margin note and highlight to be
-    clearer for color-blind users.
-  * Marginalia no longer requires changes to annotated HTML:  instead it is
-    configurable with CSS selectors to extract the appropriate elements and
-    data without modification.  This further shrinks the patch footprint.
-  * Much code cleanup for the annotation summary.  This should make any future
-    support for other Moodle modules easier.
-  * In the past, Marginalia would easily lose highlight locations if the
-    underlying annotated text changed.  This version silently attempts to fix
-    the problem in simple cases.  If the current user is appropriately trusted
-    it updates the database accordingly.  This hits the majority of simple
-    cases.  A much more complex approach is needed for a comprehensive solution.
-  * Marginalia is now capable of "popping-in" annotations by other users in 
-    real-time without reloading the page.  This capability may burden the server
-    so is not enabled for Moodle.
+  * Full localization support for strings used by the Javascript front-end.  Still no other languages though.  Add languages to blocks/marginalia/lang as per the Moodle standard.
+  * Change indication of association between margin note and highlight to be clearer for color-blind users.
+  * Marginalia no longer requires changes to annotated HTML:  instead it is configurable with CSS selectors to extract the appropriate elements and data without modification.  This further shrinks the patch footprint.
+  * Much code cleanup for the annotation summary.  This should make any future support for other Moodle modules easier.
+  * In the past, Marginalia would easily lose highlight locations if the underlying annotated text changed.  This version silently attempts to fix the problem in simple cases.  If the current user is appropriately trusted it updates the database accordingly.  This hits the majority of simple cases.  A much more complex approach is needed for a comprehensive solution.
+  * Marginalia is now capable of "popping-in" annotations by other users in  real-time without reloading the page.  This capability may burden the server so is not enabled for Moodle.
 
 == Moodle, 2009-10-09 ==
 
