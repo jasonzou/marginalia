@@ -1,0 +1,209 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN" "http://www.w3.org/TR/html4/loose.dtd">
+
+<html>
+<head>
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8">
+<title>Marginalia Unit Tests</title>
+<link rel="stylesheet" type="text/css" href="../css/jsUnitStyle.css">
+<script language="JavaScript" type="text/javascript" src="../app/jsUnitCore.js"></script>
+<script type="text/javascript" src="marginalia-config.js"></script>
+<script type="text/javascript" src="../../marginalia/3rd-party.js"></script>
+<script type="text/javascript" src="../../marginalia/3rd-party/cssQuery.js"></script>
+<script type="text/javascript" src="../../marginalia/3rd-party/cssQuery-standard.js"></script>
+<script type="text/javascript" src="../../marginalia/log.js"></script>
+
+<script type="text/javascript" src="../../marginalia/html-model.js"></script>
+<script type="text/javascript" src="../../marginalia/domutil.js"></script>
+<script type="text/javascript" src="../../marginalia/ranges.js"></script>
+<script type="text/javascript" src="../../marginalia/SequenceRange.js"></script>
+<script type="text/javascript" src="../../marginalia/XPathRange.js"></script>
+<script type="text/javascript" src="../../marginalia/post-micro.js"></script>
+
+<script type="text/javascript" src="../../marginalia/annotation.js"></script>
+<script type="text/javascript" src="../../marginalia/marginalia.js"></script>
+
+<script type="text/javascript" src="../../marginalia/highlight-ui.js"></script>
+<script type="text/javascript" src="../../marginalia/note-ui.js"></script>
+<script type="text/javascript" src="../../marginalia/link-ui.js"></script>
+<script type="text/javascript" src="../../marginalia/link-ui-simple.js"></script>
+
+<script language="javaScript" type="text/javascript">
+
+function _skipContent( node )
+{ return _skipAnnotationLinks( node ) || _skipAnnotationActions( node ); }
+
+ANNOTATION_ACCESS_DEFAULT = 'public';
+
+var marginalia;
+var post;
+var ann1;
+
+function htmlencode( s )
+{
+	s = s.replace( /\&/g, '&amp;' );
+	s = s.replace( /</g, '&lt;' );
+	return s;
+}
+	
+function load()
+{
+//	initLogging();
+//	log.setTrace( 'find-quote', true );			// Check if quote matches current state of document
+//	log.setTrace( 'show-highlight', true );			// Check if quote matches current state of document
+	marginalia = new Marginalia( null, 'geof', 'geof' );
+	var posts = new PostPageInfo( document, '' );
+	var postElement = document.getElementById( 'test-entry' );
+	post = new PostMicro( posts, postElement );
+}
+
+function createSimpleAnnotation( id, sequence, quote )
+{
+	var annotation = new Annotation( );
+	annotation.id = id;
+	annotation.sequenceRange = SequenceRange.fromString( sequence );
+	annotation.quote = quote;
+	return annotation
+}
+
+function createEditAnnotation( id, sequence, quote, insert )
+{
+	var annotation = createSimpleAnnotation( id, sequence, quote );
+	annotation.note = insert;
+	annotation.action = 'edit';
+	return annotation;
+}
+
+function createHighlightRange( sequence )
+{
+	var sequenceRange = new SequenceRange.fromString( sequence );
+	var wordRange = WordRange.fromSequenceRange( sequenceRange, post.contentElement, null );
+	return wordRange;
+}
+
+function testHighlightSimple( )
+{
+	var quote = 'brillig';
+	var annotation = createSimpleAnnotation( 1, '1/1.2.0;1/1.2.7', quote + 'x' );
+	assertFalse( post.showHighlight( marginalia, annotation ) );
+	annotation.quote = quote;
+	assertTrue( post.showHighlight( marginalia, annotation ) );
+}
+
+/*
+function testHighlightSimple( )
+{
+//	var annotation = createSimpleAnnotation( 2, '/1/2.0;/1/2.7', 'brillig' );
+	var annotation2 = createSimpleAnnotation( 3, '/1/2.3;/1/2.8', 'llig,' );
+	assertTrue( 'annotation2', post.showHighlight( marginalia, annotation2 ) );
+	inform( 'Paragraph with annotation2', htmlencode( document.getElementById( 'p1' ).innerHTML ) );
+//	assertTrue( 'annotation', post.showHighlight( marginalia, annotation ) );
+}*/
+function testHighlightOverlap( )
+{
+	var annotation = createSimpleAnnotation( 2, '2/1.2.0;2/1.2.7', 'brillig' ); //( 2, '/2/2.0;/2/2.7', 'brillig' );
+	assertTrue( 'annotation', post.showHighlight( marginalia, annotation ) );
+	inform( 'Paragraph with annotation', htmlencode( document.getElementById( 'p2' ).innerHTML ) );
+}
+
+function testHighlightSpanBlock( )
+{
+	var quote = 'hand: Lo';
+	var annotation = createSimpleAnnotation( 4, '4.1/1.7.0;4.2/1.1.2', quote + '.' ); // ( 4, '/4/1/7.0;/4/2/1.2', quote + '.' );
+	assertFalse( post.showHighlight( marginalia, annotation ) );
+	annotation.quote = quote;
+	assertTrue( post.showHighlight( marginalia, annotation ) );
+}
+
+/* edit format has changed;  this must be updated
+function testEditHighlight()
+{
+	var annotation = createEditAnnotation( 5, '/4/2/2.0;/4/2/2.4', 'time', 'long while' );
+	assertTrue( 'edit creation', post.showHighlight( marginalia, annotation ) );
+	var li = document.getElementById( 'li2' );
+	inform( 'Node text="' + domutil.getNodeText( li ) + '"' );
+//	assertTrue( 'node text', domutil.getNodeText( li ) == 'He tookheld up his vorpal sword in hand:'  );
+	var em = cssQuery( 'em', li );
+	assertTrue( 'one highlight region? ' + em.length, em.length == 1 );
+	em = em[ 0 ];
+	inform( 'em[1]=' + em );
+	assertTrue( 'one del', domutil.getLocalName( em.firstChild ).toLowerCase() == 'del' );
+	inform( 'teh 3' );
+	assertTrue( 'del text', domutil.getNodeText( em.firstChild ) == 'time' );
+	inform( 'teh 4' );
+	assertTrue( 'one ins', domutil.getLocalName( em.firstChild.nextSibling ).toLowerCase() == 'ins' );
+	inform( 'teh 5' );
+	assertTrue( 'ins text', domutil.getNodeText( em.firstChild.nextSibling ) == 'long while' );
+	inform( 'teh 6' );
+	assertTrue( 'no more', null == em.firstChild.nextSibling.nextSibling );
+}
+
+function testHighlightAfterEdit()
+{
+	var annotation1 = createEditAnnotation( 6, '/4/3/2.0;/4/3/2.6', 'rested', 'lay awhile' );
+	post.showHighlight( marginalia, annotation1 );
+	var annotation2 = createSimpleAnnotation( 7, '/4/3/3.0;/4/3/3.2', 'he' );
+	assertTrue( post.showHighlight( marginalia, annotation2 ) );
+}
+*/	
+</script>
+</head>
+
+<body onload="load()" id="jsUnitRestoredHTML-notworking">
+<button onclick="testHighlightAfterEdit()">Run Current Debug Test</button>
+
+<h1>Marginalia DOM Walker Tests</h1>
+
+<div id="test-entry" class="hEntry">
+<h2 class="entry-title">Title</h2>
+<a rel="bookmark" href="#">This Entry</a>
+<div class="entry-content">
+<p id='p1'>`Twas brillig, and the slithy toves
+  Did gyre and gimble in the wabe:
+All mimsy were the borogoves,
+  And the mome raths outgrabe.</p>
+
+<p id="p2">Twas bri<em class="annotation annot3 last">llig,</em> and the slithy toves
+  Did gyre and gimble in the wabe:
+All mimsy were the borogoves,
+  And the mome raths outgrabe.</p>
+
+<p>"Beware the Jabberwock, my son!
+  The jaws that bite, the claws that catch!
+Beware the Jubjub bird, and shun
+  The frumious Bandersnatch!"</p>
+
+<ul>
+<li id='li1'>He took his vorpal sword in hand:</li>
+<li id='li2'>  Long time the manxome foe he sought --</li>
+<li id='li3'>So rested he by the Tumtum tree,</li>
+<li id='li4'>  And stood awhile in thought.</li>
+</ul>
+
+<blockquote>
+<p>And, as in uffish thought he stood,
+  The Jabberwock, with eyes of flame,</p>
+Came whiffling through the tulgey wood,
+  And burbled as it came!
+</blockquote>
+
+<p>One, two! One, two! And through and through
+  The vorpal blade went snicker-snack!
+He left it dead, and with its head
+  He went galumphing back.
+</p>
+
+<p>"And, has thou slain the Jabberwock?
+  Come to my arms, my beamish boy!
+O frabjous day! Callooh! Callay!'
+  He chortled in his joy.</p>
+
+
+<p>`Twas brillig, and the slithy toves
+  Did gyre and gimble in the wabe;
+All mimsy were the borogoves,
+  And the mome raths outgrabe.</p>
+</div>
+</div>
+
+</body>
+</html>

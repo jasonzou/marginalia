@@ -1,0 +1,61 @@
+<?xml version="1.0" encoding="UTF-8"?>
+
+<!--
+ This is based on the OJS locale format, but with OJS-specific information
+ stripped out.  Simple XSLT transformations will convert it into the correct
+ OJS version, and into Javascript for other versions of Marginalia.
+ See util/locale2js.xsl.
+-->
+ 
+<locale name="en_US" full_name="U.S. English">
+	<!-- Button titles -->
+	<message key="public annotation">This annotation is public.</message>
+	<message key="private annotation">This annotation is private.</message>	
+	<message key="delete annotation button">Delete this annotation.</message>
+	<message key="annotation link button">Link to another document.</message>
+	<message key="annotation link label">Select a document to link to.</message>
+	<message key="delete annotation link button">Remove this link.</message>
+	<message key="annotation expand edit button">Click to display margin note editor</message>
+	<message key="annotation collapse edit button">Click to display margin note drop-down list</message>
+	
+	<!-- Action button titles (for track changes) -->
+	<message key='action annotate button'>Annotate...</message>
+	<message key='action insert before button'>Insert before...</message>
+	<message key='action insert after button'>Insert after...</message>
+	<message key='action replace button'>Replace...</message>
+	<message key='action delete button'>Delete</message>
+	
+	<!-- Errors -->
+	<message key="browser support of W3C range required for annotation creation"
+		>Your browser does not support the W3C range standard, so you cannot create annotations.</message>
+	<message key="select text to annotate">You must select some text to annotate.</message>
+	<message key="invalid selection">Selection range is not valid.</message>
+	<message key="corrupt XML from service"
+		>An attempt to retrieve annotations from the server returned corrupt XML data.</message>
+	<message key="note too long">Please limit your margin note to 250 characters.</message>
+	<message key="quote too long"
+		>The passage you have attempted to highlight is too long.  It may not exceed 1000 characters.</message>
+	<message key="zero length quote"
+		>You must select some text to annotate.</message>
+	<message key="quote not found"
+		>The highlighted passage could not be found</message>
+	<message key="create overlapping edits"
+		>You may not create overlapping edits.</message>
+	<message key='blank quote and note'>You must enter some note text</message>
+	
+	<!-- Warnings -->
+	<message key="warn delete"
+		>Delete this annotation?</message>
+		
+	<!-- OJS-specific messages -->
+	<message output="ojs" key="name">Marginalia Plugin</message>
+	<message output="ojs" key="description">This plugin adds the capability for readers to highlight and annotate passages in articles.</message>
+	<message output="ojs" key="descriptionDisabled">This plugin adds the capability for readers to highlight and annotate passages in articles. &lt;strong&gt;Marginalia is not currently installed; please install it in {$marginaliaPath}.&lt;/strong&gt;</message>
+
+	<!-- Labels used in Bungeni -->
+	<message output="bungeni" key='note note label'>Comment:</message>
+	<message output="bungeni" key='note insert label'>Insert:</message>
+	<message output="bungeni" key='note replace label'>Replace:</message>
+	<message output="bungeni" key='note delete label'>Delete</message>
+</locale>
+
