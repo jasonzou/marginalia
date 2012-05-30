@@ -37,7 +37,7 @@ function SelectActionNoteEditor( )
 
 SelectActionNoteEditor.prototype.bind = FreeformNoteEditor.prototype.bind;
 
-SelectActionNoteEditor.prototype.clear = function( marginalia )
+SelectActionNoteEditor.prototype.clear = function( )
 {
 	while ( this.noteElement.firstChild )
 	{
@@ -47,7 +47,7 @@ SelectActionNoteEditor.prototype.clear = function( marginalia )
 	}
 }
 
-SelectActionNoteEditor.prototype.show = function( marginalia )
+SelectActionNoteEditor.prototype.show = function( )
 {
 	var postMicro = this.postMicro;
 	var marginalia = this.marginalia;
@@ -106,7 +106,7 @@ SelectActionNoteEditor.prototype.show = function( marginalia )
 	}
 }
 
-SelectActionNoteEditor.prototype.focus = function( marginalia )
+SelectActionNoteEditor.prototype.focus = function( )
 { }
 
 
@@ -125,25 +125,25 @@ ActionNoteEditor.prototype.bind = function( marginalia, postMicro, annotation, n
 	this.editor.bind( marginalia, postMicro, annotation, noteElement );
 }
 
-ActionNoteEditor.prototype.show = function( marginalia )
+ActionNoteEditor.prototype.show = function( )
 {
 	this.faction( this );
-	this.editor.show( marginalia );
+	this.editor.show( );
 }
 
-ActionNoteEditor.prototype.focus = function( marginalia )
+ActionNoteEditor.prototype.focus = function( )
 {
-	this.editor.focus( marginalia );
+	this.editor.focus( );
 }
 
 ActionNoteEditor.prototype.clear = function( )
 {
-	this.editor.clear( marginalia );
+	this.editor.clear( );
 }
 
 ActionNoteEditor.prototype.save = function( )
 {
-	this.editor.save( marginalia );
+	this.editor.save( );
 }
 
 
@@ -160,18 +160,18 @@ DummyEditor.prototype.bind = function( marginalia, postMicro, annotation, noteEl
 	this.noteElement = noteElement;
 }
 
-DummyEditor.prototype.show = function( marginalia )
+DummyEditor.prototype.show = function( )
 {
 	this.faction( this );
 }
 
-DummyEditor.prototype.focus = function( marginalia )
+DummyEditor.prototype.focus = function( )
 { }
 
-DummyEditor.prototype.clear = function( marginalia )
+DummyEditor.prototype.clear = function( )
 { }
 
-DummyEditor.prototype.save = function( marginalia )
+DummyEditor.prototype.save = function( )
 { }
 
 trackchanges = {

@@ -26,36 +26,14 @@
  * $Id$
  */
 
-function RestPreferenceService( serviceUrl, features )
+NICE_PREFERENCE_SERVICE_URL = '/preference';
+UGLY_PREFERENCE_SERVICE_URL = '/preference';
+
+function RestPreferenceService( serviceUrl, niceUrls )
 {
 	this.serviceUrl = serviceUrl;
-	this.niceUrls = false;
-	
-	if ( features )
-	{
-		for ( feature in features )
-		{
-			var value = features[ feature ];
-			switch ( feature )
-			{
-				// Name of cookie to use for preventing cross-site request forgery
-				case 'csrfCookie':
-					this.csrfCookie = value;
-					break;
-				
-				// Use nice service URLs (currently unsupported)
-				case 'niceUrls':
-					this.niceUrls = value;
-					break;
-					
-				default:
-					if ( typeof( this[ feature ] ) != 'undefined' )
-						throw 'Attempt to override feature: ' + feature;
-					else
-						this[ feature ] = value;
-			}
-		}
-	}
+	this.niceUrls = niceUrls;
+	return this;
 }
 
 /**

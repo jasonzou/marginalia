@@ -26,17 +26,31 @@
  * $Id$
  */
 
-Marginalia.C_DUMMY = Marginalia.PREFIX + 'dummy';				// used for dummy item in note list 
-Marginalia.C_QUOTENOTFOUND = Marginalia.PREFIX + 'quote-error';	// note's corresponding highlight region not found
-Marginalia.C_NOTECOLLAPSED = Marginalia.PREFIX + 'collapsed';	// only the first line of the note shows
-Marginalia.C_EDITCHANGED = Marginalia.PREFIX + 'changed';		// indicates content of a text edit changed
-Marginalia.C_OTHERUSER = Marginalia.PREFIX + 'other-user';
-Marginalia.C_USERNAME = Marginalia.PREFIX + 'username';	// name (initials) of user who created annotation
-Marginalia.C_RECENT = Marginalia.PREFIX + 'recent';	// this annotation is recent
+AN_NOTES_CLASS = 'notes';			// the notes portion of a fragment
+AN_DUMMY_CLASS = 'dummy';			// used for dummy item in note list 
+AN_QUOTENOTFOUND_CLASS = 'quote-error';	// note's corresponding highlight region not found
+AN_NOTECOLLAPSED_CLASS = 'collapsed';		// only the first line of the note shows
+AN_EDITCHANGED_CLASS = 'changed';	// indicates content of a text edit changed
+
+MAX_NOTE_LENGTH = 250;
+MAX_NOTEHOVER_LENGTH = 24;
 
 // Classes to identify specific controls
-Marginalia.C_LINKBUTTON = Marginalia.PREFIX + 'annotation-link';
-Marginalia.C_DELETEBUTTON = Marginalia.PREFIX + 'annotation-delete';
+AN_LINKBUTTON_CLASS = 'annotation-link';
+AN_ACCESSBUTTON_CLASS = 'annotation-access';
+AN_DELETEBUTTON_CLASS = 'annotation-delete';
+AN_EXPANDBUTTON_CLASS = 'expand-edit';
+AN_KEYWORDSCONTROL_CLASS = 'keywords';
+
+AN_SUN_SYMBOL = '\u25cb'; //'\u263c';
+//AN_SUN_SYMBOL = '\u26aa';
+AN_MOON_SYMBOL = '\u25c6'; //'\u2641';
+AN_LINK_ICON = '\u263c'; //'\u238b'; circle-arrow // \u2318 (point of interest) \u2020 (dagger) \u203b (reference mark) \u238b (circle arrow)
+AN_LINK_EDIT_ICON = '\u263c'; //'\u238b'; circle-arrow// \u2021 (double dagger)
+AN_COLLAPSED_ICON = '+'; // '\u25b7'; triangle
+AN_EXPANDED_ICON = '-'; // '\u25bd';
+AN_DELETE_ICON = '\u00d7';
+AN_LINKEDIT_LABEL = '\u263c'; // '\u238b'; circle-arrow
 
 
 /**
@@ -49,78 +63,14 @@ PostMicro.prototype.getNotesElement = function( marginalia )
 	// Make sure it has the additional annotation properties added
 	if ( ! this.notesElement )
 	{
-		var t = marginalia.selectors[ 'mia_notes' ].node( this.getElement( ) );
+		var t = domutil.childByTagClass( this.getElement( ), null, AN_NOTES_CLASS, PostMicro.skipPostContent );
 		this.notesElement = t.getElementsByTagName( 'ol' )[ 0 ];
 	}
 	return this.notesElement;
 }
 
 
-PostMicro.prototype.initMargin = function( marginalia )
-{
-	var margin = marginalia.selectors[ 'mia_notes' ].node( this.getElement( ) );
-
-	var postId = this.getElement().id;
-//	var margin = this.getNotesElement( marginalia );
-	margin.onmousedown = function( ) {
-		marginalia.cachedSelection = marginalia.getSelection( );
-//		trace( null, 'cache selection: ' + marginalia.cachedSelection );
-	};
-	margin.onclick = function( event ) {
-		event = domutil.getEvent( event );
-		if ( ! marginalia.noteEditor )
-		{
-//			trace( null, 'clicked' );
-			createAnnotation( postId );
-			domutil.stopPropagation( event );
-		}
-//		trace( null, 'clear selection cache' );
-		marginalia.cachedSelection = null;
-	};
-}
-
-
-PostMicro.prototype.showTip = function( marginalia, tip, onclose )
-{
-	var notesElement = this.getNotesElement( marginalia );
-	var tipNode = domutil.element( 'li', {
-		className: Marginalia.PREFIX + 'tip'
-	}, tip );
-
-	var postMicro = this;
-	var f = function( ) {
-		postMicro.hideTip( marginalia, tipNode );
-		if ( onclose )
-			onclose( );
-	};
-	
-	var controls = domutil.element( 'div', { className: 'controls' } );
-	// delete button
-	controls.appendChild( domutil.button( {
-		className:  Marginalia.C_DELETEBUTTON,
-		title:  getLocalized( 'delete tip button' ),
-		content:  marginalia.icons[ 'delete' ],
-		onclick: f
-	} ) );
-	tipNode.appendChild( controls );
-		
-	for ( var node = notesElement.firstChild; node && ! node[ Marginalia.F_ANNOTATION ];  node = node.nextSibling )
-		;
-	notesElement.insertBefore( tipNode, node );
-	this.repositionSubsequentNotes( tipNode );
-	return tipNode;
-}
-
-PostMicro.prototype.hideTip = function( marginalia, tipNode )
-{
-	var notesElement = this.getNotesElement( marginalia );
-	var next = tipNode.nextSibling;
-	notesElement.removeChild( tipNode );
-	this.repositionNotes( marginalia, next );
-}
-
-
-/**
+ /**
  * Get the node that will follow this one once it is inserted in the node list
  * Slow, but necessary when the annotation has not yet been inserted in the node list
  * A return value of null indicates the annotation would be at the end of the list
@@ -133,13 +83,12 @@ PostMicro.prototype.getAnnotationNextNote = function( marginalia, annotation )
 	for ( var prevNode = notesElement.lastChild;  null != prevNode;  prevNode = prevNode.previousSibling )
 	{
 		// In case it's a dummy list item or other
-		if ( ELEMENT_NODE == prevNode.nodeType && prevNode[ Marginalia.F_ANNOTATION ] )
+		if ( ELEMENT_NODE == prevNode.nodeType && prevNode.annotation )
 		{
-			var prevAnnotation = prevNode[ Marginalia.F_ANNOTATION ];
 			// Why on earth would this happen??
-			if ( prevAnnotation.getId() == annotation.getId() )
+			if ( prevNode.annotation.getId() == annotation.getId() )
 				break;
-			else if ( annotation.compareRange( prevAnnotation ) >= 0 )
+			else if ( annotation.compareRange( prevNode.annotation ) >= 0 )
 				break;
 		}
 	}
@@ -152,7 +101,7 @@ PostMicro.prototype.getAnnotationNextNote = function( marginalia, annotation )
 		var nextNode;
 		for ( nextNode = notesElement.firstChild;  nextNode;  nextNode = nextNode.nextSibling )
 		{
-			if ( ELEMENT_NODE == nextNode.nodeType && nextNode[ Marginalia.F_ANNOTATION ] )
+			if ( ELEMENT_NODE == nextNode.nodeType && nextNode.annotation )
 				break;
 		}
 		return nextNode;	// will be null if no annotations in the list
@@ -160,10 +109,10 @@ PostMicro.prototype.getAnnotationNextNote = function( marginalia, annotation )
 }
 
 
-PostMicro.prototype.getNoteId = function( marginalia, annotation )
+PostMicro.prototype.getNoteId = function( annotation )
 {
 //	assert( typeof annotationId == 'number' );
-	return Marginalia.ID_PREFIX + annotation.getId();
+	return AN_ID_PREFIX + annotation.getId();
 }
 
 /**
@@ -178,40 +127,29 @@ PostMicro.prototype.showNoteElement = function( marginalia, annotation, nextNode
 	// Will need to align the note with the highlight.
 	// If the highlight is not found, then the quote doesn't match - display
 	// the annotation, but with an error and deactivate some behaviors.
-	var highlightElement = domutil.childByTagClass( this.getContentElement( ), 'em',
-		Marginalia.ID_PREFIX + annotation.getId(), null );
+	var highlightElement = domutil.childByTagClass( this.getContentElement( ), 'em', AN_ID_PREFIX + annotation.getId(), null );
 	var quoteFound = highlightElement != null;
 	
 	// Find or create the list item
-	var noteElement = document.getElementById( this.getNoteId( marginalia, annotation ) );
+	var noteElement = document.getElementById( this.getNoteId( annotation ) );
 	if ( noteElement )
 	{
 		trace( 'showNote', ' Note already present' );
 		this.clearNote( marginalia, annotation );
 		if ( ! quoteFound )
-			domutil.setClass( noteElement, Marginalia.C_QUOTENOTFOUND, quoteFound );
+			domutil.setClass( noteElement, AN_QUOTENOTFOUND_CLASS, quoteFound );
 	}
 	else
 	{
 		trace( 'showNote', ' Create new note' );
-
-		// Is this a recent post?
-		// Don't flag this for one's own notes - that would be cluttered and confusing.
-		// Currently, moodle does not seem to be storing anything in the forum_read table, so this doesn't work
-		var isRecent = annotation.isRecent( );
-//		isRecent = isRecent && marginalia.loginUserId && annotation.getUserId( ) != marginalia.loginUserId;
-		var className = ( quoteFound ? '' : Marginalia.C_QUOTENOTFOUND ) + ' '
-			+ ( isRecent && marginalia.enableRecentFlag ? Marginalia.C_RECENT : '' );
-
 		var noteElement = domutil.element( 'li', {
-			id:  Marginalia.ID_PREFIX + annotation.getId(),
-			className:  className,
-			title: ' ' } );
-		noteElement[ Marginalia.F_ANNOTATION ] = annotation;
+			id:  AN_ID_PREFIX + annotation.getId(),
+			className:  quoteFound ? '' : AN_QUOTENOTFOUND_CLASS,
+			annotation:  annotation } );
 
 		// Align the note (takes no account of subsequent notes, which is OK because this note
 		// hasn't yet been filled out)
-		var alignElement = highlightElement ? highlightElement : this.getNoteAlignElement( marginalia, annotation );
+		var alignElement = highlightElement ? highlightElement : this.getNoteAlignElement( annotation );
 		if ( null != alignElement )
 		{
 			// The margin must be relative to a preceding list item.
@@ -228,7 +166,7 @@ PostMicro.prototype.showNoteElement = function( marginalia, annotation, nextNode
 			// If there is no preceding note, create a dummy
 			if ( null == prevNode )
 			{
-				prevNode = domutil.element( 'li', { className:  Marginalia.C_DUMMY } );
+				prevNode = domutil.element( 'li', { className:  AN_DUMMY_CLASS } );
 				noteList.insertBefore( prevNode, nextNode );
 			}
 			
@@ -251,7 +189,7 @@ PostMicro.prototype.showNoteElement = function( marginalia, annotation, nextNode
 
 /**
  * Show a note in the margin
- * Regular annotation display with control buttons (delete, link)
+ * Regular annotation display with control buttons (delete, access, link)
  * Call showEdit if you want to show an editor instead
  */
 PostMicro.prototype.showNote = function( marginalia, annotation, nextNode )
@@ -262,14 +200,13 @@ PostMicro.prototype.showNote = function( marginalia, annotation, nextNode )
 	
 	// Mark the action
 	if ( marginalia.showActions && annotation.getAction() )
-		domutil.addClass( noteElement, Marginalia.C_ACTIONPREFIX + annotation.getAction() );
+		domutil.addClass( noteElement, AN_ACTIONPREFIX_CLASS + annotation.getAction() );
 	
 	// Calculating these parameters here makes it much easier to implement note display
 	var params = {
 		isCurrentUser: null != marginalia.loginUserId && annotation.getUserId( ) == marginalia.loginUserId,
 		linkingEnabled: marginalia.editors[ 'link' ] ? true : false,
-		quoteFound: null != domutil.childByTagClass( this.getContentElement( ), 'em',
-			Marginalia.ID_PREFIX + annotation.getId(), null),
+		quoteFound: null != domutil.childByTagClass( this.getContentElement( ), 'em', AN_ID_PREFIX + annotation.getId(), null),
 		keyword: marginalia.keywordService ? marginalia.keywordService.getKeyword( annotation.getNote() ) : null
 	};
 	
@@ -282,13 +219,13 @@ PostMicro.prototype.showNote = function( marginalia, annotation, nextNode )
 Marginalia.prototype.bindNoteBehaviors = function( annotation, parentElement, behaviors )
 {
 	var marginalia = this;
-	var postMicro = domutil.nestedFieldValue( parentElement, Marginalia.F_POST );
+	var postMicro = domutil.nestedFieldValue( parentElement, AN_POST_FIELD );
 
 	// Apply behavior rules
 	// These are separated out to insulate display implementations from changes to internal APIs
 	for ( var i = 0;  i < behaviors.length;  ++i )
 	{
-		var nodes = jQuery( behaviors[ i ][ 0 ], parentElement );
+		var nodes = cssQuery( behaviors[ i ][ 0 ], parentElement );
 		if ( nodes.length == 1 )
 		{
 			var node = nodes[ 0 ];
@@ -308,6 +245,7 @@ Marginalia.prototype.bindNoteBehavior = function( node, property, value )
 {
 	// Functions to associate with events (click etc.)
 	var eventMappings = { 
+		access: _toggleAnnotationAccess,
 		'delete': _deleteAnnotation,
 //		edit: _editAnnotation,
 		save: _saveAnnotation };
@@ -357,23 +295,34 @@ Marginalia.defaultDisplayNote = function( marginalia, annotation, noteElement, p
 		}
 	}
 	
+	var aButton = null;
 	if ( params.isCurrentUser )
 	{
 		// add the link button
 		if ( params.linkingEnabled )
 		{
 			controls.appendChild( domutil.button( {
-				className:  Marginalia.C_LINKBUTTON,
+				className:  AN_LINKBUTTON_CLASS,
 				title:  getLocalized( 'annotation link button' ),
-				content:  marginalia.icons[ 'linkEdit' ]
+				content:  AN_LINK_EDIT_ICON
 			} ) );
 		}
 
+		// add the access button
+		if ( marginalia.showAccess )
+		{
+			controls.appendChild( domutil.button( {
+				className:  AN_ACCESSBUTTON_CLASS,
+				title:  getLocalized( annotation.getAccess() == AN_PUBLIC_ACCESS ? 'public annotation' : 'private annotation' ),
+				content:  annotation.getAccess() == AN_PUBLIC_ACCESS ? AN_SUN_SYMBOL : AN_MOON_SYMBOL
+			} ) );
+		}
+		
 		// add the delete button
 		controls.appendChild( domutil.button( {
-			className:  Marginalia.C_DELETEBUTTON,
+			className:  AN_DELETEBUTTON_CLASS,
 			title:  getLocalized( 'delete annotation button' ),
-			content:  marginalia.icons[ 'delete' ]
+			content:  AN_DELETE_ICON
 		} ) );
 		
 		// KLUDGE ALERT #geof#
@@ -393,59 +342,9 @@ Marginalia.defaultDisplayNote = function( marginalia, annotation, noteElement, p
 	}
 	
 	// add the text content
-	// Substitutes urls with actual hyperlinks if possible
-	// You may wonder why I do this with the DOM, rather using a regex to
-	// insert <a> tags in the string.  I do this because the DOM is safer - I
-	// *know* I can't possibly create any elements or entities other than those
-	// I explicitly code here.  Escaping may be easy, but with the DOM it can't
-	// be forgotten.  I only see two potential security risks here:  1) allowing
-	// bad url schemes (so I limit to http and https), 2) linking to dangerous
-	// sites.  The latter is unavoidable, and is presumably already a risk on
-	// any site that allows user content.  At  least displaying the domain name
-	// (a la Slashdot) gives some indication of safety.
 	var noteText = domutil.element( 'p', {
-		title: params.isCurrentUser ? getLocalized( 'edit annotation click' ) : '',
-		content: annotation.getNote() ? annotation.getNote() : '\u203b' } );
-	domutil.urlize( noteText );
-	
-/*	while ( tail.length > 0 )
-	{
-		var match = tail.match( /https?:\/\/([a-zA-Z0-9\.-]+)(?:\/(?:[^ ]*[a-zA-Z0-9\/#])?)?/ );
-		var url = null;
-		if ( match )
-			url = match[ 0 ];
-		else
-		{
-			match = tail.match( /(www\.[a-zA-Z0-9\.-]+\.[a-zA-Z]{2,4})/ );
-			if ( match )
-				url = 'http://' + match[ 1 ] + '/';
-		}
-		if ( url )
-		{
-			var head = tail.substr( 0, match.index );
-			if ( head.length )
-				noteText.appendChild( document.createTextNode( head ) );
-			domain = match[ 1 ];
-			//if ( 'www.' == domain.substr( 0, 4 ) )
-			//	domain = domain.substr( 4 );
-			noteText.appendChild( domutil.element( 'a', {
-				href: url,
-				title: getLocalized( 'visit annotation link' ),
-				onclick: domutil.stopPropagation,
-				content: domain }));
-			tail = tail.substr( head.length + url.length );
-		}
-		else
-		{
-			noteText.appendChild( document.createTextNode( tail ) );
-			break;
-		}
-	}
-	*/
-	
-//	var noteText = domutil.element( 'p', {
-//		content: annotation.getNote() ? annotation.getNote() : '\u203b'
-//	} );
+		content: annotation.getNote() ? annotation.getNote() : '\xa0'
+	} );
 	var titleText = null;
 
 	if ( ! params.quoteFound || ! annotation.getSequenceRange( ) )
@@ -459,20 +358,14 @@ Marginalia.defaultDisplayNote = function( marginalia, annotation, noteElement, p
 	// This doesn't belong to the current user, add the name of the owning user
 	if ( ! params.isCurrentUser )
 	{
-		domutil.addClass( noteElement, Marginalia.C_OTHERUSER );
-		var username = annotation.getUserName( );
-		if ( annotation.isRecent( ) )
-			titleText = getLocalized( 'note user recent title' );
-		else
-			titleText = getLocalized( 'note user title' );
-		titleText += annotation.getUpdated( ).toString( 'yyyy-MM-d H:mm' ); // tt' );
-		// The space is not part of the note, nor is it part of the username.  This is important so
-		// that it doesn't get underlined or otherwise styled with the username.
-		noteText.insertBefore( document.createTextNode( ' ' ), noteText.firstChild );
-		noteText.insertBefore( domutil.element( 'span', {
-			className:  Marginalia.C_USERNAME,
-			title:  titleText,
-			content:  username + ':' } ), noteText.firstChild );
+		domutil.addClass( noteElement, 'other-user' );
+		// If multiple users' notes are being displayed, show the owner's name
+//		if ( annotation.getUserId( ) != marginalia.displayUserId )
+//		{
+			noteText.insertBefore( domutil.element( 'span', {
+				className:  'username',
+				content:  annotation.getUserName( ) + ': ' } ), noteText.firstChild );
+//		}
 	}
 	noteElement.appendChild( noteText );
 	
@@ -480,8 +373,9 @@ Marginalia.defaultDisplayNote = function( marginalia, annotation, noteElement, p
 	if ( params.isCurrentUser )
 	{
 		marginalia.bindNoteBehaviors( annotation, noteElement, [
-			[ 'button.' + Marginalia.C_LINKBUTTON, { click: 'edit link' } ],
-			[ 'button.' + Marginalia.C_DELETEBUTTON, { click: 'delete' } ],
+			[ 'button.annotation-link', { click: 'edit link' } ],
+			[ 'button.annotation-access', { click: 'access' } ],
+			[ 'button.annotation-delete', { click: 'delete' } ],
 			[ 'p', { click: 'edit' } ]
 		] );
 	}
@@ -508,9 +402,9 @@ PostMicro.prototype.showNoteEditor = function( marginalia, annotation, editor, n
 	{
 		editor.annotationOrig = marginalia.noteEditor.annotationOrig;
 		if ( marginalia.noteEditor.save )
-			marginalia.noteEditor.save( marginalia );
+			marginalia.noteEditor.save( );
 		if ( marginalia.noteEditor.clear )
-			marginalia.noteEditor.clear( marginalia );
+			marginalia.noteEditor.clear( );
 		if ( marginalia.noteEditor.annotation != annotation )
 			_saveAnnotation( );
 	}
@@ -518,8 +412,8 @@ PostMicro.prototype.showNoteEditor = function( marginalia, annotation, editor, n
 	if ( ! marginalia.noteEditor || marginalia.noteEditor.noteElement != noteElement )
 	{
 		// Since we're editing, set the appropriate class on body
-		domutil.addClass( document.body, Marginalia.C_EDITINGNOTE );
-		this.flagAnnotation( marginalia, annotation, Marginalia.C_EDITINGNOTE, true );
+		domutil.addClass( document.body, AN_EDITINGNOTE_CLASS );
+		this.flagAnnotation( marginalia, annotation, AN_EDITINGNOTE_CLASS, true );
 		
 		setEvents = true;
 		editor.annotationOrig = clone( annotation );
@@ -532,53 +426,24 @@ PostMicro.prototype.showNoteEditor = function( marginalia, annotation, editor, n
 	editor.bind( marginalia, this, annotation, noteElement );
 
 	marginalia.noteEditor = editor;
-	editor.show( marginalia );
+	editor.show( );
 	this.repositionNotes( marginalia, this.nextSibling );
-	editor.focus( marginalia );
+	editor.focus( );
 	window.scrollTo( scrollX, scrollY );
 
 	// If anywhere outside the note area is clicked, the annotation will be saved.
 	// Beware serious flaws in IE's model (see addAnonBubbleEventListener code for details),
 	// so this only works because I can figure out which element was clicked by looking for
 	// AN_EDITINGNOTE_CLASS.
-	
-	/*
-	 * FIXED:  Turns out a <script/></script> combination caused this!  Wow.
-	 * Removed closing slash on first tag and problem went away.
-	 *
-	// Another problem:  Safari 4 scrolls the page down 240px between the
-	// firing of textInput and keyup.  There appears to be no way to stop this.  So
-	// this event handler checks for the scroll, and undoes it if necessary.
-	// Bleargh.  Thanks Safari.
-	var yscroll = domutil.getWindowYScroll( );
-	var fixSafariScroll = function( event )
-	{
-		if ( domutil.getWindowYScroll() != yscroll )
-		{
-			var xscroll = domutil.getWindowXScroll();
-			window.scrollTo( xscroll, yscroll );
-			window.status = 'Apparently a Safari bug scrolls the window when you type.  Marginalia is trying to undo the damage.';
-		}
-	}
-	*/
-	
 	if ( setEvents )
 	{
 		addEvent( document.documentElement, 'click', _saveAnnotation );
 		addEvent( noteElement, 'click', domutil.stopPropagation );
-		addEvent( noteElement, 'keypress', domutil.stopPropagation );
-	//	addEvent( noteElement, 'keyup', fixSafariScroll );
 	}
 
 	return noteElement;
 }
 
-
-function debugSafariScroll( event )
-{
-	trace( null, 'Key event ' + event.type + ', vertical position ' + domutil.getWindowYScroll() );
-	domutil.stopPropagation( event );
-}
 
 /**
  * Freeform margin note editor
@@ -596,52 +461,50 @@ FreeformNoteEditor.prototype.bind = function( marginalia, postMicro, annotation,
 	this.noteElement = noteElement;
 }
 
-FreeformNoteEditor.prototype.clear = function( marginalia )
+FreeformNoteEditor.prototype.clear = function( )
 {
 	this.editNode = null;
 }
 
-FreeformNoteEditor.prototype.save = function( marginalia )
+FreeformNoteEditor.prototype.save = function( )
 {
 	this.annotation.setNote( this.editNode.value );
 }
 
-FreeformNoteEditor.REMAINING_THRESHOLD = 50;
-FreeformNoteEditor.prototype.show = function( marginalia )
+FreeformNoteEditor.prototype.show = function( )
 {
 	var postMicro = this.postMicro;
 	var marginalia = this.marginalia;
 	var annotation = this.annotation;
 	var noteElement = this.noteElement;
-	var noteText = annotation.getNote( );
 	
+	// If keywords are enabled, show the expand/collapse control
+	if ( this.marginalia.keywordService )
+	{
+		var f = function( event ) {
+			postMicro.showNoteEditor( marginalia, annotation, new KeywordNoteEditor( ) );
+		};
+		this.noteElement.appendChild( domutil.button( {
+			className:	AN_EXPANDBUTTON_CLASS,
+			title: getLocalized( 'annotation expand edit button' ),
+			content: AN_EXPANDED_ICON,
+			onclick: f } ) );
+	}
+
 	// Create the edit box
 	this.editNode = document.createElement( "textarea" );
 	this.editNode.rows = 3;
-	this.editNode.appendChild( document.createTextNode( noteText ) );
-	this.noteElement.appendChild( this.editNode );
-	
-	// Create the place for showing how many characters remain
-	var threshold = marginalia.maxNoteLength - FreeformNoteEditor.REMAINING_THRESHOLD;
-	var remainingNode = domutil.element( 'p', {
-		className: Marginalia.PREFIX + 'charsremaining',
-		style: 'display:none' } );
-	noteElement.appendChild( remainingNode, null );
-	FreeformNoteEditor.showCharsRemaining( marginalia, postMicro, this.editNode, remainingNode, noteElement, prompt );
+	this.editNode.appendChild( document.createTextNode( annotation.getNote() ) );
 
 	// Set focus after making visible later (IE requirement; it would be OK to do it here for Gecko)
-	var editNode = this.editNode;
-	var prompt = getLocalized( 'chars remaining' );
-	var onkey = function( e ) {
-		FreeformNoteEditor.showCharsRemaining( marginalia, postMicro, editNode, remainingNode, noteElement, prompt );
-		_editChangedKeyup( e );
-	};
 	this.editNode.annotationId = this.annotation.getId();
 	addEvent( this.editNode, 'keypress', _editNoteKeypress );
-	addEvent( this.editNode, 'keyup', onkey );
+	addEvent( this.editNode, 'keyup', _editChangedKeyup );
+	
+	this.noteElement.appendChild( this.editNode );
 }
 
-FreeformNoteEditor.prototype.focus = function( marginalia )
+FreeformNoteEditor.prototype.focus = function( )
 {
 	this.editNode.focus( );
 	// Yeah, ain't IE great.  You gotta focus TWICE for it to work.  I don't
@@ -650,23 +513,83 @@ FreeformNoteEditor.prototype.focus = function( marginalia )
 		this.editNode.focus( );
 }
 		
-FreeformNoteEditor.showCharsRemaining = function( marginalia, postMicro, editNode, remainingNode, noteElement, prompt )
+
+/**
+ * Keyword margin note editor
+ */
+function KeywordNoteEditor( )
 {
-	var threshold = marginalia.maxNoteLength - FreeformNoteEditor.REMAINING_THRESHOLD;
-	var reposition = false;
-	if ( editNode.value.length > threshold && ! editNode.mia_showremaining )
+	this.selectNode = null;
+}
+
+KeywordNoteEditor.prototype.bind = FreeformNoteEditor.prototype.bind;
+
+KeywordNoteEditor.prototype.clear = function( )
+{
+	this.selectNode = null;
+}
+
+KeywordNoteEditor.prototype.save = function( )
+{
+	if ( -1 != this.selectNode.selectedIndex )
+		this.annotation.setNote( this.selectNode.options[ this.selectNode.selectedIndex ].value );
+}
+
+KeywordNoteEditor.prototype.show = function( )
+{
+	var postMicro = this.postMicro;
+	var marginalia = this.marginalia;
+	var annotation = this.annotation;
+	var noteElement = this.noteElement;
+
+	// Show the expand/collapse control
+	this.noteElement.appendChild( domutil.button( {
+		className:	AN_EXPANDBUTTON_CLASS,
+		title: getLocalized( 'annotation collapse edit button' ),
+		content: AN_COLLAPSED_ICON } ) );
+	
+	this.selectNode = document.createElement( 'select' );
+	
+	this.selectNode.className = AN_KEYWORDSCONTROL_CLASS;
+	var keywords = marginalia.keywordService.keywords;
+	addEvent( this.selectNode, 'keypress', _editNoteKeypress );
+	
+	// See if the current value of the note is a keyword
+	if ( ! marginalia.keywordService.isKeyword( annotation.getNote() ) && annotation.getNote() )
 	{
-		jQuery( remainingNode ).css( 'display', 'block' );
-		editNode.mia_showremaining = true;
-		reposition = true;
+		// First option is the freeform edit value for the note
+		var opt = document.createElement( 'option' );
+		opt.appendChild( document.createTextNode(
+			annotation.getNote().length > 12 ? annotation.getNote().substring( 0, 12 ) : annotation.getNote() ) );
+		opt.setAttribute( 'value', annotation.getNote() );
+		this.selectNode.appendChild( opt );
 	}
-	if ( editNode.mia_showremaining )
+	
+	var value = annotation.getNote();
+	for ( var i = 0;  i < keywords.length;  ++i )
 	{
-		var remaining = Math.max( marginalia.maxNoteLength - editNode.value.length, 0 );
-		jQuery( remainingNode ).text( remaining + ' ' + prompt );
-		if ( reposition )
-			postMicro.repositionSubsequentNotes( marginalia, noteElement );
+		var keyword = keywords[ i ];
+		opt = document.createElement( 'option' );
+		if ( value == keyword.name )
+			opt.setAttribute( 'selected', 'selected' );
+		opt.appendChild( document.createTextNode( keyword.name ) );
+		opt.setAttribute( 'value', keyword.name );
+		opt.setAttribute( 'title', keyword.description );
+		this.selectNode.appendChild( opt );
 	}
+	
+	this.noteElement.appendChild( this.selectNode );
+	
+	marginalia.bindNoteBehaviors( annotation, noteElement, [
+		[ '.'+AN_EXPANDBUTTON_CLASS, { click: 'edit freeform' } ]
+	] );
+}
+
+KeywordNoteEditor.prototype.focus = function( )
+{
+	this.selectNode.focus( );
+	if ( 'exploder' == domutil.detectBrowser( ) )
+		this.selectNode.focus( );
 }
 
 
@@ -687,22 +610,26 @@ YuiAutocompleteNoteEditor.prototype.clear = FreeformNoteEditor.prototype.clear;
 YuiAutocompleteNoteEditor.prototype.save = FreeformNoteEditor.prototype.save;
 YuiAutocompleteNoteEditor.prototype.focus = FreeformNoteEditor.prototype.focus;
 
-YuiAutocompleteNoteEditor.prototype.show = function( marginalia )
+YuiAutocompleteNoteEditor.prototype.show = function( )
 {
 	var postMicro = this.postMicro;
 	var marginalia = this.marginalia;
 	var annotation = this.annotation;
 	var noteElement = this.noteElement;
-	var noteText = annotation.getNote( );
 	
 	// Create the edit box
 	this.editNode = document.createElement( "textarea" );
 	this.editNode.rows = 3;
-	this.editNode.appendChild( document.createTextNode( noteText ) );
+	this.editNode.appendChild( document.createTextNode( annotation.getNote() ) );
 	
 	// Create the query results box
 	this.queryNode = domutil.element( 'div' );
 
+	// Set focus after making visible later (IE requirement; it would be OK to do it here for Gecko)
+	this.editNode.annotationId = this.annotation.getId();
+	addEvent( this.editNode, 'keypress', _editNoteKeypress );
+	addEvent( this.editNode, 'keyup', _editChangedKeyup );
+	
 	var wrapperNode = domutil.element( 'div', { className: 'yui-skin-sam' } );
 	wrapperNode.appendChild( this.editNode );
 	wrapperNode.appendChild( this.queryNode );
@@ -744,27 +671,6 @@ YuiAutocompleteNoteEditor.prototype.show = function( marginalia )
 	
 		wrapperNode.style.height = String( wrapperHeight ) + 'px';
 	}
-	
-	// Set focus after making visible later (IE requirement; it would be OK to do it here for Gecko)
-	// Create the place for showing how many characters remain
-	var editNode = this.editNode;
-	var prompt = getLocalized( 'chars remaining' );
-	var threshold = marginalia.maxNoteLength - FreeformNoteEditor.REMAINING_THRESHOLD;
-	var remainingNode = domutil.element( 'p', {
-		className: Marginalia.PREFIX + 'charsremaining',
-		style: 'display:none' } );
-	noteElement.appendChild( remainingNode, null );
-	FreeformNoteEditor.showCharsRemaining( marginalia, postMicro, editNode, remainingNode, noteElement, prompt );
-
-	// Set focus after making visible later (IE requirement; it would be OK to do it here for Gecko)
-	var onkey = function( e ) {
-		FreeformNoteEditor.showCharsRemaining( marginalia, postMicro, editNode, remainingNode, noteElement, prompt );
-		_editChangedKeyup( e );
-	};
-
-	this.editNode.annotationId = this.annotation.getId();
-	addEvent( this.editNode, 'keypress', _editNoteKeypress );
-	addEvent( this.editNode, 'keyup', onkey );
 }
 
 
@@ -775,17 +681,14 @@ YuiAutocompleteNoteEditor.prototype.show = function( marginalia )
  */
 PostMicro.prototype.positionNote = function( marginalia, annotation )
 {
-	var note = annotation.getNoteElement( marginalia );
+	var note = annotation.getNoteElement( );
 	while ( null != note )
 	{
-		var alignElement = this.getNoteAlignElement( marginalia, annotation );
+		var alignElement = this.getNoteAlignElement( annotation );
 		// Don't push down if no align element was found
 		if ( null != alignElement )
 		{
-			// #geof# doesn't work right.  Current fix is to have no intervening text nodes:
-			// <div class="mia_margin"><ol><li class="mia_dummyfirst"></li></ol></div>
-			var prev = jQuery( note ).prev( ); // note.previousSibling
-			var pushdown = this.calculateNotePushdown( marginalia, prev, alignElement );
+			var pushdown = this.calculateNotePushdown( marginalia, note.previousSibling, alignElement );
 			note.style.marginTop = ( pushdown > 0 ? String( pushdown ) : '0' ) + 'px';
 		}
 		note = note.nextSibling;
@@ -795,10 +698,10 @@ PostMicro.prototype.positionNote = function( marginalia, annotation )
 /**
  * Determine where an annotation note should be aligned vertically
  */
-PostMicro.prototype.getNoteAlignElement = function( marginalia, annotation )
+PostMicro.prototype.getNoteAlignElement = function( annotation )
 {
 	// Try to find the matching highlight element
-	var alignElement = domutil.childByTagClass( this.getContentElement( ), 'em', Marginalia.ID_PREFIX + annotation.getId(), null );
+	var alignElement = domutil.childByTagClass( this.getContentElement( ), 'em', AN_ID_PREFIX + annotation.getId(), null );
 	// If there is no matching highlight element, pick the paragraph.  Prefer XPath range representation.
 	if ( null == alignElement && annotation.getXPathRange( ) )
 		alignElement = annotation.getXPathRange( ).start.getReferenceElement( this.getContentElement( ) );
@@ -840,24 +743,21 @@ PostMicro.prototype.repositionNotes = function( marginalia, element )
 
 PostMicro.prototype.repositionNote = function( marginalia, element )
 {
-	var annotation = element[ Marginalia.F_ANNOTATION ];
+	var annotation = element.annotation;
 	if ( annotation )
 	{
-		var alignElement = this.getNoteAlignElement( marginalia, annotation );
+		var alignElement = this.getNoteAlignElement( annotation );
 		if ( alignElement )
 		{
 			var goback = false;
-			
-			for ( var previous = element.previousSibling; previous;  previous = previous.previousSibling )
-				if ( ELEMENT_NODE == previous.nodeType )
-					break;
+			var previous = element.previousSibling;
 			var pushdown = this.calculateNotePushdown( marginalia, previous, alignElement );
 
 		/* uncomment this to automatically collapse some notes: *
 			// If there's negative pushdown, check whether the preceding note also has pushdown
 			if ( pushdown < 0
 				&& previous 
-				&& previous[ Marginalia.F_ANNOTATION ] 
+				&& previous.annotation 
 				&& ! hasClass( previous, AN_NOTECOLLAPSED_CLASS )
 				&& previous.pushdown
 				&& previous.pushdown < 0 )
@@ -866,7 +766,7 @@ PostMicro.prototype.repositionNote = function( marginalia, element )
 				// Go back two elements and collapse, then restart pushdown 
 				// calculations at the previous element.
 				var collapseElement = previous.previousSibling;
-				if ( collapseElement && collapseElement[ Marginalia.F_ANNOTATION ] )
+				if ( collapseElement && collapseElement.annotation )
 				{
 					addClass( collapseElement, AN_NOTECOLLAPSED_CLASS );
 					element = previous;
@@ -879,7 +779,7 @@ PostMicro.prototype.repositionNote = function( marginalia, element )
 			if ( ! goback )
 			{
 				element.style.marginTop = ( pushdown > 0 ? String( pushdown ) : '0' ) + 'px';
-				domutil.removeClass( element, Marginalia.C_NOTECOLLAPSED );
+				domutil.removeClass( element, AN_NOTECOLLAPSED_CLASS );
 				element.pushdown = pushdown;
 			}
 		}
@@ -895,9 +795,9 @@ PostMicro.prototype.repositionSubsequentNotes = function( marginalia, firstNote 
 {
 	for ( var note = firstNote;  note;  note = note.nextSibling )
 	{
-		if ( ELEMENT_NODE == note.nodeType && note[ Marginalia.F_ANNOTATION ] )
+		if ( ELEMENT_NODE == note.nodeType && note.annotation )
 		{
-			var alignElement = this.getNoteAlignElement( marginalia, note[ Marginalia.F_ANNOTATION ] );
+			var alignElement = this.getNoteAlignElement( note.annotation );
 			if ( alignElement )
 			{
 				var pushdown = this.calculateNotePushdown( marginalia, note.previousSibling, alignElement );
@@ -917,13 +817,11 @@ PostMicro.prototype.repositionSubsequentNotes = function( marginalia, firstNote 
  */
 PostMicro.prototype.removeNote = function( marginalia, annotation )
 {
-	var listItem = annotation.getNoteElement( marginalia );
+	var listItem = annotation.getNoteElement( );
 	var next = domutil.nextByTagClass( listItem, 'li' );
 	listItem.parentNode.removeChild( listItem );
-	listItem[ Marginalia.F_ANNOTATION ] = null; // dummy item won't have this field
+	listItem.annotation = null; // dummy item won't have this field
 	domutil.clearEventHandlers( listItem, true );	
-//	if ( next )
-//		this.repositionNotes( marginalia, next );
 	return next;
 }
 
@@ -933,7 +831,7 @@ PostMicro.prototype.removeNote = function( marginalia, annotation )
  */
 PostMicro.prototype.clearNote = function( marginalia, annotation )
 {
-	var note = annotation.getNoteElement( marginalia );
+	var note = annotation.getNoteElement( );
 	domutil.clearEventHandlers( note, true, true );
 	while ( note.firstChild )
 		note.removeChild( note.firstChild );
@@ -948,8 +846,8 @@ function _editAnnotation( event )
 {
 	var marginalia = window.marginalia;
 
-	var post = domutil.nestedFieldValue( this, Marginalia.F_POST );
-	var annotation = domutil.nestedFieldValue( this, Marginalia.F_ANNOTATION );
+	var post = domutil.nestedFieldValue( this, AN_POST_FIELD );
+	var annotation = domutil.nestedFieldValue( this, AN_ANNOTATION_FIELD );
 
 	// If an annotation is already being edited and it's not *this* annotation,
 	// return (don't stop propagation)
@@ -975,8 +873,8 @@ function _editAnnotation( event )
 function _editNoteKeypress( event )
 {
 	var target = domutil.getEventTarget( event );
-	var post = domutil.nestedFieldValue( target, Marginalia.F_POST );
-	var annotation = domutil.nestedFieldValue( target, Marginalia.F_ANNOTATION );
+	var post = domutil.nestedFieldValue( target, AN_POST_FIELD );
+	var annotation = domutil.nestedFieldValue( target, AN_ANNOTATION_FIELD );
 	if ( event.keyCode == 13 )
 	{
 		post.saveAnnotation( window.marginalia, annotation );
@@ -996,13 +894,12 @@ function _editNoteKeypress( event )
  */
 function _editChangedKeyup( event )
 {
-	var marginalia = window.marginalia;
 	var target = domutil.getEventTarget( event );
-	var annotation = domutil.nestedFieldValue( target, Marginalia.F_ANNOTATION );
+	var annotation = domutil.nestedFieldValue( target, AN_ANNOTATION_FIELD );
 	if ( target.value != annotation.note )
-		domutil.addClass( target, Marginalia.C_EDITCHANGED );
+		domutil.addClass( target, AN_EDITCHANGED_CLASS );
 	else
-		domutil.removeClass( target, Marginalia.C_EDITCHANGED );
+		domutil.removeClass( target, AN_EDITCHANGED_CLASS );
 }
 
 
@@ -1033,8 +930,54 @@ function _cancelAnnotationEdit( event )
 function _deleteAnnotation( event )
 {
 	event.stopPropagation( );
-	var post = domutil.nestedFieldValue( this, Marginalia.F_POST );
-	var annotation = domutil.nestedFieldValue( this, Marginalia.F_ANNOTATION );
-	post.deleteAnnotation( window.marginalia, annotation, marginalia.warnDelete );
+	var post = domutil.nestedFieldValue( this, AN_POST_FIELD );
+	var annotation = domutil.nestedFieldValue( this, AN_ANNOTATION_FIELD );
+	post.deleteAnnotation( window.marginalia, annotation );
+}
+
+/**
+ * Click the expand/collapse edit button
+ */
+function _expandEdit( event )
+{
+	event.stopPropagation( );
+	var target = domutil.getEventTarget( event );
+	var annotation = domutil.nestedFieldValue( this, AN_ANNOTATION_FIELD );
+	var post = domutil.nestedFieldValue( this, AN_POST_FIELD );
+	var noteElement = domutil.parentByTagClass( target, 'li', null, false, null );
+	var expandControl = domutil.childByTagClass( noteElement, 'button', AN_EXPANDBUTTON_CLASS, null );
+	while ( expandControl.firstChild )
+		expandControl.removeChild( expandControl.firstChild );
+	
+	if ( AN_EDIT_NOTE_KEYWORDS == annotation.editing )
+	{
+		expandControl.appendChild( document.createTextNode( AN_EXPANDED_ICON ) );
+		post.showNoteEditor( marginalia, annotation, new FreeformNoteEditor( ) );
+	}
+	else
+	{
+		expandControl.appendChild( document.createTextNode( AN_COLLAPSED_ICON ) );
+		post.showNoteEditor( marginalia, annotation, new KeywordNoteEditor( ) );
+	}
+}
+
+/**
+ * Click annotation access button
+ */
+function _toggleAnnotationAccess( event )
+{
+	event.stopPropagation( );
+	var target = domutil.getEventTarget( event );
+	
+	var annotation = domutil.nestedFieldValue( this, AN_ANNOTATION_FIELD );
+	var accessButton = target;
+
+	annotation.setAccess( annotation.getAccess() == 'public' ? 'private' : 'public' );
+	window.marginalia.updateAnnotation( annotation, null );
+	while ( accessButton.firstChild )
+		accessButton.removeChild( accessButton.firstChild );
+	accessButton.appendChild( document.createTextNode( annotation.getAccess() == 'public' ? AN_SUN_SYMBOL : AN_MOON_SYMBOL ) );
+	accessButton.setAttribute( 'title', annotation.getAccess() == 'public' ?
+		getLocalized( 'public annotation' ) : getLocalized( 'private annotation' ) );
 }
 

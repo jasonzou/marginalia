@@ -27,25 +27,49 @@
  * $Id$
  */
 
+// If this is true, uses paths like annotate/nnn
+// if false, use paths like annotation/annotate.php?id=nnn
+ANNOTATION_NICE_URLS = false;
+
+
+/**
+ * Oops.  This didn't conform to the URI spec - all those nice juice characters are
+ * reserved.  So now all it does is replace %20 with + to make URIs easier to read.
+ *
+ * I'm tired of the standard Javascript encodeURIComponent encoding slashes
+ * and colons in query parameters.  This makes debugging information difficult
+ * to read, and there's really no point to it (at least for URI parameters).  
+ * This function uses encodeURIComponent, then converts back some translations 
+ * to make everything easier to read and debug.
+ */
+function encodeURIParameter( s )
+{
+	s = encodeURIComponent( s );
+//	s = s.replace( /%2[fF]/g, '/' );
+//	s = s.replace( /%3[aA]/g, ':' );
+	s = s.replace( /%20/g, '+' );
+//	s = s.replace( /%5[bB]/g, '[' );
+//	s = s.replace( /%5[dD]/g, ']' );
+//	s = s.replace( /%2[cC]/g, ',' );
+//	s = s.replace( /%3[bB]/g, ';' );
+	return s;
+}
+
 
 /**
  * Initialize the REST annotation service
  */
 function RestAnnotationService( serviceUrl, features )
 {
+	this.serviceUrl = serviceUrl;
+	this.niceUrls = false;
 	this.noPutDelete = false;
-	
-	// Fixed service URL.  Use this if not using nice URLs.
-	if ( 'string' == typeof( serviceUrl ) )
-		this.urlTemplate = new restutil.UrlTemplate( serviceUrl );
-	else
-		this.urlTemplate = new restutil.UrlTemplateDictionary( serviceUrl );
 	
 	if ( features )
 	{
 		for ( feature in features )
 		{
-			var value = features[ feature ];
+			value = features[ feature ];
 			switch ( feature )
 			{
 				// Name of cookie to use for preventing cross-site request forgery
@@ -53,24 +77,21 @@ function RestAnnotationService( serviceUrl, features )
 					this.csrfCookie = value;
 					break;
 				
-				// Use HTTP POST instead of PUT and DELETE.  In this case, the operation could be determined as follows:
+				// Use nice service URLs (currently unsupported)
+				case 'niceUrls':
+					this.niceUrls = value;
+					break;
+					
+				// Use HTTP POST instead of PUT and DELETE.  In this case, the operation can be determined as follows:
 				//   create:  no id or search parameters in URL, body contains new annotation data
 				//   delete: id in URL with no body
 				//   update:  id in URL, body contains new annotation data
 				//   bulkUpdate:  search parameters in URL, body contains substitution data
-				// But that's a bad idea, as it rules out certain future possible parameters to calls.
 				// Why not pass method=PUT or method=DELETE in body or URL?
 				// - in URL is incorrect as this does not help identify the resource
 				// - in body is incorrect if mime type is not application/x-www-url-encoded;  makes no sense in XML body
 				case noPutDelete:
 					this.noPutDelete = value;
-					break;
-					
-				// include curuser as get parameter to requests
-				// should be set to actual user ID
-				// cheap way to do simple logging
-				case sendCurUser:
-					this.sendCurUser = value;
 					break;
 					
 				default:
@@ -83,144 +104,215 @@ function RestAnnotationService( serviceUrl, features )
 	}
 }
 
+
 /**
  * Fetch a list of annotated blocks
- * #geof# should perhaps be merged into listAnnotations, adding optional format parameter
- * (which I guess would require callback function to always be first parameter)
  */
-RestAnnotationService.prototype.listBlocks = function( url, ok, fail )
+RestAnnotationService.prototype.listBlocks = function( url, f )
 {
-	// uses listAnnotations url, but with different format parameter
-	var serviceUrl = this.urlTemplate.match( [
-		[ 'url', url, true ],
-		[ 'format', 'blocks' ],
-		[ 'curuser', this.sendCurUser, this.sendCurUser ]
-	], 'listAnnotations' );
-	if ( ! serviceUrl )
-		throw "No matching service URL template for listBlocks.";	
+	var serviceUrl = this.serviceUrl + '?format=blocks&url=' + encodeURIParameter( url );
 	
-	fail2 = function( status, text ) {
-		logError( "listBlocks Server request failed with code " + status + ":\n" + serviceUrl );
-		if ( fail )
-			fail( status, text );
-	};
+	// For demo debugging only
+	if ( window.marginalia && window.marginalia.userInRequest )
+		serviceUrl += '&curuser=' + encodeURIParameter( window.marginalia.loginUserId );
 	
-	restutil.getResource( serviceUrl, ok, fail2, { okXml: true } );
-	trace( 'annotation-service', "AnnotationService.listBlocks " + decodeURI( serviceUrl ) );
+	var xmlhttp = domutil.createAjaxRequest( );
+	xmlhttp.open( 'GET', serviceUrl );
+	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
+	xmlhttp.onreadystatechange = function( ) {
+		if ( xmlhttp.readyState == 4 ) {
+			if ( xmlhttp.status == 200 ) {
+				if ( null != f )
+				{
+					trace( 'block-users-xml', "listBlocks result:\n" + xmlhttp.responseText );
+					// alert( serviceUrl + "\n" + xmlhttp.responseText );
+					f( xmlhttp.responseXML );
+				}
+			}
+			else {
+				trace( "listBlocks Server request failed with code " + xmlhttp.status + ":\n" + serviceUrl );
+			}
+			xmlhttp = null;
+		}
+	}
+	// Decode the URI to make it easier to read and debug
+	trace( 'annotation-service', "AnnotationService.listBlocks " + decodeURI( serviceUrl ));
+	xmlhttp.send( null );
 }
 
 
 /**
  * Fetch a list of annotations from the server
  */
-// Recent change (2009-09-29):  userid replaced by sheet.  This filters which
-// annotations are fetched.
-RestAnnotationService.prototype.listAnnotations = function( url, sheet, params, ok, fail )
+RestAnnotationService.prototype.listAnnotations = function( url, userid, block, f )
 {
-	var block = params.block;
-	var mark = params.mark;
+	// exclude content to lighten the size across the wire
+	var serviceUrl = this.serviceUrl;
+	serviceUrl += '?format=atom';
+	if ( block )
+		serviceUrl += '&block=' + encodeURIParameter( block );
+	if ( userid )
+		serviceUrl += '&user=' + encodeURIParameter( userid );
+	serviceUrl += '&url=' + encodeURIParameter( url );
 	
-	var serviceUrl = this.urlTemplate.match( [
-		[ 'url', url ],
-		[ 'sheet', sheet, true ],
-		[ 'mark', mark ],
-		[ 'format', 'atom' ],
-		[ 'curuser', this.sendCurUser, this.sendCurUser ]
-	], 'listAnnotations' );
-	if ( ! serviceUrl )
-		throw "No matching service URL template for listAnnotations.";	
+	// For demo debugging only
+	if ( window.marginalia && window.marginalia.userInRequest )
+		serviceUrl += '&curuser=' + encodeURIParameter( window.marginalia.loginUserId );
 
-	fail2 = function( status, text ) {
-		logError( "AnnotationService.listAnnotations failed with code " + status + ":\n" + serviceUrl + "\n" + text );
-		if ( fail )
-			fail( status, text );
-	};
-	restutil.getResource( serviceUrl, ok, fail2, { okXml: true } );
+	var xmlhttp = domutil.createAjaxRequest( );
+	xmlhttp.open( 'GET', serviceUrl );
+	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
+	xmlhttp.onreadystatechange = function( ) {
+		if ( xmlhttp.readyState == 4 ) {
+			if ( xmlhttp.status == 200 ) {
+				if ( null != f )
+				{
+					trace( 'list-annotations-xml', "listAnnotations result:\n" + xmlhttp.responseText );
+					// alert( serviceUrl + "\n" + xmlhttp.responseText );
+					f( xmlhttp.responseXML );
+				}
+			}
+			else {
+				trace( "ListAnnotations Server request failed with code " + xmlhttp.status + ":\n" + serviceUrl );
+			}
+			xmlhttp = null;
+		}
+	}
 	trace( 'annotation-service', "AnnotationService.listAnnotations " + decodeURI( serviceUrl ) );
+	xmlhttp.send( null );
 }
 
 /**
  * Create an annotation on the server
  * When successful, calls a function f with one parameter:  the URL of the created annotation
  */
-RestAnnotationService.prototype.createAnnotation = function( annotation, ok, fail )
+RestAnnotationService.prototype.createAnnotation = function( annotation, f )
 {
-	// Small flaw here:  the url gets sent both in the query string *and* in the
-	// body when niceurls are not in use.  When the URLs are nice, it can be part of
-	// the URL path.  Though that limits to annotations only of the current site.
-	// Hmmm.
-	var serviceUrl = this.urlTemplate.match( [
-		[ 'url', annotation.getUrl( ) ],
-		[ 'method', 'POST', this.noPutDelete ],
-		[ 'curuser', this.sendCurUser, this.sendCurUser ]
-	], 'createAnnotation' );
-	if ( ! serviceUrl )
-		throw "No matching service URL template for createAnnotation.";
-
-	var params = [
-		[ 'url', annotation.getUrl( ), true ],
-		[ 'note', annotation.getNote( ), true ],
-		[ 'sheet', annotation.getSheet( ), true ],
-		[ 'quote', annotation.getQuote( ), true ],
-		[ 'quote_title', annotation.getQuoteTitle( ) ],
-		[ 'quote_author_id', annotation.getQuoteAuthorId( ) ],
-		[ 'quote_author_name', annotation.getQuoteAuthorName( ) ],
-		[ 'link', annotation.getLink( ), true ],
-		[ 'userid', annotation.getUserId( ), true ], // not trustworthy, but good for demo apps
-		[ 'action', annotation.getAction( ) ],
-		[ 'sequence-range', annotation.getSequenceRange( ) ? annotation.getSequenceRange( ).toString( ) : '' ],
-		[ 'xpath-range', annotation.getXPathRange( ) ? annotation.getXPathRange( ).toString( ) : '' ],
-		[ 'link_title' , annotation.getLinkTitle( ) ],
-		[ this.csrfCookie, readCookie( this.csrfCookie ), this.csrfCookie ]
-	];
-	var body = restutil.queryArgsToString( params );
+	var serviceUrl = this.serviceUrl;
 		
-	fail2 = function( status, text ) {
-		logError( "AnnotationService.createAnnotation failed with code " + status + ":\n" + serviceUrl + "\n" + text );
-		if ( fail )
-			fail( status, text );
-	};
-	restutil.postResource( serviceUrl, body, ok, fail2 );
+	// For demo debugging only
+	if ( window.marginalia && window.marginalia.userInRequest )
+		serviceUrl += '?curuser=' + encodeURIParameter( window.marginalia.loginUserId );
+
+	var body
+		= 'url=' + encodeURIParameter( annotation.getUrl() )
+		+ '&note=' + encodeURIParameter( annotation.getNote() )
+		+ '&access=' + encodeURIParameter( annotation.getAccess() )
+		+ '&quote=' + encodeURIParameter( annotation.getQuote() )
+		+ '&quote_title=' + encodeURIParameter( annotation.getQuoteTitle() )
+		+ '&quote_author_id=' + encodeURIParameter( annotation.getQuoteAuthorId() )
+		+ '&quote_author_name=' + encodeURIParameter( annotation.getQuoteAuthorName() )
+		+ '&link=' + encodeURIParameter( annotation.getLink() )
+		+ '&userid=' + encodeURIParameter( annotation.getUserId() );
+	// userid shouldn't be trusted by the server of course, except for demo applications for
+	// which it can be useful.
+		
+	if ( annotation.getAction() )
+		body += '&action=' + encodeURIParameter (annotation.getAction() );
+	if ( annotation.getSequenceRange( ) )
+		body += '&sequence-range=' + encodeURIParameter( annotation.getSequenceRange( ).toString( ) );
+	if ( annotation.getXPathRange( ) )
+		body += '&xpath-range=' + encodeURIParameter( annotation.getXPathRange( ).toString( ) );
+	if ( annotation.getLinkTitle( ) )
+		+ '&linkTitle=' + encodeURIParameter( annotation.getLinkTitle( ) );
+
+	// Cross-site request forgery protection (if present)
+	if ( this.csrfCookie )
+		body += '&' + encodeURIComponent( this.csrfCookie ) + '=' + encodeURIParameter( readCookie( this.csrfCookie ) );
+		
+	// May need to pass method name instead of using PUT or DELETE
+	if ( this.noPutDelete )
+		serviceUrl += '&method=POST';
+	
+	var xmlhttp = domutil.createAjaxRequest( );
+	
+	xmlhttp.open( 'POST', serviceUrl, true );
+	xmlhttp.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8' );
+	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
+	xmlhttp.setRequestHeader( 'Content-length', body.length );
+	xmlhttp.onreadystatechange = function( ) {
+		if ( xmlhttp.readyState == 4 ) {
+			// No need for Safari hack, since Safari can't create annotations anyway.
+			if ( xmlhttp.status == 201 ) {
+				var url = xmlhttp.getResponseHeader( 'Location' );
+				if ( null != f )
+				{
+					trace( 'annotation-service', 'Create annotation body: ' + xmlhttp.responseText );
+					f( url );
+				}
+			}
+			else {
+				logError( "AnnotationService.createAnnotation failed with code " + xmlhttp.status + ":\n" + serviceUrl + "\n" + xmlhttp.responseText );
+			}
+			xmlhttp = null;
+		}
+	}
 	trace( 'annotation-service', "AnnotationService.createAnnotation " + decodeURI( serviceUrl ) + "\n" + body );
+	xmlhttp.send( body );
 }
 
 /**
  * Update an annotation on the server
  * Only updates the fields that have changed
  */
-RestAnnotationService.prototype.updateAnnotation = function( annotation, ok, fail )
+RestAnnotationService.prototype.updateAnnotation = function( annotation, f )
 {
-	var serviceUrl = this.urlTemplate.match( [
-		[ 'url', annotation.getUrl( ), true, false ],
-		[ 'id', annotation.getId( ), true ],
-		[ 'method', 'PUT', this.noPutDelete ],
-		[ 'curuser', this.sendCurUser, this.sendCurUser ]
-	], 'updateAnnotations' );
-	if ( ! serviceUrl )
-		throw "No matching service URL for updateAnnotation.";	
+	var serviceUrl = this.serviceUrl;
+	serviceUrl += this.niceUrls ? ( '/' + annotation.getId() ) : ( '?id=' + annotation.getId() );
+	
+	// For demo debugging only
+	if ( window.marginalia && window.marginalia.userInRequest )
+		serviceUrl += ( this.niceUrls ? '?' : '&' )
+			+ 'curuser=' + encodeURIParameter( window.marginalia.loginUserId );
+
+	var body = '';
+	if ( annotation.hasChanged( 'note' )  )
+		body = 'note=' + encodeURIParameter( annotation.getNote() );
+	if ( annotation.hasChanged( 'access' ) )
+		body += ( body == '' ? '' : '&' ) + 'access=' + encodeURIParameter( annotation.getAccess() );
+	if ( annotation.hasChanged( 'link' ) )
+		body += ( body == '' ? '' : '&' ) + 'link=' + encodeURIParameter( annotation.getLink() );
+	if ( annotation.hasChanged( 'linkTitle' ) )
+		body += ( body == '' ? '' : '&' ) + 'link_title=' + encodeURIParameter( annotation.getLinkTitle( ) );
+	if ( annotation.hasChanged( 'range/sequence' ) )
+		body += '&sequence-range=' + encodeURIParameter( annotation.getSequenceRange( ).toString( ) );
+	if ( annotation.hasChanged( 'range/xpath' ) )
+		body += '&xpath-range=' + encodeURIParameter( annotation.getXPathRange( ).toString( ) );
+
+// Cross-site request forgery protection (if present)
+	if ( this.csrfCookie )
+		body += '&' + encodeURIComponent( this.csrfCookie ) + '=' + encodeURIParameter( readCookie( this.csrfCookie ) );
 
 	// May need to pass method name instead of using PUT or DELETE
-	var method = this.noPutDelete ? 'POST' : 'PUT';
-
-	var params = [
-		[ 'note', annotation.getNote( ), annotation.hasChanged( 'note' ) ],
-		[ 'sheet', annotation.getSheet( ), annotation.hasChanged( 'sheet' ) ],
-		[ 'link', annotation.getLink( ), annotation.hasChanged( 'link' ) ],
-		[ 'link_title', annotation.getLinkTitle( ), annotation.hasChanged( 'linkTitle' ) ],
-		[ 'sequence-range', annotation.getSequenceRange( ) ? annotation.getSequenceRange( ).toString( ) : '', annotation.hasChanged( 'range/sequence' ) ],
-		[ 'xpath-range', annotation.getXPathRange( ) ? annotation.getXPathRange( ).toString( ) : '', annotation.hasChanged( 'range/xpath' ) ],
-		[ this.csrfCookie, readCookie( this.csrfCookie ) ]
-	];
-	var body = restutil.queryArgsToString( params );
+	var method = 'PUT';
+	if ( this.noPutDelete )
+	{
+		serviceUrl += '&method=PUT';
+		method = 'POST';
+	}
 	
-	fail2 = function( status, text ) {
-		logError( "AnnotationService.updateAnnotation failed with code " + status + ":\n" + serviceUrl + "\n" + text );
-		if ( fail )
-			fail( status, text );
-	};
-	restutil.putResource( serviceUrl, body, ok, fail2, { okXml: true, noPutDelete: this.noPutDelete } );
+	var xmlhttp = domutil.createAjaxRequest( );
+	xmlhttp.open( method, serviceUrl, true );
+	xmlhttp.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8' );
+	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
+	xmlhttp.setRequestHeader( 'Content-length', body.length );
+	xmlhttp.onreadystatechange = function( ) {
+		if ( xmlhttp.readyState == 4 ) {
+			// Safari is braindead here:  any status code other than 200 is converted to undefined
+			// IE invents its own 1223 status code
+			// See http://www.trachtenberg.com/blog/?p=74
+			if ( 204 == xmlhttp.status || xmlhttp.status == null || xmlhttp.status == 1223 ) {
+				if ( null != f )
+					f( xmlhttp.responseXML );
+			}
+			else
+				logError( "AnnotationService.updateAnnotation failed with code " + xmlhttp.status + " (" + xmlhttp.statusText + ")\n" + xmlhttp.statusText + "\n" + xmlhttp.responseText );
+			xmlhttp = null;
+		}
+	}
 	trace( 'annotation-service', "AnnotationService.updateAnnotation " + decodeURI( serviceUrl ) );
 	trace( 'annotation-service', "  " + body );
+	xmlhttp.send( body );
 }
 
 
@@ -229,54 +321,114 @@ RestAnnotationService.prototype.updateAnnotation = function( annotation, ok, fai
  * The method signature will likely change in future;  for now it only deals with updates to
  * the note field.
  */
-RestAnnotationService.prototype.bulkUpdate = function( oldNote, newNote, ok, fail )
+RestAnnotationService.prototype.bulkUpdate = function( oldNote, newNote, f )
 {
-	var serviceUrl = this.urlTemplate.match( [
-		[ 'note', oldNote, true ],
-		[ 'method', 'PUT', this.noPutDelete ],
-		[ 'curuser', this.sendCurUser, this.sendCurUser ]
-	], 'updateAnnotation' );
-	if ( ! serviceUrl )
-		throw "No matching service URL template for bulkUpdate.";	
+	var serviceUrl = this.serviceUrl;
+	serviceUrl += '?note=' + encodeURIComponent( oldNote );
+		
+	var body = 'note=' + encodeURIComponent( newNote );
+		
+	// Cross-site request forgery protection (if present)
+	if ( this.csrfCookie )
+		body += '&' + encodeURIComponent( this.csrfCookie ) + '=' + encodeURIComponent( readCookie( this.csrfCookie ) );
 
-	var params = [
-		[ 'note', newNote, true ],
-		[ this.csrfCookie, readCookie( this.csrfCookie ) ]
-	];
+	// May need to pass method name instead of using PUT or DELETE
+	var method = 'PUT';
+	if ( this.noPutDelete )
+	{
+		serviceUrl += '&method=PUT';
+		method = 'POST';
+	}
 	
-	var body = restutil.queryArgsToString( params );
-
-	fail2 = function( status, text ) {
-		logError( "AnnotationService.bulkUpdate failed with code " + status + ":\n" + serviceUrl + "\n" + text );
-		if ( fail )
-			fail( status, text );
-	};
-	restutil.putResource( serviceUrl, body, ok, fail2, { noPutDelete: this.noPutDelete } );
+	var xmlhttp = domutil.createAjaxRequest( );
+	
+	// This use of PUT is suspect, as it does not send a full representation of the resource -
+	// instead it sends a delta for the resource (or rather for child resources of which this
+	// resource is composed)
+	xmlhttp.open( method, serviceUrl, true );
+	xmlhttp.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8' );
+	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
+	xmlhttp.setRequestHeader( 'Content-length', body.length );
+	xmlhttp.onreadystatechange = function( ) {
+		if ( xmlhttp.readyState == 4 ) {
+			// No need for Safari hack, since Safari can't create annotations anyway.
+			if ( xmlhttp.status == 200 ) {
+				var url = xmlhttp.getResponseHeader( 'Location' );
+				if ( null != f )
+				{
+					trace( 'annotation-service', 'Create annotation body: ' + xmlhttp.responseText );
+					f( xmlhttp.responseText, url );
+				}
+			}
+			else {
+				logError( "AnnotationService.bulkUpdate failed with code " + xmlhttp.status + ":\n" + serviceUrl + "\n" + xmlhttp.responseText );
+			}
+			xmlhttp = null;
+		}
+	}
 	trace( 'annotation-service', "AnnotationService.bulkUpdate " + decodeURI( serviceUrl ) + "\n" + body );
+	xmlhttp.send( body );
 }
 
 
 /**
  * Delete an annotation on the server
  */
-RestAnnotationService.prototype.deleteAnnotation = function( annotation, ok, fail )
+RestAnnotationService.prototype.deleteAnnotation = function( annotationId, f )
 {
-	var serviceUrl = this.urlTemplate.match( [
-		[ 'url', annotation.getUrl( ), true, false ],
-		[ 'id', annotation.id, true ],
-		[ 'method', 'DELETE', this.noPutDelete ],
-		[ this.csrfCookie, readCookie( this.csrfCookie ) ],
-		[ 'curuser', this.sendCurUser, this.sendCurUser ]
-	], 'updateAnnotations' );
-	if ( ! serviceUrl )
-		throw "No matching service URL template for deleteAnnotation.";
+	var serviceUrl = this.serviceUrl;
+	var hasParams = false;
+	
+	if ( this.niceUrls )
+		serviceUrl += '/' + annotationId;
+	else
+	{
+		serviceUrl += '?id=' + annotationId;
+		hasParams = true;
+	}
+	
+	// Cross-site request forgery protection (if present)
+	if ( this.csrfCookie )
+	{
+		serviceUrl += ( hasParams ? '&' : '?' )
+			+ encodeURIComponent( this.csrfCookie ) + '=' + encodeURIComponent( readCookie( this.csrfCookie ) );
+		hasParams = true;
+	}
 
-	fail2 = function( status, text ) {
-		logError( "AnnotationService.deleteAnnotation failed with code " + status + ":\n" + serviceUrl + "\n" + text );
-		if ( fail )
-			fail( status, text );
-	};
-	restutil.deleteResource( serviceUrl, ok, fail2, { noPutDelete: this.noPutDelete } );
+	// For demo debugging only
+	if ( window.marginalia && window.marginalia.userInRequest )
+	{
+		serviceUrl += ( hasParams ? '&' : '?' )
+			+ 'curuser=' + encodeURIParameter( window.marginalia.loginUserId );
+		hasParams = true;
+	}
+	
+	// May need to pass method name instead of using PUT or DELETE
+	var method = 'DELETE';
+	if ( this.noPutDelete )
+	{
+		serviceUrl += ( hasParams ? '&' : '?' ) + 'method=DELETE';
+		method = 'POST';
+	}
+	
+	var xmlhttp = domutil.createAjaxRequest( );
+	xmlhttp.open( method, serviceUrl, true );
+	
+	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
+	xmlhttp.onreadystatechange = function( ) {
+		if ( xmlhttp.readyState == 4 ) {
+			// Safari is braindead here:  any status code other than 200 is converted to undefined
+			// IE invents its own 1223 status code
+			if ( 204 == xmlhttp.status || xmlhttp.status == null || xmlhttp.status == 1223 ) {
+				if ( null != f )
+					f( xmlhttp.responseXML );
+			}
+			else
+				logError( "AnnotationService.deleteAnnotation failed with code " + xmlhttp.status + "\n" + xmlhttp.responseText );
+			xmlhttp = null;
+		}
+	}
 	trace( 'annotation-service', "AnnotationService.deleteAnnotation " + decodeURI( serviceUrl ) );
+	xmlhttp.send( null );
 }
 

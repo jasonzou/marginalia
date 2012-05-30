@@ -31,6 +31,16 @@ NS_PTR = 'http://www.geof.net/code/annotation/';
 NS_ATOM = 'http://www.w3.org/2005/Atom';
 NS_XHTML = 'http://www.w3.org/1999/xhtml';
 
+// values for annotation.access
+AN_PUBLIC_ACCESS = 'public';
+AN_PRIVATE_ACCESS = 'private';
+
+// values for annotation.editing (field is deleted when not editing)
+AN_EDIT_NOTE_FREEFORM = 'note freeform';
+AN_EDIT_NOTE_KEYWORDS = 'note keywords';
+AN_EDIT_LINK = 'link';
+
+
 /* ************************ Annotation Class ************************ */
 /*
  * This is a data-only class with (almost) no methods.  This is because all annotation
@@ -54,7 +64,7 @@ function Annotation( params )
 	this.id = params.id || 0;
 	this.quote = params.quote || '';
 	this.note = params.note || '';
-	this.sheet = params.sheet || '';
+	this.access = params.access || ANNOTATION_ACCESS_DEFAULT;
 	this.action = params.action || '';
 	this.quote = params.quote || '';
 	this.quoteAuthorId = params.quoteAuthorId || '';
@@ -69,7 +79,6 @@ function Annotation( params )
 	// removed (which would affect both blocks) unless it is hidden for both.
 	this.fetchCount = 0;
 	this.updated = new Date( );
-	this.lastRead = null;
 }
 
 /**
@@ -208,15 +217,15 @@ Annotation.prototype.setQuote = function( quote )
 	}
 }
 
-Annotation.prototype.getSheet = function( )
-{ return this.sheet ? this.sheet : ''; }
+Annotation.prototype.getAccess = function( )
+{ return this.access ? this.access : ''; }
 
-Annotation.prototype.setSheet = function( sheet )
+Annotation.prototype.setAccess = function( access )
 {
-	if ( this.sheet != sheet )
+	if ( this.access != access )
 	{
-		this.sheet = sheet;
-		this.changes[ 'sheet' ] = true;
+		this.access = access;
+		this.changes[ 'access' ] = true;
 	}
 }
 
@@ -292,30 +301,6 @@ Annotation.prototype.setQuoteTitle = function( title )
 	}
 }
 
-Annotation.prototype.getUpdated = function( )
-{  return this.updated;  }
-
-Annotation.prototype.getLastRead = function( )
-{ return this.lastRead; }
-
-Annotation.prototype.setLastRead = function( lastRead )
-{
-	if ( this.lastRead != lastRead )
-	{
-		this.lastRead = lastRead;
-		this.changes[ 'lastRead' ] = true;
-	}
-}
-
-Annotation.prototype.isRecent = function( )
-{
-	var r;
-	if ( this.getLastRead( ) )
-		r = this.getUpdated( ).getTime( ) > this.getLastRead( ).getTime( );
-	else
-		r = true;
-	return r;
-}
 
 Annotation.prototype.fieldsFromPost = function( post )
 {
@@ -363,7 +348,6 @@ function annotationFromTextRange( marginalia, post, textRange )
 	if ( null == range )
 		return null;  // The range is probably invalid (e.g. whitespace only)
 	var annotation = new Annotation ( {
-		sheet: marginalia.defaultSheet,
 		url:  post.getUrl( ),
 		sequenceRange:  textRange.toSequenceRange( ),
 		xpathRange:  textRange.toXPathRange( ),
@@ -401,25 +385,17 @@ Annotation.prototype.toString = function( )
 Annotation.prototype.defaultNoteEditMode = function( preferences, keywordService )
 {
 	if ( ! keywordService )
-		return Marginalia.EDIT_NOTE_FREEFORM;
+		return AN_EDIT_NOTE_FREEFORM;
 	else if ( '' == this.note )
 	{
-		var pref = preferences.getPreference( Marginalia.P_NOTEEDITMODE );
-		return pref ? pref : Marginalia.EDIT_NOTE_KEYWORDS;
+		var pref = preferences.getPreference( PREF_NOTEEDIT_MODE );
+		return pref ? pref : AN_EDIT_NOTE_KEYWORDS;
 	}
 	else
 		return keywordService.isKeyword( this.note )
-			? Marginalia.EDIT_NOTE_KEYWORDS : Marginalia.EDIT_NOTE_FREEFORM;
+			? AN_EDIT_NOTE_KEYWORDS : AN_EDIT_NOTE_FREEFORM;
 }
 
-
-Annotation.idFromUrl = function( url )
-{
-	if ( matches = url.match( /\/(\w+)[^\/]*$/ ) )
-		return matches[ 1 ];
-	else if ( matches = url.match( /\/(\w+)\/[^\/]*$/ ) )
-		return matches[ 1 ];
-}
 
 Annotation.prototype.fromAtom = function( entry )
 {
@@ -427,62 +403,57 @@ Annotation.prototype.fromAtom = function( entry )
 	var rangeStr = null;
 	for ( var field = entry.firstChild;  field != null;  field = field.nextSibling )
 	{
-		if ( ELEMENT_NODE == field.nodeType )
+		if ( field.namespaceURI == NS_ATOM && domutil.getLocalName( field ) == 'content' )
 		{
-			if ( field.namespaceURI == NS_ATOM && domutil.getLocalName( field ) == 'content' )
+			if ( 'xhtml' == field.getAttribute( 'type' ) )
 			{
-				if ( 'xhtml' == field.getAttribute( 'type' ) )
-				{
-					// Find the enclosed div
-					var child;
-					for ( child = field.firstChild;  child;  child = child.nextSibling )
-						if ( child.namespaceURI == NS_XHTML && child.nodeName == 'div' && domutil.hasClass( child, 'annotation' ) )
-							break;
-					if ( child )
-						this.fromAtomContent( child );	
-				}
+				// Find the enclosed div
+				var child;
+				for ( child = field.firstChild;  child;  child = child.nextSibling )
+					if ( child.namespaceURI == NS_XHTML && child.nodeName == 'div' && domutil.hasClass( child, 'annotation' ) )
+						break;
+				if ( child )
+					this.fromAtomContent( child );	
 			}
-			else if ( field.namespaceURI == NS_ATOM && domutil.getLocalName( field ) == 'link' )
-			{
-				var rel = field.getAttribute( 'rel' );
-				var href = field.getAttribute( 'href' );
-				// What is the role of this link element?  (there are several links in each entry)
-				if ( 'self' == rel )
-					this.id = Annotation.idFromUrl( href );
-				else if ( 'related' == rel )
-					this.link = href;
-				else if ( 'alternate' == rel )
-					this.url = href;
-			}
-			else if ( NS_ATOM == field.namespaceURI && 'author' == domutil.getLocalName( field ) )
-			{
-				for ( var nameElement = field.firstChild;  null != nameElement;  nameElement = nameElement.nextSibling )
-				{
-					if ( NS_ATOM == nameElement.namespaceURI && 'name' == domutil.getLocalName( nameElement ) )
-						this.userName = nameElement.firstChild ? nameElement.firstChild.nodeValue : null;
-					else if ( NS_PTR == nameElement.namespaceURI && 'userid' == domutil.getLocalName( nameElement ) )
-						this.userid = nameElement.firstChild ? nameElement.firstChild.nodeValue : null;
-				}
-			}
-			else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'range' )
-			{
-				var format = field.getAttribute( 'format' );
-				// These ranges may throw parse errors
-				if ( 'sequence' == format )
-					this.setSequenceRange( SequenceRange.fromString( domutil.getNodeText( field ) ) );
-				else if ( 'xpath' == format )
-					this.setXPathRange( XPathRange.fromString( domutil.getNodeText( field ) ) );
-				// ignore unknown formats
-			}
-			else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'sheet' )
-				this.sheet = null == field.firstChild ? 'private' : domutil.getNodeText( field );
-			else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'action' )
-				this.action = null == field.firstChild ? '' : domutil.getNodeText( field );
-			else if ( field.namespaceURI == NS_ATOM && domutil.getLocalName( field ) == 'updated' )
-				this.updated = domutil.parseIsoDate( domutil.getNodeText( field ) );
-			else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'lastread' )
-				this.lastRead = domutil.parseIsoDate( domutil.getNodeText( field ) );
 		}
+		else if ( field.namespaceURI == NS_ATOM && domutil.getLocalName( field ) == 'link' )
+		{
+			var rel = field.getAttribute( 'rel' );
+			var href = field.getAttribute( 'href' );
+			// What is the role of this link element?  (there are several links in each entry)
+			if ( 'self' == rel )
+				this.id = href.substring( href.lastIndexOf( '/' ) + 1 );
+			else if ( 'related' == rel )
+				this.link = href;
+			else if ( 'alternate' == rel )
+				this.url = href;
+		}
+		else if ( NS_ATOM == field.namespaceURI && 'author' == domutil.getLocalName( field ) )
+		{
+			for ( var nameElement = field.firstChild;  null != nameElement;  nameElement = nameElement.nextSibling )
+			{
+				if ( NS_ATOM == nameElement.namespaceURI && 'name' == domutil.getLocalName( nameElement ) )
+					this.userName = nameElement.firstChild ? nameElement.firstChild.nodeValue : null;
+				else if ( NS_PTR == nameElement.namespaceURI && 'userid' == domutil.getLocalName( nameElement ) )
+					this.userid = nameElement.firstChild ? nameElement.firstChild.nodeValue : null;
+			}
+		}
+		else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'range' )
+		{
+			var format = field.getAttribute( 'format' );
+			// These ranges may throw parse errors
+			if ( 'sequence' == format )
+				this.setSequenceRange( SequenceRange.fromString( domutil.getNodeText( field ) ) );
+			else if ( 'xpath' == format )
+				this.setXPathRange( XPathRange.fromString( domutil.getNodeText( field ) ) );
+			// ignore unknown formats
+		}
+		else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'access' )
+			this.access = null == field.firstChild ? 'private' : domutil.getNodeText( field );
+		else if ( field.namespaceURI == NS_PTR && domutil.getLocalName( field ) == 'action' )
+			this.action = null == field.firstChild ? '' : domutil.getNodeText( field );
+		else if ( field.namespaceURI == NS_ATOM && domutil.getLocalName( field ) == 'updated' )
+			this.updated = domutil.parseIsoDate( domutil.getNodeText( field ) );
 	}
 	// This is here because annotations are only parsed from XML when being initialized.
 	// In future who knows, this might not be the case - and the reset would have to
@@ -544,7 +515,7 @@ Annotation.prototype.fromAtomContent = function( parent, mode )
 
 Annotation.prototype.atomContentText = function( parent, css )
 {
-	var node = jQuery( css, parent );
+	var node = cssQuery( css, parent );
 	if ( node && node.length > 0 )
 	{
 		var s = domutil.getNodeText( node[0] );
@@ -556,7 +527,7 @@ Annotation.prototype.atomContentText = function( parent, css )
 
 Annotation.prototype.atomContentAttrib = function( parent, css, attrib )
 {
-	var node = jQuery( css, parent );
+	var node = cssQuery( css, parent );
 	if ( node && node.length > 0 )
 		return node[0].getAttribute( attrib );
 	trace( null, 'CSS (' + css + ') did not resolve for "' + attrib + '" in ' + parent.innerHtml );

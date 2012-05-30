@@ -62,7 +62,7 @@ instanceOf: function( obj, type )
 
 parseIsoDate: function( s )
 {
-	var matches = s.match( /(\d{4})-?(\d{2})-?(\d{2})T(\d{2}):?(\d{2}):?(\d{2})([+-]\d{2}:?\d{2})/ );
+	var matches = s.match( /(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})([+-]\d{4})/ );
 	if ( null == matches )
 		return null;
 	else
@@ -374,35 +374,21 @@ getLocalName: function( element )
 },
 
 /*
- * I considered jQuery instead of getChildByTagClass etc., but it has several weaknesses:
+ * I considered cssQuery instead of getChildByTagClass etc., but it has several weaknesses:
  * - in many cases I need to exclude subtrees using fskip
  * - CSS queries only look down the tree, not up or at siblings
  * CSS (or XPath) could be used by filtering out elements that are ancestors of a filtered
  * node.  But then why waste the time scanning what could be a long document?  (Especially when
- * Marginalia already has performance problems).
+ * Marginalia already has performance problems).  Better to update cssQuery.
  */
-
- 
-/**
- * Apply a CSS selector using an implementation from jQuery
- * here because originally domutil was not dependent on jQuery
- */
-select: function( selector, root, first )
-{
-	var results = jQuery( selector, root );
-	if ( first )
-		return results && results.length ? results[ 0 ] : null;
-	else
-		return results;
-},
 
 /**
  * Fetch the first child with a given class attribute value
  */
 childByTagClass: function( node, tagName, className, fskip )
 {
-//	if ( node == null )
-//		alert( "node not found tag=" + tagName + ", class=" + className );
+	if ( node == null )
+		alert( "node not found tag=" + tagName + ", class=" + className );
 	if ( node.nodeType == ELEMENT_NODE && ( ! fskip || ! fskip( node ) ) )
 	{
 		if ( null == tagName || tagName.toUpperCase( ) == node.tagName.toUpperCase( ) )
@@ -635,27 +621,13 @@ closestPrecedingMatchingElement: function( node, f )
 	return null;
 },
 
-// Should be a jQuery function, but right now I just want to make it work
-closestPrecedingFlat: function( rel, selector, orself )
-{
-	if ( orself && $( rel ).is( selector ) )
-		return rel;
-	else
-	{
-		return domutil.closestPrecedingMatchingElement( rel, function( node, tag ) {
-			return $( node ).is( selector ); } );
-	}
-},
-
 /*
  * Find the start of the closest preceding breaking element *in document order*
  * This is not the same as the closest preceding element at the same depth as the passed element
  * E.g., for <a> <b>...</b> </a> <rel/>, the closest preceding element for rel is b - not a
  */
-closestPrecedingBreakingElement: function( rel, orself )
+closestPrecedingBreakingElement: function( rel )
 {
-	if ( orself && ELEMENT_NODE == rel.nodeType && domutil.isBreakingElement( rel.tagName ) )
-		return rel;
 	return domutil.closestPrecedingMatchingElement( rel, function( node, isStartTag ) {
 		return isStartTag && domutil.isBreakingElement( node.tagName ); } );
 },
@@ -663,10 +635,8 @@ closestPrecedingBreakingElement: function( rel, orself )
 /**
  * Find the start of the closest preceding block-level element in document order
  */
-closestPrecedingBlockElement: function( rel, orself )
+closestPrecedingBlockElement: function( rel )
 {
-	if ( orself && ELEMENT_NODE == rel.nodeType && domutil.isBreakingElement( rel.tagName ) )
-		return rel;
 	return domutil.closestPrecedingMatchingElement( rel, function( node, isStartTag ) {
 		return isStartTag && domutil.isBlockElement( node.tagName ); } );
 },
@@ -897,64 +867,6 @@ button: function( spec )
 	return domutil.element( 'button', spec );
 },
 
-/**
- * Given a plain text string, build text nodes and <a> nodes for any contained URLs
- * Appends constructed nodes to the passed node
- */
-urlize: function( node )
-{
-	var child = node.firstChild;
-	while ( child )
-	{
-		if ( TEXT_NODE == child.nodeType || CDATA_SECTION_NODE == child.nodeType )
-		{
-			var tail = child.nodeValue;
-			var next = child.nextSibling;
-			
-			// Rebuild node content with text and links
-			while ( tail.length > 0 )
-			{
-				var match = tail.match( /https?:\/\/([a-zA-Z0-9\.-]+)(?:\/(?:[^ ]*[a-zA-Z0-9\/#])?)?/ );
-				var url = null;
-				if ( match )
-					url = match[ 0 ];
-				else
-				{
-					match = tail.match( /(www\.[a-zA-Z0-9\.-]+\.[a-zA-Z]{2,4})/ );
-					if ( match )
-						url = 'http://' + match[ 1 ] + '/';
-				}
-				if ( url )
-				{
-					var head = tail.substr( 0, match.index );
-					if ( head.length )
-						node.appendChild( document.createTextNode( head ) );
-					domain = match[ 1 ];
-					//if ( 'www.' == domain.substr( 0, 4 ) )
-					//	domain = domain.substr( 4 );
-					node.insertBefore( domutil.element( 'a', {
-						href: url,
-						title: url,
-						onclick: domutil.stopPropagation,
-						content: domain }), next);
-					tail = tail.substr( head.length + url.length );
-				}
-				else
-				{
-					node.insertBefore( document.createTextNode( tail ), next );
-					break;
-				}
-			}
-			
-			// now remove the old text node
-			node.removeChild( child );
-			child = next;
-		}
-		else
-			child = child.nextSibling;
-	}
-},
-
 
 /* ********** Element Position/Dimension Manipulation ********** */
 
@@ -1014,24 +926,13 @@ getWindowXScroll: function( )
 		return document.body.scrollLeft;
 },
 
-SCROLL_POS_TOP: 0,
-SCROLL_POS_CENTER: 1,
-SCROLL_POS_CENTER_NODE: 2,
-SCROLL_POS_UP_NODE: 3,
-scrollWindowToNode: function( node, position, params )
+scrollWindowToNode: function( node )
 {
 	if ( null != node )
 	{
 		var xoffset = domutil.getWindowXScroll( );
 		var yoffset = domutil.getElementYOffset( node, node.ownerDocument.documentElement );
-		if ( domutil.SCROLL_POS_CENTER == position )
-			yoffset -= document.documentElement.clientHeight / 2;
-		else if ( domutil.SCROLL_POS_CENTER_NODE == position )
-			yoffset -= document.documentElement.clientHeight / 2 - Math.ceil( $( node ).innerHeight( ) / 2 );
-		else if ( domutil.SCROLL_POS_UP_NODE == position )
-			yoffset -= document.documentElement.clientHeight / 4;
-		$( 'body' ).scrollTo( { left:xoffset, top:yoffset}, params );
-//		window.scrollTo( xoffset, yoffset );
+		window.scrollTo( xoffset, yoffset );
 	}
 },
 
@@ -1041,13 +942,10 @@ scrollWindowToNode: function( node, position, params )
  */
 createAjaxRequest: function( )
 {
-	var request;
 	if ( window.XMLHttpRequest )
-		request = new XMLHttpRequest( );  // Gecko / XHTML / WebKit
+		return new XMLHttpRequest( );  // Gecko / XHTML / WebKit
 	else
-		request = new ActiveXObject( "Microsoft.XMLHTTP" );  // MS IE
-//	request.setRequestHeader( 'X-Requested-With', 'XMLHttpRequest' );
-	return request;
+		return new ActiveXObject( "Microsoft.XMLHTTP" );  // MS IE
 },
 
 /*
@@ -1437,164 +1335,8 @@ isString: function( s )
 		return null != s.constructor.toString( ).match( /string/i );
 	else
 		return false;
-},
-
-// Thanks to Dan Allen (?) at mojavelinux for the hash implementation
-// http://www.mojavelinux.com/articles/javascript_hashes.html
-Hash: function( )
-{
-	this.length = 0;
-	this.items = new Array();
-	for (var i = 0; i < arguments.length; i += 2) {
-		if (typeof(arguments[i + 1]) != 'undefined') {
-			this.items[arguments[i]] = arguments[i + 1];
-			this.length++;
-		}
-	}
-   
-	this.removeItem = function(in_key)
-	{
-		var tmp_previous;
-		if (typeof(this.items[in_key]) != 'undefined') {
-			this.length--;
-			var tmp_previous = this.items[in_key];
-			delete this.items[in_key];
-		}
-	   
-		return tmp_previous;
-	}
-
-	this.getItem = function(in_key) {
-		return this.items[in_key];
-	}
-
-	this.setItem = function(in_key, in_value)
-	{
-		var tmp_previous;
-		if (typeof(in_value) != 'undefined') {
-			if (typeof(this.items[in_key]) == 'undefined') {
-				this.length++;
-			}
-			else {
-				tmp_previous = this.items[in_key];
-			}
-
-			this.items[in_key] = in_value;
-		}
-	   
-		return tmp_previous;
-	}
-
-	this.hasItem = function(in_key)
-	{
-		return typeof(this.items[in_key]) != 'undefined';
-	}
-
-	this.clear = function()
-	{
-		for (var i in this.items) {
-			delete this.items[i];
-		}
-
-		this.length = 0;
-	}
 }
-}
-
-
-/**
- * include: CSS selector determining which nodes to include
- * exclude: CSS selector determining which nodes to exclude
- * text: when extracting a value, take this attribute or node text
- */
-function Selector( include, exclude, text )
-{
-	this.include = include;
-	this.exclude = exclude;
-	this.text = text;
-}
-
-Selector.prototype.nodes = function( root )
-{
-	if ( this.exclude )
-	{
-		var result0 = domutil.select( this.include, root );
-		if ( ! result0 )
-			return [ ];
-		else
-		{
-			var subtract = domutil.select( this.exclude, root );
-			if ( subtract )
-			{
-				// This is god-awful inefficient.  I'd like to use a hash,
-				// but don't think I can use an object as an array index.
-				// Though it isn't as horribly bad as it might be because though
-				// it is O(n*m), m is expected to be very small.
-				var result = [ ];
-				for ( var i = 0;  i < result0.length;  ++i )
-				{
-					var b = true;
-					for ( var j = 0;  j < subtract.length;  ++j )
-					{
-						if ( subtract[ j ] == result[ i ] )
-						{
-							b = false;
-							break;
-						}
-					}
-					if ( b )
-						result.push( result0[ i ] );
-				}
-				return result;
-			}
-			else
-				return result0;
-		}
-	}
-	else
-		return domutil.select( this.include, root );
-}
-
-Selector.prototype.node = function( root )
-{
-	var v = this.nodes( root );
-	return ( v && v.length ) ? v[ 0 ] : null;
-}
-
-Selector.prototype.values = function( root )
-{
-	var nodes = this.nodes( root );
-	
-	if ( ! nodes || ! nodes.length )
-		return [ ];
-	
-	var results = [ ];
-	var resolved = false;
-	if ( this.text )
-	{
-		if ( '@' == this.text.charAt( 0 ) && nodes )
-		{
-			var attribute = this.text.substring( 1 );
-			for ( var i = 0;  i < nodes.length;  ++i )
-				results[ i ] = nodes[ i ].getAttribute( attribute );
-			resolved = true;
-		}
-	}
-	if ( ! resolved ) // default, or if ( 'text()' == this.text )
-	{
-		for ( var i = 0;  i < nodes.length;  ++i )
-			results[ i ] = domutil.getNodeText( nodes[ i ] );
-	}
-	
-	return results;
-}
-
-Selector.prototype.value = function( root )
-{
-	var v = this.values( root );
-	return ( v && v.length ) ? v[ 0 ]: null;
-}
-
+};
 
 /**
  * Walk through nodes in document order

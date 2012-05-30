@@ -4,24 +4,24 @@
  * Use darker shades of yellow for overlapping highlights
  */
  
-em.mia_annotation {
+.hentry .entry-content em.annotation {
 	background: #fdf377;
 	font-style: inherit;
 }
 
-em.mia_annotation em.mia_annotation {
+.hentry .entry-content em.annotation em.annotation {
 	background: #f4e373;
 }
 
-em.mia_annotation em.mia_annotation em.mia_annotation {
+.hentry .entry-content em.annotation em.annotation em.annotation {
 	background: #ecd470;
 }
 
-em.mia_annotation em.mia_annotation em.mia_annotation em.mia_annotation {
+.hentry .entry-content em.annotation em.annotation em.annotation em.annotation {
 	background: #e0ce6c;
 }
 
-em.mia_annotation em.mia_annotation em.mia_annotation em.mia_annotation em.mia_annotation {
+.hentry .entry-content em.annotation em.annotation em.annotation em.annotation em.annotation {
 	background: #d8c666;
 }
 
@@ -32,22 +32,22 @@ em.mia_annotation em.mia_annotation em.mia_annotation em.mia_annotation em.mia_a
  * Strikethrough etc.
  */
 
-em.mia_annotation.action-edit {
+.hentry .entry-content em.annotation.action-edit {
 	background: none;
 }
 
-em.mia_annotation del {
+.hentry .entry-content em.annotation del {
 	color: darkred;
 	text-decoration: line-through;
 }
 
-em.mia_annotation ins {
+.hentry .entry-content em.annotation ins {
 	color: darkblue;
 	text-decoration: none;
 }
 
-em.mia_annotation a,
-a em.mia_annotation {
+.hentry .entry-content em.annotation a,
+.hentry .entry-content a em.annotation {
 	text-decoration: underline;
 }
 
@@ -56,7 +56,7 @@ a em.mia_annotation {
  * Inserted links
  */
 
-em.mia_annotation sup a {
+.hentry .entry-content em.annotation sup a {
 	text-decoration: none;
 	background-color: inherit;
 	cursor: pointer;
@@ -67,14 +67,14 @@ em.mia_annotation sup a {
  * Annotation margin notes
  */
 
-.mia_margin ol {
+.hentry .notes ol {
 	list-style-type: none;
 	margin: 0;
 	padding: 0 .5ex ;
 	height: 100%;
 }
 
-.mia_margin li {
+.hentry .notes li {
 	position: relative;
 	font-family: sans-serif;
 	font-size: 80%;	
@@ -83,10 +83,11 @@ em.mia_annotation sup a {
 	padding: 0;
 	min-height: 1.2em;
 	line-height: 1.2em;
+	width: 100%;
 	cursor: pointer;
 }
 
-.mia_margin li.mia_dummyfirst {
+.hentry .notes li.dummy {
 	height: 1px;
 	min-height: 1px;
 	margin: 0 0 -1px 0;
@@ -94,45 +95,32 @@ em.mia_annotation sup a {
 }
 
 /* notes by another user are in a lighter grey */
-.mia_margin li.mia_other-user {
-	color: #444;
-	cursor: inherit;
+.hentry .notes li.other-user {
+	color: #555;
+}
+.hentry .notes .username {
+	font-style: italic;
 }
 
-.mia_margin .mia_username {
-	/*font-variant: small-caps;*/
-	/*font-size: 90%;*/
-}
 
-.mia_recent .mia_username {
-	xfont-weight: bold;
-	xcolor: #444;
-}
-
-.mia_recent .mia_username:before {
-	content: '*';
-	font-size: 120%;
-	color: #d00;
-}
-
-.mia_margin li.mia_quote-error p:before {
+.hentry .notes li.quote-error p:before {
 	content: '!';
 	padding: 0 .75ex;
 	margin-right: .2ex;
-	background: #d00;
+	background: red;
 	color: white;
 	font-weight: bold;
 }
 
-.mia_margin li.mia_collapsed {
+.hentry .notes li.collapsed {
 	overflow: hidden;
 }
 
-.mia_margin li.mia_collapsed p {
+.hentry .notes li.collapsed p {
 	white-space: nowrap;
 }
 
-.mia_margin li.mia_dummyfirst {
+.hentry .notes li.dummyfirst {
 	height: 1px;	/* force minimal display so later note margins will be correctly calculated */
 	cursor: default;
 	border: none;
@@ -141,13 +129,13 @@ em.mia_annotation sup a {
 	padding: 0;
 }
 
-.mia_margin li .controls {
+.hentry .notes li .controls {
 	float: right;
 	vertical-align: top;
 	/*display: none;*/
 }
 
-.mia_margin li .select-action {
+.hentry .notes li .select-action {
 	margin: .5ex;
 	padding: 0 0 0 .5ex;
 	list-style-type: none;
@@ -155,13 +143,13 @@ em.mia_annotation sup a {
 	border-left: #bbb .5ex solid;
 }
 
-.mia_margin li .select-action li {
+.hentry .notes li .select-action li {
 	margin: 0;
 	padding: 0;
 	position: relative;
 }
 
-.mia_margin li .select-action button {
+.hentry .notes li .select-action button {
 	border: none;
 	padding: 0;
 	cursor: pointer;
@@ -171,12 +159,12 @@ em.mia_annotation sup a {
 }
 
 
-.mia_margin li .select-action button:hover {
+.hentry .notes li .select-action button:hover {
 	background-color: #bbb;
 }
 	
-.mia_margin li .controls button,
-.mia_margin li button.expand-edit {
+.hentry .notes li .controls button,
+.hentry .notes li button.expand-edit {
 	line-height: 1em;
 	border: none;
 	font-size: inherit;
@@ -189,14 +177,12 @@ em.mia_annotation sup a {
 	z-index: 1000;
 }
 
-/*
-.mia_margin li .controls button:hover,
-.mia_margin li button.mia_expand-edit {
+.hentry .notes li .controls button:hover,
+.hentry .notes li button.expand-edit {
 	font-weight: bold;
 }
-*/
 
-.mia_margin li textarea {
+.hentry .notes li textarea {
 	font-size: inherit;
 	font-family: sans-serif;
 	border: none;
@@ -205,95 +191,51 @@ em.mia_annotation sup a {
 	width: 95%;
 }
 
-.mia_margin li button.mia_annotation-access {
+.hentry .notes li button.annotation-access {
 	heigh: 1.2em;
 	width: 1em;
 }
 
 /*
-.mia_margin li.mia_hover,
-.hentry .entry-content em.mia_annotation.mia_hover,
-.hentry .entry-content em.mia_annotation.mia_hover ins,
-.hentry .entry-content em.mia_annotation.mia_hover del {
+.hentry .notes li.hover,
+.hentry .entry-content em.annotation.hover,
+.hentry .entry-content em.annotation.hover ins,
+.hentry .entry-content em.annotation.hover del {
 	color: red;
 }
 */
 
-.mia_margin li {
-	padding-left: 2px;
-}
-
-.mia_margin li.mia_hover {
-	color: #d00;
-}
-em.mia_annotation.mia_hover {
-	color: #d00;
-	outline: #d00 1px solid;
-}
-.mia_margin li.mia_hover:before {
-	background-color: #d00;
-	height: 100%;
-	position: absolute;
-	right: 100%;
-	width: .2px;
-	padding-right: 2px;
-	top: 0;
-	content: ' ';
-	display: block;
-}
-
-
-.mia_margin li button.mia_expand-edit {
+.hentry .notes li button.expand-edit {
 	position: absolute;
 	top: 0;
 	right: 100%;
 }
 
-.mia_margin .mia_editing-link label {
+.hentry .notes .editing-link label {
 	position: absolute;
 	top: 0;
 	left: 0;
 	width: 1em;
 }
 
-.mia_margin .mia_editing-link input {
+.hentry .notes .editing-link input {
 	margin-left: 1.5em;
 	margin-right: 1.5em;
 	max-width: 80%;
 }
 
-.mia_margin .mia_editing-link button {
+.hentry .notes .editing-link button {
 	position: absolute;
 	top: 0;
 	right: 0;
 	width: 1em;
 }
 
-p.mia_charsremaining {
-	margin: 0;
-	text-align: right;
-	color: #999;
+
+/*
+ * Hide smart copy additional info
+ */
+.hentry .smart-copy {
+	display: none;
 }
 
-/** Default service error display */
-.mia_errorbox {
-	position: fixed;
-	width: 50%;
-	top: 30%;
-	left: 25%;
-	background: white;
-	border:  3px #ddd outset;
-	font-size: large;
-}
-
-.mia_errorbox h3 {
-	margin: 0;
-	padding: .5ex;
-	background: yellow;
-	font-size: x-large;
-	text-align: center;
-}
-
-.mia_errorbox p {
-	margin: 1ex 1em 1em 1em;
-}
