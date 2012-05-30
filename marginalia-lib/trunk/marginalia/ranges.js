@@ -16,7 +16,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -91,7 +91,7 @@ TextRange.prototype.shrinkwrap = function( fskip )
 
 	// First apply the offset
 	if ( TEXT_NODE != node.nodeType && startOffset > 0)
-		node = node.childNodes.item( startOffset );
+		node = node.childNodes.item( startOffset - 1 );
 		
 	var foundOther = false;
 	var walker = new DOMWalker( node );
@@ -128,7 +128,7 @@ TextRange.prototype.shrinkwrap = function( fskip )
 
 	// First apply the offset
 	if ( TEXT_NODE != endContainer.nodeType && endOffset > 0 )
-		node = node.childNodes.item( endOffset );
+		node = node.childNodes.item( endOffset - 1 );
 		
 	var foundOther = false;
 	var walker = new DOMWalker( node, true );
@@ -1417,12 +1417,22 @@ function NormalizedRange( range, rel, fskip )
 
 /**
  * Get the text inside a TextRange
- * While the built-in toString() method would do this, we need to skip content
- * (such as smart copy text).  This is in fact designed to work with smartcopy, so there
- * are certain cases it may not handle.  This also assumes that the range points to
- * text nodes at the start and end (otherwise walking won't work).
+ * All whitespace (including that resulting from breaking elements) is reduced to a single space.
+ * While the built-in toString() method would do this, we need the ability to skip
+ * content (e.g. marginalia insertions).  There are certain cases this may not handle.
+ * This also assumes that the range points to text nodes at the start and end (otherwise 
+ * walking won't work).
+ * mode can be one of:
+ *  'text' - text content only (default)
+ *  'breaking-tags' - embed breaking tags (no attributes)
+ *  'tags' - embed all tags (no attributes)
+ * If tags are embedded, breaking tags are always preceeded/folowed by a space.  Thus tags can be stripped
+ * and &amp; &lt; &gt; replaced and the result will be the same as 'text' mode.
  */
-function getTextRangeContent( range, fskip )
+RANGETEXT_TEXT = 0;
+RANGETEXT_BREAKING = 1;
+RANGETEXT_TAGS = 2;
+function getTextRangeContent( range, fskip, mode )
 {
 	var s;
 	// Special case
@@ -1436,9 +1446,26 @@ function getTextRangeContent( range, fskip )
 		while ( null != walker.node && walker.node != range.endContainer )
 		{
 			if ( TEXT_NODE == walker.node.nodeType )
-				s += walker.node.nodeValue;
-			else if ( ELEMENT_NODE == walker.node.nodeType && domutil.isBreakingElement( walker.node.tagName ) )
-				s += ' ';
+			{
+				if ( RANGETEXT_TEXT == mode )
+					s += walker.node.nodeValue;
+				else
+					s += walker.node.nodeValue.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+			}
+			else if ( ELEMENT_NODE == walker.node.nodeType )
+			{
+				if ( domutil.isBreakingElement( walker.node.tagName ) )
+				{
+					if ( RANGETEXT_TEXT == mode )
+						s += ' ';
+					else if ( RANGETEXT_BREAKING == mode || RANGETEXT_TAGS == mode )
+						s += ( walker.startTag ? ' <' : '</' ) + walker.node.tagName + ( walker.startTag ? '>' : '> ' );
+				}
+				else if ( RANGETEXT_TAGS == mode )
+				{
+					s += '<' + ( walker.startTag ? '' : '/' ) + walker.node.tagName + '>';
+				}
+			}
 			walker.walk( ! fskip( walker.node ) );	
 		}
 	

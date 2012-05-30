@@ -11,7 +11,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -41,7 +41,7 @@ domutil = {
 isXhtml: function( doc )
 {
 	if ( doc.contentType )
-		return /xml/i.test( doc.contentType );
+		return /xml/i.test( doc.contentType );                
 	else
 		return doc.documentElement.tagName != "HTML";
 },
@@ -62,7 +62,7 @@ instanceOf: function( obj, type )
 
 parseIsoDate: function( s )
 {
-	var matches = s.match( /(\d{4})(\d{2})(\d{2})T(\d{2})(\d{2})([+-]\d{4})/ );
+	var matches = s.match( /(\d{4})-?(\d{2})-?(\d{2})T(\d{2}):?(\d{2}):?(\d{2})([+-]\d{2}:?\d{2})/ );
 	if ( null == matches )
 		return null;
 	else
@@ -71,6 +71,12 @@ parseIsoDate: function( s )
 		// time and local time are the same - which is rather bad.
 		return new Date( matches[1], matches[2]-1, matches[3], matches[4], matches[5] );
 	}
+},
+
+formatIsoDate: function( d )
+{
+	return d.getFullYear( ) + '-' + ( d.getMonth( ) + 1 ) + '-' + d.getDate( ) + 'T'
+		+ d.getHours( ) + ':' + d.getMinutes( ) + ':' + d.getSeconds( );
 },
 
 htmlEncode: function( s )
@@ -227,6 +233,17 @@ htmlDisplayModel: function( tagName )
 },
 
 /**
+ * Given an HTML string, return only the contents of the <body> element
+ * Requires that <body> and </body> not occur anywhere else in the document
+ * (are rare occurrence, but it could happen - so this function should only
+ * be used for documents that you generate).
+ */
+extractBody: function( html )
+{
+	return html.replace( /<body>(.*)<\/body>/i, '$1' );
+},
+ 
+/**
  * Determine whether a given HTML element is block-level (as opposed to inline,
  * although there are some elements, such as script, that are neither)
  */
@@ -374,13 +391,27 @@ getLocalName: function( element )
 },
 
 /*
- * I considered cssQuery instead of getChildByTagClass etc., but it has several weaknesses:
+ * I considered jQuery instead of getChildByTagClass etc., but it has several weaknesses:
  * - in many cases I need to exclude subtrees using fskip
  * - CSS queries only look down the tree, not up or at siblings
  * CSS (or XPath) could be used by filtering out elements that are ancestors of a filtered
  * node.  But then why waste the time scanning what could be a long document?  (Especially when
- * Marginalia already has performance problems).  Better to update cssQuery.
+ * Marginalia already has performance problems).
  */
+
+ 
+/**
+ * Apply a CSS selector using an implementation from jQuery
+ * here because originally domutil was not dependent on jQuery
+ */
+select: function( selector, root, first )
+{
+	var results = jQuery( selector, root );
+	if ( first )
+		return results && results.length ? results[ 0 ] : null;
+	else
+		return results;
+},
 
 /**
  * Fetch the first child with a given class attribute value
@@ -621,13 +652,27 @@ closestPrecedingMatchingElement: function( node, f )
 	return null;
 },
 
+// Should be a jQuery function, but right now I just want to make it work
+closestPrecedingFlat: function( rel, selector, orself )
+{
+	if ( orself && $( rel ).is( selector ) )
+		return rel;
+	else
+	{
+		return domutil.closestPrecedingMatchingElement( rel, function( node, tag ) {
+			return $( node ).is( selector ); } );
+	}
+},
+
 /*
  * Find the start of the closest preceding breaking element *in document order*
  * This is not the same as the closest preceding element at the same depth as the passed element
  * E.g., for <a> <b>...</b> </a> <rel/>, the closest preceding element for rel is b - not a
  */
-closestPrecedingBreakingElement: function( rel )
+closestPrecedingBreakingElement: function( rel, orself )
 {
+	if ( orself && ELEMENT_NODE == rel.nodeType && domutil.isBreakingElement( rel.tagName ) )
+		return rel;
 	return domutil.closestPrecedingMatchingElement( rel, function( node, isStartTag ) {
 		return isStartTag && domutil.isBreakingElement( node.tagName ); } );
 },
@@ -635,8 +680,10 @@ closestPrecedingBreakingElement: function( rel )
 /**
  * Find the start of the closest preceding block-level element in document order
  */
-closestPrecedingBlockElement: function( rel )
+closestPrecedingBlockElement: function( rel, orself )
 {
+	if ( orself && ELEMENT_NODE == rel.nodeType && domutil.isBreakingElement( rel.tagName ) )
+		return rel;
 	return domutil.closestPrecedingMatchingElement( rel, function( node, isStartTag ) {
 		return isStartTag && domutil.isBlockElement( node.tagName ); } );
 },
@@ -867,6 +914,64 @@ button: function( spec )
 	return domutil.element( 'button', spec );
 },
 
+/**
+ * Given a plain text string, build text nodes and <a> nodes for any contained URLs
+ * Appends constructed nodes to the passed node
+ */
+urlize: function( node )
+{
+	var child = node.firstChild;
+	while ( child )
+	{
+		if ( TEXT_NODE == child.nodeType || CDATA_SECTION_NODE == child.nodeType )
+		{
+			var tail = child.nodeValue;
+			var next = child.nextSibling;
+			
+			// Rebuild node content with text and links
+			while ( tail.length > 0 )
+			{
+				var match = tail.match( /https?:\/\/([a-zA-Z0-9\.-]+)(?:\/(?:[^ ]*[a-zA-Z0-9\/#])?)?/ );
+				var url = null;
+				if ( match )
+					url = match[ 0 ];
+				else
+				{
+					match = tail.match( /(www\.[a-zA-Z0-9\.-]+\.[a-zA-Z]{2,4})/ );
+					if ( match )
+						url = 'http://' + match[ 1 ] + '/';
+				}
+				if ( url )
+				{
+					var head = tail.substr( 0, match.index );
+					if ( head.length )
+						node.appendChild( document.createTextNode( head ) );
+					domain = match[ 1 ];
+					//if ( 'www.' == domain.substr( 0, 4 ) )
+					//	domain = domain.substr( 4 );
+					node.insertBefore( domutil.element( 'a', {
+						href: url,
+						title: url,
+						onclick: domutil.stopPropagation,
+						content: domain }), next);
+					tail = tail.substr( head.length + url.length );
+				}
+				else
+				{
+					node.insertBefore( document.createTextNode( tail ), next );
+					break;
+				}
+			}
+			
+			// now remove the old text node
+			node.removeChild( child );
+			child = next;
+		}
+		else
+			child = child.nextSibling;
+	}
+},
+
 
 /* ********** Element Position/Dimension Manipulation ********** */
 
@@ -926,13 +1031,24 @@ getWindowXScroll: function( )
 		return document.body.scrollLeft;
 },
 
-scrollWindowToNode: function( node )
+SCROLL_POS_TOP: 0,
+SCROLL_POS_CENTER: 1,
+SCROLL_POS_CENTER_NODE: 2,
+SCROLL_POS_UP_NODE: 3,
+scrollWindowToNode: function( node, position, params )
 {
 	if ( null != node )
 	{
 		var xoffset = domutil.getWindowXScroll( );
 		var yoffset = domutil.getElementYOffset( node, node.ownerDocument.documentElement );
-		window.scrollTo( xoffset, yoffset );
+		if ( domutil.SCROLL_POS_CENTER == position )
+			yoffset -= document.documentElement.clientHeight / 2;
+		else if ( domutil.SCROLL_POS_CENTER_NODE == position )
+			yoffset -= document.documentElement.clientHeight / 2 - Math.ceil( $( node ).innerHeight( ) / 2 );
+		else if ( domutil.SCROLL_POS_UP_NODE == position )
+			yoffset -= document.documentElement.clientHeight / 4;
+		$( 'body' ).scrollTo( { left:xoffset, top:yoffset}, params );
+//		window.scrollTo( xoffset, yoffset );
 	}
 },
 
@@ -942,10 +1058,13 @@ scrollWindowToNode: function( node )
  */
 createAjaxRequest: function( )
 {
+	var request;
 	if ( window.XMLHttpRequest )
-		return new XMLHttpRequest( );  // Gecko / XHTML / WebKit
+		request = new XMLHttpRequest( );  // Gecko / XHTML / WebKit
 	else
-		return new ActiveXObject( "Microsoft.XMLHTTP" );  // MS IE
+		request = new ActiveXObject( "Microsoft.XMLHTTP" );  // MS IE
+//	request.setRequestHeader( 'X-Requested-With', 'XMLHttpRequest' );
+	return request;
 },
 
 /*
@@ -1335,8 +1454,197 @@ isString: function( s )
 		return null != s.constructor.toString( ).match( /string/i );
 	else
 		return false;
+},
+
+// Thanks to Dan Allen (?) at mojavelinux for the hash implementation
+// http://www.mojavelinux.com/articles/javascript_hashes.html
+Hash: function( )
+{
+	this.length = 0;
+	this.items = new Array();
+	for (var i = 0; i < arguments.length; i += 2) {
+		if (typeof(arguments[i + 1]) != 'undefined') {
+			this.items[arguments[i]] = arguments[i + 1];
+			this.length++;
+		}
+	}
+   
+	this.removeItem = function(in_key)
+	{
+		var tmp_previous;
+		if (typeof(this.items[in_key]) != 'undefined') {
+			this.length--;
+			var tmp_previous = this.items[in_key];
+			delete this.items[in_key];
+		}
+	   
+		return tmp_previous;
+	}
+
+	this.getItem = function(in_key) {
+		return this.items[in_key];
+	}
+
+	this.setItem = function(in_key, in_value)
+	{
+		var tmp_previous;
+		if (typeof(in_value) != 'undefined') {
+			if (typeof(this.items[in_key]) == 'undefined') {
+				this.length++;
+			}
+			else {
+				tmp_previous = this.items[in_key];
+			}
+
+			this.items[in_key] = in_value;
+		}
+	   
+		return tmp_previous;
+	}
+
+	this.hasItem = function(in_key)
+	{
+		return typeof(this.items[in_key]) != 'undefined';
+	}
+
+	this.clear = function()
+	{
+		for (var i in this.items) {
+			delete this.items[i];
+		}
+
+		this.length = 0;
+	}
 }
-};
+}
+
+
+/**
+ * include: CSS selector or function determining which nodes to include
+ * exclude: CSS selector or function determining which nodes to exclude
+ * text: when extracting a value, take this attribute or node text or call this function
+ */
+function Selector( include, exclude, text )
+{
+	this.include = include;
+	this.exclude = exclude;
+	this.text = text;
+}
+
+/**
+ * Used internally to determine whether a selector is a CSS selector string
+ * or a function, call it, and return the result
+ */
+Selector.prototype.select = function( sel, root )
+{
+	// If it's not a string, assume it's a function
+	return domutil.isString( sel ) ? domutil.select( sel, root ) : sel( root );
+}
+
+/**
+ * Return all nodes matching the selector
+ */
+Selector.prototype.nodes = function( root )
+{
+	if ( this.exclude )
+	{
+		var result0 = this.select( this.include, root );
+		if ( ! result0 )
+			return [ ];
+		else
+		{
+			var subtract = this.select( this.exclude, root );
+			if ( subtract )
+			{
+				// This is god-awful inefficient.  I'd like to use a hash,
+				// but don't think I can use an object as an array index.
+				// Though it isn't as horribly bad as it might be because though
+				// it is O(n*m), m is expected to be very small.
+				var result = [ ];
+				for ( var i = 0;  i < result0.length;  ++i )
+				{
+					var b = true;
+					for ( var j = 0;  j < subtract.length;  ++j )
+					{
+						if ( subtract[ j ] == result[ i ] )
+						{
+							b = false;
+							break;
+						}
+					}
+					if ( b )
+						result.push( result0[ i ] );
+				}
+				return result;
+			}
+			else
+				return result0;
+		}
+	}
+	else
+		return this.select( this.include, root );
+}
+
+/**
+ * Return the first node matching the selector
+ */
+Selector.prototype.node = function( root )
+{
+	var v = this.nodes( root );
+	return ( v && v.length ) ? v[ 0 ] : null;
+}
+
+/**
+ * Return the values of all nodes matching the selector
+ */
+Selector.prototype.values = function( root )
+{
+	var nodes = this.nodes( root );
+	
+	if ( ! nodes || ! nodes.length )
+		return [ ];
+	
+	var results = [ ];
+	var resolved = false;
+	if ( ! this.text || this.text == 'text()' ) // default, or if ( 'text()' == this.text )
+	{
+		for ( var i = 0;  i < nodes.length;  ++i )
+			results[ i ] = domutil.getNodeText( nodes[ i ] );
+	}
+	else
+	{
+		if ( domutil.isString( this.text ) )
+		{
+			if ( '@' == this.text.charAt( 0 ) && nodes )
+			{
+				var attribute = this.text.substring( 1 );
+				for ( var i = 0;  i < nodes.length;  ++i )
+					results[ i ] = nodes[ i ].getAttribute( attribute );
+				resolved = true;
+			}
+			else
+				throw 'Bad selector text value ' + this.text;
+		}
+		else
+		{
+			for ( i = 0;  i < nodes.length;  ++i )
+				results[ i ] = this.text( nodes[ i ] );
+			resolved = true;
+		}
+	}
+	
+	return results;
+}
+
+/**
+ * Return the value of the first node matching the selector
+ */
+Selector.prototype.value = function( root )
+{
+	var v = this.values( root );
+	return ( v && v.length ) ? v[ 0 ]: null;
+}
+
 
 /**
  * Walk through nodes in document order
@@ -1420,6 +1728,12 @@ DOMWalker.prototype.walk = function( gointo, reverse )
  *                      have read a given publication
  * <name>_publication_n - content of publication #n
  * <name>_publish_count - maximum publication # used so far
+ *
+ * An item on the bus consists of the following:
+ * name - an identifier
+ * text - the item value
+ * once - a control field indicating that only one subscriber should see the item
+ * forward - a control field indicating that future subscribers should see the item
  */
 function CookieBus( cookieName )
 {
@@ -1427,6 +1741,7 @@ function CookieBus( cookieName )
 	this.subscribed = false;
 	this.interval = null;
 	this.readPubs = new Object( );
+	this.nextToRead = 0;
 }
 
 /**
@@ -1437,14 +1752,32 @@ CookieBus.prototype.getPublication = function( name )
 	var rawPub = domutil.readCookie( this.cookieName + '_publication_' + name );
 	if ( rawPub )
 	{
+		var r = CookieBus.parseCookieValue( rawPub );
 		return {
 			name: name,
-			value: rawPub
+			once: r[ 'once' ] == 'true' ? true : false,
+			forward: r[ 'forward' ] == 'true' ? true : false,
+			value: r.value
 		};
 	}
 	else
 		return null;
-}	
+}
+
+CookieBus.parseCookieValue = function( raw )
+{
+	raw = raw.split( ':' );
+	var control = raw[ 0 ];
+	var text = raw[ 1 ];
+	var paramstrs = control.split( '&' );
+	var params = { value: raw[ 1 ] };
+	for ( var i = 0;  i < paramstrs.length;  ++i )
+	{
+		var p = paramstrs[ i ].split( '=' );
+		params[ p[ 0 ] ] = p[ 1 ];
+	}
+	return params;
+}
 
 CookieBus.prototype.getAllPublications = function( )
 {
@@ -1454,9 +1787,12 @@ CookieBus.prototype.getAllPublications = function( )
 	for ( var i = 0;  i < rawPubs.length;  ++i )
 	{
 		var pub = rawPubs[ i ];
+		var r = CookieBus.parseCookieValue( pub.value );
 		publications[ publications.length ] = {
 			name: pub.name.substring( prefix.length, pub.name.length ),
-			value: pub.value
+			value: r.value,
+			once: r.once ? true : false,
+			forward: r.forward ? true : false
 		};
 	}
 	return publications;
@@ -1494,33 +1830,44 @@ CookieBus.prototype.subscribe = function( interval, f, opts )
 	if ( ! this.subscribed )
 	{
 		this.subscribed = true;
+		this.nextToRead = 0;
 		
 		// Get and update the subscriber count (expires in 2 minutes)
 		var n = domutil.readCookie( this.cookieName + '_subscriber_count' );
 		n = n ? Number( n ) + 1 : 1;
 		domutil.createCookie( this.cookieName + '_subscriber_count', n, 0, 0, 2 );
 		
-		// We won't read existing publications, so record them as read
+		// We won't read existing items unless the forward flag is set,
+		// so record them as read
 		var publications = this.getAllPublications( );
 		for ( var i = 0;  i < publications.length;  ++i )
 		{
 			var pub = publications[ i ];
-			this.readPubs[ pub.name ] = true;
+			if ( ! pub.forward )
+				this.readPubs[ pub.name ] = true;
 		}
 		
 		if ( interval && f )
 		{
 			var bus = this;
 			this.interval = setInterval( function( ) {
-				while ( bus.subscribed )
-				{
+//				while ( bus.subscribed )
+//				{
 					bus.getUpdateSubscriberCount( );
-					var pub = bus.read( );
+					var pub = bus.nextUnread( );
 					if ( pub )
-						f( pub );
-					else
-						break;
-				}
+					{
+						// Only mark as read if the the callback indicates 
+						// that it has handled the cookie.
+						if ( f( pub ) )
+						{
+							bus.markAsRead( pub.name );
+							if ( pub.once );
+								bus.unpublish( pub.name );
+							return;
+						}
+					}
+//				}
 			}, interval );
 		}
 	}
@@ -1553,17 +1900,46 @@ CookieBus.prototype.terminate = function( )
 		domutil.removeCookie( publications[ i ].name );
 }
 
-CookieBus.prototype.publish = function( s )
+/**
+ * Publish on the bus
+ * s - the text to publish
+ * once - if true, the first subscriber to see this will delete it
+ * forward - if true the item should be seen by subscribers that appear
+ *   after it has been published
+ */
+CookieBus.prototype.publish = function( s, params )
 {
 	// Find the highest publish count
 	var n = domutil.readCookie( this.cookieName + '_publish_count' );
 	n = n ? Number( n ) + 1 : 1;
+
+	var once = false, forward = false;
+	for ( var p in params )
+	{
+		var setting = params[ p ];
+		switch ( p )
+		{
+			case 'once':
+				once = setting ? true : false;
+				break;
+				
+			case 'forward':
+				forward = setting ? true : false;
+				break;
+				
+			default:
+				throw "Unknown CookieBus parameter.";
+		}
+	}
 	
+	var control = 'once=' + ( once ? 'true' : 'false' )
+		+ '&forward=' + ( forward ? 'true' : 'false');
+	var text = control + ':' + s;
 	// Publish a new item
 	// Item expires in 1 minute
 	// Count expires in 2 minutes
 	domutil.createCookie( this.cookieName + '_publish_count', n, 0, 0, 2 );
-	domutil.createCookie( this.cookieName + '_publication_' + n, s, 0, 0, 1 );
+	domutil.createCookie( this.cookieName + '_publication_' + n, text, 0, 0, 1 );
 	return n;
 }
 
@@ -1572,6 +1948,41 @@ CookieBus.prototype.unpublish = function( n )
 	domutil.removeCookie( this.cookieName + '_publication_' + n );
 }
 
+/**
+ * Fetch the next unread item
+ * This is a bit tricky, because it's possible that this particular item might
+ * not be read successfully.  In that case the subsequent call to this should
+ * continue from the publication following this one.  This is done with the
+ * nextToRead index.  That's not foolproof is publications are removed from
+ * the list, but it's probably good enough.
+ */
+CookieBus.prototype.nextUnread = function( )
+{
+	if ( this.subscribed )
+	{
+		var publications = this.getAllPublications( );
+		for ( var i = 0;  i < publications.length;  ++i )
+		{
+			var x = ( i + this.nextToRead ) % publications.length;
+			this.nextToRead = ( x + 1 ) % publications.length;
+			var pub = publications[ i ];
+			if ( ! this.readPubs[ pub.name ] )
+				return pub;
+		}
+	}
+	return null;
+}
+
+/**
+ * When a publication is handled it should be marked as read so it won't be
+ * seen again.                                                                                            
+ */
+CookieBus.prototype.markAsRead = function( name )
+{
+	this.readPubs[ name ] = true;
+}
+
+/*
 CookieBus.prototype.read = function( )
 {
 	if ( this.subscribed )
@@ -1589,3 +2000,4 @@ CookieBus.prototype.read = function( )
 	}
 	return null;
 }
+*/

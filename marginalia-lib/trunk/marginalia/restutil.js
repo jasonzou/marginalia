@@ -285,7 +285,9 @@ postResource: function( serviceUrl, body, ok, fail, args )
 		if ( xmlhttp.readyState == 4 ) {
 			// No need for Safari hack, since Safari can't create annotations anyway.
 			// Status could should ideally be 201, but some services don't support that (django 1.0)
+			// console.log( 'status=' + xmlhttp.status );
 			if ( xmlhttp.status == 201 || xmlhttp.status == 200 ) {
+				// console.log( 'got response ' + xmlhttp.responseText + "\nOR\n" + xmlhttp.responseXml );
 				var url = xmlhttp.getResponseHeader( 'Location' );
 				if ( ok )
 					ok( url, args && args.okXml ? xmlhttp.responseXml : xmlhttp.responseText );

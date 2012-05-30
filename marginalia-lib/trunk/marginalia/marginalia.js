@@ -1,4 +1,4 @@
-/*
+/* 
  * marginalia.js
  *
  * Marginalia has been developed with funding and support from
@@ -11,7 +11,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -26,81 +26,71 @@
  * $Id$
  */
 
-// Features that can be switched on and off
-AN_BLOCKMARKER_FEAT = 'show block markers';
-AN_ACCESS_FEAT = 'public/private access settings';
-AN_LINKING_FEAT = 'allow external links';
-AN_EXTLINKS_FEAT = 'allow external links';
-AN_ACTIONS_FEAT = 'allow (edit) actions';
-
-// The names of HTML/CSS classes used by the annotation code.
-AN_HOVER_CLASS = 'hover';			// assigned to highlights and notes when the mouse is over the other
-AN_ANNOTATED_CLASS = 'annotated';	// class added to fragment when annotation is on
-AN_SELFANNOTATED_CLASS = 'self-annotated';  // annotations are by the current user (and therefore editable)
-AN_EDITINGNOTE_CLASS = 'editing-note';		// (on body) indicates a note is being edited
-AN_EDITINGLINK_CLASS = 'editing-link';
-AN_LASTHIGHLIGHT_CLASS = 'last';	// used to flag the last highlighted regin for a single annotation
-AN_ACTIONPREFIX_CLASS = 'action-';		// prefix for class names for actions (e.g. action-delete)
-
-AN_RANGECARET_ID = 'range-caret';		// identifies caret used to show zero-length ranges
-
-AN_ANNOTATION_FIELD = 'annotation';	// reference to Annotation object
-AN_POST_FIELD = 'post';				// reference to PostMicro object
-
-AN_ID_PREFIX = 'annot';				// prefix for annotation IDs in element classes and IDs
-
-// Length limits
-MAX_QUOTE_LENGTH = 1000;
-
-// The timeout between coop multitasking calls.  Should be short so most time is spent doing
-// something rather than timing out.
-AN_COOP_TIMEOUT = 50;
-
-// The maximum time to spend on one coop multitasking call.  Should be short enough to be
-// fairly unnoticeable, but long enough to get some work done.
-AN_COOP_MAXTIME = 200;
-
 /* ************************ User Functions ************************ */
 
 /**
  * Must be called before any other annotation functions
  * service - used to connect to the server side
  * loginUserId - the current user
- * displayUserId - the user whose annotations are to be shown (may differ from username)
- * urlBase - if null, annotation URLs are used as normal.  Otherwise, they are searched for this
  * string and anything preceeding it is chopped off.  This is necessary because IE lies about
  * hrefs:  it provides an absolute URL for that attribute, rather than the actual text.  In some
  * cases, absolute URLs aren't desirable (e.g. because the annotated resources might be moved
  * to another host, in which case the URLs would all break).
  */
-function Marginalia( service, loginUserId, displayUserId, features )
+function Marginalia( service, loginUserId, sheet, features )
 {
 	this.annotationService = service;
 	this.loginUserId = loginUserId;
-	this.displayUserId = displayUserId;
+	this.sheet = sheet;
 	this.editing = null;	// annotation currently being edited (if any)
 	this.noteEditor = null;	// state for note currently being edited (if any) - should replace editing, above
+	this.annotationCache = [ ];	 // array of arrays of annotations that have been fetched from the server
+	this.annotationCacheIndex = 0; // entries below this have already been displayed
 	
+	this.maxNoteLength = 250;
+	this.maxQuoteLength = 1000;
+	this.maxNoteHoverLength = 24;
 	this.userInRequest = false;
 	this.preferences = null;
 	this.keywordService = null;
 	this.urlBase = null;
-	this.blockMarkers = false;
-	this.access = false;
 	this.actions = false;
 	this.defaultAction = null;
 	this.skipContent = function(node) {
 		return _skipAnnotationLinks(node) || _skipAnnotationActions(node) || _skipCaret(node); };
-	this.saveEditPrefs = Marginalia.saveEditPrefs;
 	this.displayNote = Marginalia.defaultDisplayNote;
 	this.allowAnyUserPatch = false;
 	this.onMarginHeight = null;
+	this.serviceErrorCallback = Marginalia.defaultErrorCallback;
+	this.enableRecentFlag = false;
+	this.lastUpdate = null;
+	
+	this.selectors = {
+		post: new Selector( '.hentry', '.hentry .hentry' ),
+		post_content: new Selector( '.entry-content', '.entry-content .entry-content' ),
+		post_title: new Selector( '.entry-title', '.entry-content .title', 'text()' ),
+		post_author: new Selector( '.author', '.entry-content .author', 'text()' ),
+		post_authorid: new Selector( '.author', '.entry-content .author', '@title' ),
+		post_date: new Selector( 'abbr.published', '.entry-content abbr.published', '@title' ),
+		post_url: new Selector( 'a[rel="bookmark"]', '.entry-content a[rel="bookmark"]', '@href' ),
+		mia_notes: new Selector( '.notes', '.entry-content .notes' ),
+		mia_markers: new Selector( '.markers', '.entry-content .markers' )
+	};
 		
 	this.editors = {
 		'default': Marginalia.newDefaultEditor,
-		freeform: Marginalia.newEditorFunc( FreeformNoteEditor ),
-		keyword: Marginalia.newEditorFunc( KeywordNoteEditor ),
-		link: Marginalia.newEditorFunc( SimpleLinkUi )
+		freeform: Marginalia.newEditorFunc( FreeformNoteEditor )
+//		link: Marginalia.newEditorFunc( SimpleLinkUi )
+	};
+
+	this.icons = {
+		'public': '\u25cb', // SUN_SYMBOL '\u263c'; '\u26aa';
+		'private': '\u25c6', // MOON_SYMBOL '\u2641';
+		link: '\u263c', //'\u238b'; circle-arrow // \u2318 (point of interest) \u2020 (dagger) \u203b (reference mark) \u238b (circle arrow)
+		linkEdit: '\u263c', //'\u238b'; circle-arrow// \u2021 (double dagger)
+		collapsed: '+', // '\u25b7'; triangle
+		expanded: '-', // '\u25bd';
+		'delete': '\u00d7'
 	};
 	
 	for ( var feature in features )
@@ -108,9 +98,15 @@ function Marginalia( service, loginUserId, displayUserId, features )
 		var value = features[ feature ];
 		switch ( feature )
 		{
+			// The default sheet (e.g. public or private)
+			case 'sheetDefault':
+				this.defaultSheet = value;
+				break;
+				
 			// Set the default action for a new annotation ("edit" for track changes)
 			case 'action':
 				this.defaultAction = value;
+				break;
 			
 			// Allow this user to submit patches for out-of-date annotations by any other user
 			case 'allowAnyUserPatch':
@@ -133,11 +129,37 @@ function Marginalia( service, loginUserId, displayUserId, features )
 					this.editors[ name ] = value[ name ];
 				break;
 				
+			// Show flag for recent annotations
+			case 'enableRecentFlag':
+				this.enableRecentFlag = value;
+				break;
+			
+			// Override or add icons
+			case 'icons':
+				for ( var name in value )
+					this.icons[ name ] = value[ name ];
+				break;
+			
 			// The keyword service to provide the drop-down list of keywords
 			case 'keywordService':
 				this.keywordService = value;
 				break;
 				
+			// The maximum length of a margin note, in characters
+			case 'maxNoteLength':
+				this.maxNoteLength = value;
+				break;
+				
+			// The maximum length of hover text over a note or link
+			case 'maxNoteHoverLength':
+				this.maxNoteHoverLength = value;
+				break;
+
+			// Maximum length of a quote, in characters
+			case 'maxQuoteLength':
+				this.maxQuoteLength = value;
+				break;
+			
 			// Toggle: Create an annotation when the user presses the Enter key
 			case 'onkeyCreate':
 				if ( value )
@@ -154,11 +176,19 @@ function Marginalia( service, loginUserId, displayUserId, features )
 				this.preferences = value;
 				break;
 				
-			// Toggle: Display the private/public access button for each margin note
-			case 'showAccess':
-				this.showAccess = value;
+			// Callback for displaying an error when a service call to the server
+			// fails
+			case 'serviceErrorCallback':
+					this.serviceErrorCallback = value;
+					break;
+					
+			// Selectors for finding parts of the document (posts, urls, titles, etc.)
+			// Default selectors can be overriden individually
+			case 'selectors':
+				for ( var selector in value )
+					this.selectors[ selector ] = value[ selector ];
 				break;
-				
+			
 			case 'showActions':
 				this.showActions = value;
 				break;
@@ -173,9 +203,9 @@ function Marginalia( service, loginUserId, displayUserId, features )
 				break;
 				
 			// Show block markers in the left margin, indicating how many users have annotated a block
-			case 'showBlockMarkers':
-				this.showBlockMarkers = value;
-				break;
+//			case 'showBlockMarkers':
+//				this.showBlockMarkers = value;
+//				break;
 				
 			// Function for ignoring elements embedded in annotatable content
 			case 'skipContent':
@@ -194,10 +224,6 @@ function Marginalia( service, loginUserId, displayUserId, features )
 				this.warnDelete = value;
 				break;
 			
-			case 'saveEditPrefs':
-				this.saveEditPrefs = value;
-				break;
-			
 			default:
 				if ( typeof( this[ feature ] ) != 'undefined' )
 					throw 'Attempt to override feature: ' + feature;
@@ -210,6 +236,51 @@ function Marginalia( service, loginUserId, displayUserId, features )
 
 // Recorded in every annotation created by this client
 Marginalia.VERSION = 2;
+
+// Fields (i.e. properties added to DOM nodes)
+Marginalia.F_ANNOTATION = 'mia_annotation';	// reference to Annotation object
+Marginalia.F_POST = 'mia_post';				// reference to PostMicro object
+
+// The timeout between coop multitasking calls.  Should be short so most time is spent doing
+// something rather than timing out.
+Marginalia.COOP_TIMEOUT = 50;
+
+// The maximum time to spend on one coop multitasking call.  Should be short enough to be
+// fairly unnoticeable, but long enough to get some work done.
+Marginalia.COOP_MAXTIME = 200;
+
+// Prefix for all Marginalia class and ID values
+Marginalia.PREFIX = 'mia_';
+
+// Class and ID prefixes
+Marginalia.ID_PREFIX = Marginalia.PREFIX + 'id_';	// prefix for annotation IDs
+
+// The names of HTML/CSS classes used by the annotation code.
+Marginalia.C_HOVER = Marginalia.PREFIX + 'hover';				// assigned to highlights and notes when the mouse is over the other
+Marginalia.C_ANNOTATED = Marginalia.PREFIX + 'annotated';		// class added to fragment when annotation is on
+Marginalia.C_SELFANNOTATED = Marginalia.PREFIX + 'self-annotated';  // annotations are by the current user (and therefore editable)
+Marginalia.C_EDITINGNOTE = Marginalia.PREFIX + 'editing-note';	// (on body) indicates a note is being edited
+Marginalia.C_EDITINGLINK = Marginalia.PREFIX + 'editing-link';
+Marginalia.C_LASTHIGHLIGHT = Marginalia.PREFIX + 'last';		// used to flag the last highlighted regin for a single annotation
+Marginalia.C_ACTIONPREFIX = Marginalia.PREFIX + 'action-';		// prefix for class names for actions (e.g. action-delete)
+Marginalia.C_ERRORBOX = Marginalia.PREFIX + 'errorbox';	// used for displaying pop-up errors
+Marginalia.ID_RANGECARET = Marginalia.PREFIX + 'range-caret';	// identifies caret used to show zero-length ranges
+
+// Preferences
+Marginalia.P_SHEET = 'annotations.sheet';
+Marginalia.P_SHOWANNOTATIONS = 'annotations.show';
+Marginalia.P_NOTEEDITMODE = 'annotations.note-edit-mode';
+Marginalia.P_SPLASH = 'annotations.splash';
+
+// Default values for annotation.sheet (other sheets are possible)
+Marginalia.SHEET_PUBLIC = 'public';
+Marginalia.SHEET_PRIVATE = 'private';
+
+// values for annotation.editing (field is deleted when not editing)
+Marginalia.EDIT_NOTE_FREEFORM = 'note freeform';
+Marginalia.EDIT_NOTE_KEYWORDS = 'note keywords';
+Marginalia.EDIT_LINK = 'link';
+
 
 Marginalia.prototype.newEditor = function( annotation, editorName )
 {
@@ -238,8 +309,8 @@ Marginalia.newDefaultEditor = function( marginalia, annotation )
 		return new FreeformNoteEditor( );
 	else if ( ! annotation || '' == annotation.getNote() )
 	{
-		var pref = marginalia.preferences.getPreference( AN_NOTEEDITMODE_PREF );
-		if ( pref == AN_EDIT_NOTE_KEYWORDS )
+		var pref = marginalia.preferences.getPreference( Marginalia.P_NOTEEDITMODE );
+		if ( pref == Marginalia.EDIT_NOTE_KEYWORDS )
 			return new KeywordNoteEditor( );
 		else
 			return new FreeformNoteEditor( );
@@ -250,15 +321,24 @@ Marginalia.newDefaultEditor = function( marginalia, annotation )
 		return new FreeformNoteEditor( );
 }
 
-Marginalia.saveEditPrefs = function( marginalia, annotation, editor )
+Marginalia.defaultErrorCallback = function( object, operation, status, text )
 {
-	if ( editor.constructor == KeywordNoteEditor )
-		marginalia.preferences.setPreference( AN_NOTEEDITMODE_PREF, AN_EDIT_NOTE_KEYWORDS );
-	else if ( editor.constructor == FreeformNoteEditor )
-		marginalia.preferences.setPreference( AN_NOTEEDITMODE_PREF, AN_EDIT_NOTE_FREEFORM );
+	var msgKey = object + '.' + operation;
+	var node = domutil.element( 'div', {
+		className: Marginalia.C_ERRORBOX }, [
+		domutil.element( 'h3', { },
+			getLocalized( 'service error title ' + msgKey ) ),
+		domutil.element( 'p', { },
+			getLocalized( 'service error ' + msgKey ) + ' ' ),
+		domutil.element( 'p', { },
+			getLocalized( 'service error ' + status ) ) ] );
+	document.body.appendChild( node );
+	setTimeout( function( ) {
+		jQuery( node ).fadeOut( 'def ', function( ) {
+		document.body.removeChild( node ); } ) },
+		7000 );
 }
-
-
+	
 
 /**
  * Could do this in the initializer, but by leaving it until now we can avoid
@@ -267,22 +347,27 @@ Marginalia.saveEditPrefs = function( marginalia, annotation, editor )
 Marginalia.prototype.listPosts = function( )
 {
 	if ( ! this.posts )
-		this.posts = PostPageInfo.getPostPageInfo( document );
+	{
+		this.posts = PostPageInfo.getPostPageInfo( document, this.selectors );
+		for ( var i = 0;  i < this.posts.posts.length;  ++i )
+			this.posts.posts[ i ].initMargin( this );
+	}
 	return this.posts;
 }
 
-Marginalia.prototype.createAnnotation = function( annotation, f )
+Marginalia.prototype.createAnnotation = function( annotation, ok, fail )
 {
-	var f2 = null;
+	var ok2 = null;
 	if ( this.keywordService )
 	{
 		var keywordService = this.keywordService;
-		f2 = function( url ) {
-			f( url );
+		ok2 = function( url ) {
+			ok( url );
 			keywordService.refresh( );
 		};
 	}
-	this.annotationService.createAnnotation( annotation, f2 ? f2 : f );
+
+	this.annotationService.createAnnotation( annotation, ok2 ? ok2 : ok, fail );
 }
 
 Marginalia.prototype.updateAnnotation = function( annotation )
@@ -290,26 +375,34 @@ Marginalia.prototype.updateAnnotation = function( annotation )
 	if ( annotation.hasChanged() )
 	{
 		var marginalia = this;
-		var f = function( xml )	{
+		var ok = function( xml )	{
 			annotation.resetChanges();
 			if ( marginalia.keywordService )
 				marginalia.keywordService.refresh( );
 		};
-		this.annotationService.updateAnnotation( annotation, f );
+		fail = function( status, text ) {
+			if ( marginalia.serviceErrorCallback )
+				marginalia.serviceErrorCallback( 'annotation', 'update', status, text );
+		};
+		this.annotationService.updateAnnotation( annotation, ok, fail );
 	}
 }
 
-Marginalia.prototype.deleteAnnotation = function( annotationId )
+Marginalia.prototype.deleteAnnotation = function( annotation, ok )
 {
-	var f = null;
+	var ok = null;
 	if ( this.keywordService )
 	{
 		var keywordService = this.keywordService;
-		f = function( xml ) {
+		ok = function( xml ) {
 			keywordService.refresh( );
 		};
 	}
-	this.annotationService.deleteAnnotation( annotationId, f );
+	fail = function( status, text ) {
+		if ( marginalia.serviceErrorCallback )
+			marginalia.serviceErrorCallback( 'annotation', 'delete', status, text );
+	};
+	this.annotationService.deleteAnnotation( annotation, ok, fail );
 }
 
 
@@ -320,43 +413,53 @@ Marginalia.prototype.deleteAnnotation = function( annotationId )
  * apply to individual posts on a page.  Unused, I removed them - they added
  * complexity because annotations needed to be stored but not displayed.  IMHO,
  * the best way to do this is with simple dynamic CSS (using display:none).
- * TODO: If the url is a wildcard matching multiple posts, per block user markers
- * won't show up as a result of calling this!
+ *
+ * params:
+ * - recent:    fetch only recent annotations
+ * - callback:  call this function before showing retrieved annotations, if it
+ *              returns true go ahead and show them.  Useful for polling
+ *              for updates.
  */
-Marginalia.prototype.showAnnotations = function( url, block )
+Marginalia.prototype.showAnnotations = function( url, params )
 {
 	// Must set the class here so that annotations margins will expand so that,
 	// in turn, any calculations done by the caller (e.g. to resize margin
 	// buttons) will take the correct size into account.
-	domutil.addClass( document.body, AN_ANNOTATED_CLASS );
-	if ( this.loginUserId == this.displayUserId || '' == this.displayUserId )
-		domutil.addClass( document.body, AN_SELFANNOTATED_CLASS );
-	// marginalia.hideAnnotations( );
+	domutil.addClass( document.body, Marginalia.C_ANNOTATED );
 	var marginalia = this;
-	this.annotationService.listAnnotations( url, this.displayUserId, block,
-		function(xmldoc) { _showAnnotationsCallback( marginalia, url, xmldoc, true ) } );
+	this.annotationService.listAnnotations( url, this.sheet, {
+		mark: 'read',
+		since: marginalia.lastUpdate,
+		recent: params && params.recent },
+		function( xmldoc ) {
+			var annotations = parseAnnotationXml( xmldoc );
+			if ( annotations.length && ( ! params || ! params.callback || params.callback( annotations )  ) )
+				marginalia.loadAnnotations( annotations );
+		} );
 }
-
-Marginalia.prototype.showBlockAnnotations = function( url, block )
-{
-	// TODO: Push down calculations must be repaired where new annotations are added.
-	// Ideally this would happen automatically.
-	var marginalia = this;
-	this.annotationService.listAnnotations( url, null, block,
-		function(xmldoc) { _showAnnotationsCallback( marginalia, url, xmldoc, false, true ) } );
-}
+	
 
 /**
- * This is the callback function called by listAnnotations when data first comes back
- * from the server.
+ * Process annotations returned from the server.
+ * The new annotations are appended to the annotationCache
+ * (so that we don't have two update interval going on at once)
+ * and an interval is created (if necessary) to actually
+ * show them.  Showing can be slow, so we're doing coop
+ * multitasking to give control back to the browser.
  */
-function _showAnnotationsCallback( marginalia, url, xmldoc, doBlockMarkers )
+Marginalia.prototype.loadAnnotations = function( annotations )
 {
-	domutil.addClass( document.body, AN_ANNOTATED_CLASS );
-	if ( marginalia.loginUserId == marginalia.displayUserId || '' == marginalia.displayUserId )
-		domutil.addClass( document.body, AN_SELFANNOTATED_CLASS );
-	marginalia.annotationXmlCache = xmldoc;
-	_annotationDisplayCallback( marginalia, url, doBlockMarkers );
+	domutil.addClass( document.body, Marginalia.C_ANNOTATED );
+	this.annotationCache = this.annotationCache.concat( annotations );
+	// Danger: coopLoadAnnotations says it needs annotations
+	// sorted by url.  So should sort the new array. #geof#
+	if ( ! this.loadInterval )
+	{
+		var marginalia = this;
+		this.loadInterval = setInterval( function( ) {
+			marginalia.coopLoadAnnotations( );
+		}, Marginalia.COOP_TIMEOUT );
+	}
 }
 
 /**
@@ -365,116 +468,115 @@ function _showAnnotationsCallback( marginalia, url, xmldoc, doBlockMarkers )
  * all in that time, it will call setTimeout to trigger continued display later.  This
  * is basically a way to implement cooperative multitasking so that if many annotations
  * need to be displayed the browser won't lock up.
- *
- * It will also fetch and display block markers if that feature is set and the doBlockMarkers
- * flag is true.  Block markers must be displayed *after* the annotations so that their
- * height will be correct.
- *
- * - noCountIncrement: set this if the annotation is simlpy being redisplayed, and is not part
- *   of an attempt to fetch and display more annotations
  */
-function _annotationDisplayCallback( marginalia, callbackUrl, doBlockMarkers, noCountIncrement )
+Marginalia.prototype.coopLoadAnnotations = function( )
 {
 	var startTime = new Date( );
-	var curTime;
-	
-	// Parse the XML, if that hasn't been done already
-	if ( marginalia.annotationXmlCache )
-	{
-		marginalia.annotationCache = parseAnnotationXml( marginalia.annotationXmlCache );
-		delete marginalia.annotationXmlCache;
-		curTime = new Date( );
-		if ( curTime - startTime >= AN_COOP_MAXTIME )
-		{
-			setTimeout( function() { _annotationDisplayCallback( marginalia, callbackUrl, doBlockMarkers ) }, AN_COOP_TIMEOUT );
-			return;
-		}
-	}
 	
 	// Display cached annotations
 	// Do this by merging the new annotations with those already displayed
 	// For this to work, annotations must be sorted by URL
-	var annotations = marginalia.annotationCache;
-	if ( annotations )
+	var url = null;			// there may be annotations for multiple URLs;  this is the current one
+	var post = null;		// post for the current url
+	var notes = null;		// current notes element
+	var nextNode = null;
+	
+	var mostRecent = null;
+	while ( this.annotationCacheIndex < this.annotationCache.length )
 	{
-		var url = null;			// there may be annotations for multiple URLs;  this is the current one
-		var post = null;		// post for the current url
-		var notes = null;		// current notes element
-		var nextNode = null;
-		for ( var annotation_i = 0;  annotation_i < annotations.length;  ++annotation_i )
+		var annotation = this.annotationCache[ this.annotationCacheIndex ];
+		this.annotationCacheIndex += 1;
+		
+		// Don't want to fail completely just because an annotation is malformed
+		if ( annotation )
 		{
-			// Don't want to fail completely just because one or more annotations are malformed
-			if ( null != annotations[ annotation_i ] )
+			// Determine whether we're moving on to a new post (hence a new note list)
+			if ( annotation.getUrl( ) != url )
 			{
-				var annotation = annotations[ annotation_i ];
+				// Margin height callback
+				if ( post && marginalia.onMarginHeight )
+					marginalia.onMarginHeight( post );
 				
-				// Determine whether we're moving on to a new post (hence a new note list)
-				if ( annotation.getUrl( ) != url )
-				{
-					// Margin height callback
-					if ( post && marginalia.onMarginHeight )
-						marginalia.onMarginHeight( post );
-					
-					url = annotation.getUrl( );
-					post = marginalia.listPosts( ).getPostByUrl( url, marginalia.baseUrl );
-					
-					// Find the first note in the list (if there is one)
-					if ( post )
-					{
-						notes = post.getNotesElement( );
-						nextNode = notes.firstCild;
-					}
-					else
-						logError( 'Post not found for URL "' + url + "'" );
-				}
+				url = annotation.getUrl( );
+				post = marginalia.listPosts( ).getPostByUrl( url, marginalia.baseUrl );
 				
-				// The server shouldn't normally return URLs that not on this page, but it
-				// could (e.g. if the target has been deleted).  In that case, don't crash!
+				// Find the first note in the list (if there is one)
 				if ( post )
 				{
-					// Find the position of the annotation by walking through the note list
-					// (binary search would be nice here, but not practical unless the list is
-					// stored somewhere other than in the DOM - plus, since multiple annotations
-					// are dealt with here at once, the speed hit shouldn't be too bad)
-					while ( nextNode )
-					{
-						if ( ELEMENT_NODE == nextNode.nodeType && nextNode.annotation )
-						{
-							if ( annotation.compareRange( nextNode.annotation ) < 0 )
-								break;
-						}
-						nextNode = nextNode.nextSibling;
-					}
-					
-					// If the annotation is already present, increment its fetch count
-					if ( ! noCountIncrement )
-						annotation.fetchCount += 1;
-					// Now insert before beforeNote
-					var success = post.addAnnotation( marginalia, annotation, nextNode );
-					
-					if ( success && annotation.getUserId( ) == marginalia.loginUserId || marginalia.allowAnyUserPatch )
-						marginalia.patchAnnotation( annotation, post );
+					notes = post.getNotesElement( marginalia );
+					nextNode = notes.firstCild;
 				}
+				else
+					logError( 'Post not found for URL "' + url + "'" );
 			}
 			
-			annotations[ annotation_i ] = null;
-			if ( curTime - startTime >= AN_COOP_MAXTIME )
-				break;
+			// The server shouldn't normally return URLs that not on this page, but it
+			// could (e.g. if the target has been deleted).  In that case, don't crash!
+			if ( post )
+			{
+				// Find the position of the annotation by walking through the note list
+				// (binary search would be nice here, but not practical unless the list is
+				// stored somewhere other than in the DOM - plus, since multiple annotations
+				// are dealt with here at once, the speed hit shouldn't be too bad)
+				while ( nextNode )
+				{
+					if ( ELEMENT_NODE == nextNode.nodeType && nextNode[ Marginalia.F_ANNOTATION ] )
+					{
+						if ( annotation.compareRange( nextNode[ Marginalia.F_ANNOTATION ] ) < 0 )
+							break;
+					}
+					nextNode = nextNode.nextSibling;
+				}
+				
+				// Now insert before beforeNote
+				var success = post.addAnnotation( marginalia, annotation, nextNode );
+				
+				// If the annotation was added it may need to be patched (to update the XPathRange
+				// or SequenceRange to the current format)
+				if ( success )
+				{
+					if ( annotation.getUserId( ) == marginalia.loginUserId || marginalia.allowAnyUserPatch )
+						marginalia.patchAnnotation( annotation, post );
+				}
+				// If the highlight could not be located, try to fix the annotation
+				else
+				{
+					if ( annotation.getUserId( ) == marginalia.loginUserId || marginalia.allowAnyUserPatch )
+						marginalia.fixAnnotation( annotation, post );
+				}
+				
+				// Use the incoming annotations to figure out how recent our last update was.
+				// This info needs to come from the server so we have a single point of truth
+				// about time, and doing this avoids having the server explicitly send a
+				// last update value.
+				if ( ! this.lastUpdate || annotation.getUpdated( ) > this.lastUpdate )
+					this.lastUpdate = annotation.getUpdated( );
+			}
 		}
 		
-		if ( annotations.length == annotation_i )
-		{
-			delete marginalia.annotationCache;
-			if ( doBlockMarkers && marginalia.showBlockMarkers )
-				marginalia.showPerBlockUserCounts( callbackUrl );
-		}
-		else
-			setTimeout( function() { _annotationDisplayCallback( marginalia, callbackUrl, doBlockMarkers ) }, AN_COOP_TIMEOUT );
+		if ( Date( ) - startTime >= Marginalia.COOP_MAXTIME )
+			break;
 	}
-	// Finally, reposition block markers, as the annotations may have altered paragraph lengths
-	else if ( doBlockMarkers && marginalia.showBlockMarkers )
+	
+	if ( this.annotationCache.length == this.annotationCacheIndex )
 	{
-		marginalia.showPerBlockUserCounts( callbackUrl );
+		this.annotationCache = [ ];
+		this.annotationCacheIndex = 0;
+		clearInterval( this.loadInterval );
+		this.loadInterval = null;
+		
+		// Now that annotation display is complete, check whether there is
+		// a fragment identifier in the URL telling us to scroll to a
+		// particular annotation.
+		var url = '' + window.location;
+		var match = url.match( /#annotation@(\w+)$/ );
+		if ( match )
+		{
+			var id = Marginalia.ID_PREFIX + match[ 1 ];
+			var node = document.getElementById( id );
+			if ( node )
+				domutil.scrollWindowToNode( node, domutil.SCROLL_POS_CENTER );
+		}
 	}
 }
 
@@ -542,8 +644,51 @@ Marginalia.prototype.patchAnnotation = function( annotation, post )
 		post.repositionNotes( this, noteElement.nextSibling );
 	
 		// Reposition block markers
-		post.repositionBlockMarkers( this );
+//		post.repositionBlockMarkers( this );
 	}
+}
+
+/**
+ * Fix a broken annotation range by searching for the quote text
+ */
+Marginalia.prototype.fixAnnotation = function( annotation, post )
+{
+	while( window.find( annotation.getQuote( ) ) )
+	{
+		// the find function places a text range over the found text
+		var textRange = marginalia.getSelection( );
+		var contentElement = post.getContentElement( );
+		// if the found text is within the post then we're good to go
+		if ( ( domutil.isElementDescendant( textRange.startContainer, contentElement )
+			|| textRange.startContainer == contentElement )
+			&& ( domutil.isElementDescendant( textRange.endContainer, contentElement )
+			|| textRange.endContainer == contentElement ) )
+		{
+			// Calculate the ranges
+			var wordRange = WordRange.fromTextRange( textRange, contentElement, marginalia.skipContent );
+			var sequenceRange = wordRange.toSequenceRange( contentElement );
+			var xpathRange = wordRange.toXPathRange( contentElement );
+			annotation.setSequenceRange( sequenceRange );
+			annotation.setXPathRange( xpathRange );
+			
+			// Update the annotation
+			marginalia.updateAnnotation( annotation, null );
+	
+			// Show the highlight
+			post.showHighlight( marginalia, annotation );
+
+			// Replace the editable note display
+			post.removeNote( this, annotation );
+			var nextNode = post.getAnnotationNextNote( this, annotation );
+			noteElement = post.showNote( this, annotation, nextNode );
+			post.repositionNotes( this, noteElement.nextSibling );
+		
+			// Reposition block markers
+//			post.repositionBlockMarkers( this );
+			return true;
+		}
+	}
+	return false;
 }
 
 /**
@@ -551,8 +696,8 @@ Marginalia.prototype.patchAnnotation = function( annotation, post )
  */
 Marginalia.prototype.hideAnnotations = function( )
 {
-	domutil.removeClass( document.body, AN_ANNOTATED_CLASS );
-	domutil.removeClass( document.body, AN_SELFANNOTATED_CLASS );
+	domutil.removeClass( document.body, Marginalia.C_ANNOTATED );
+	domutil.removeClass( document.body, Marginalia.C_SELFANNOTATED );
 	
 	var posts = this.listPosts( ).getAllPosts( );
 	for ( var i = 0;  i < posts.length;  ++i )
@@ -566,6 +711,28 @@ Marginalia.prototype.hideAnnotations = function( )
 	}
 }
 
+
+/**
+ * Display a tip to the user in the margin
+ * current implementation only shows the tip in the top post
+ */
+Marginalia.prototype.showTip = function( tip, onclose )
+{
+	var posts = this.listPosts( ).getAllPosts( );
+	if ( posts.length >= 1 )
+		return posts[ 0 ].showTip( this, tip, onclose );
+	else
+		return null;
+}
+
+Marginalia.prototype.hideTip = function ( tipNode )
+{
+	var post = marginalia.posts.getPostByElement( tipNode );
+	if ( post )
+		post.hideTip( this, tipNode );
+}
+
+
 /* *****************************
  * Additions to Annotation class
  */
@@ -573,9 +740,9 @@ Marginalia.prototype.hideAnnotations = function( )
 /**
  * Convenience method for getting the note element for a given annotation
  */
-Annotation.prototype.getNoteElement = function( )
+Annotation.prototype.getNoteElement = function( marginalia )
 {
-	return document.getElementById( AN_ID_PREFIX + this.getId() );
+	return document.getElementById( Marginalia.ID_PREFIX + this.getId() );
 }
 
 
@@ -593,7 +760,8 @@ Annotation.prototype.getNoteElement = function( )
  */
 
 /**
- * Add an annotation to the local annotation list and display.
+ * Add an annotation to the local annotation list and display, or
+ * replace an existing one that matches.
  * Returns true if the annotation highlight was located successfully
  */
 PostMicro.prototype.addAnnotation = function( marginalia, annotation, nextNode, editor )
@@ -601,7 +769,7 @@ PostMicro.prototype.addAnnotation = function( marginalia, annotation, nextNode, 
 	if ( ! nextNode )
 		nextNode = this.getAnnotationNextNote( marginalia, annotation );
 	// If the annotation is already displayed, remove the existing display
-	var existing = annotation.getNoteElement( );
+	var existing = annotation.getNoteElement( marginalia );
 	if ( existing )
 		this.removeAnnotation( marginalia, annotation );
 	var quoteFound = this.showHighlight( marginalia, annotation );
@@ -626,8 +794,8 @@ PostMicro.prototype.listAnnotations = function( marginalia )
 	var annotations = new Array( );
 	while ( null != child )
 	{
-		if ( child.annotation )
-			annotations[ annotations.length ] = child.annotation;
+		if ( child[ Marginalia.F_ANNOTATION ] )
+			annotations[ annotations.length ] = child[ Marginalia.F_ANNOTATION ];
 		child = child.nextSibling;
 	}
 	return annotations;
@@ -647,10 +815,10 @@ PostMicro.prototype.removeAnnotations = function( marginalia )
 	var annotations = new Array( );
 	while ( null != child )
 	{
-		if ( child.annotation )
+		if ( child[ Marginalia.F_ANNOTATION ] )
 		{
-			annotations[ annotations.length ] = child.annotation;
-			child.annotation = null;
+			annotations[ annotations.length ] = child[ Marginalia.F_ANNOTATION ];
+			child[ Marginalia.F_ANNOTATION ] = null;
 		}
 		notesElement.removeChild( child );
 		child = notesElement.firstChild;
@@ -659,7 +827,7 @@ PostMicro.prototype.removeAnnotations = function( marginalia )
 	var stripTest = function( tnode )
 		{ return micro.highlightStripTest( tnode, null ); };
 	domutil.stripMarkup( this.getContentElement( ), stripTest, true );
-	domutil.removeClass( this.getElement( ), AN_ANNOTATED_CLASS );
+	domutil.removeClass( this.getElement( ), Marginalia.C_ANNOTATED );
 	return annotations;
 }
 
@@ -672,10 +840,10 @@ PostMicro.prototype.removeAnnotation = function( marginalia, annotation )
 	this.removeHighlight( marginalia, annotation );
 
 	// Reposition markers if necessary
-	if ( 'edit' == annotation.action )
-		this.repositionBlockMarkers( marginalia );
+//	if ( 'edit' == annotation.action )
+//		this.repositionBlockMarkers( marginalia );
 	
-	return null == next ? null : next.annotation;
+	return null == next ? null : next[ Marginalia.F_ANNOTATION ];
 }
 
 /* ************************ Display Actions ************************ */
@@ -691,19 +859,19 @@ PostMicro.prototype.removeAnnotation = function( marginalia, annotation )
 PostMicro.prototype.flagAnnotation = function( marginalia, annotation, className, flag )
 {
 	// Activate the note
-	var noteNode = document.getElementById( AN_ID_PREFIX + annotation.getId() );
+	var noteNode = document.getElementById( Marginalia.ID_PREFIX + annotation.getId() );
 	if ( flag )
 		domutil.addClass( noteNode, className );
 	else
 		domutil.removeClass( noteNode, className );
 
 	// Activate the highlighted areas
-	var highlights = domutil.childrenByTagClass( this.getContentElement( ), null, AN_HIGHLIGHT_CLASS, null, null );
+	var highlights = domutil.childrenByTagClass( this.getContentElement( ), null, Marginalia.C_HIGHLIGHT, null, null );
 	for ( var i = 0;  i < highlights.length;  ++i )
 	{
 		var node = highlights[ i ];
 		// Need to change to upper case in case this is HTML rather than XHTML
-		if ( node.tagName.toUpperCase( ) == 'EM' && node.annotation == annotation )
+		if ( node.tagName.toUpperCase( ) == 'EM' && node[ Marginalia.F_ANNOTATION ] == annotation )
 		{
 			if ( flag )
 				domutil.addClass( node, className );
@@ -739,7 +907,7 @@ PostMicro.prototype.createAnnotation = function( marginalia, annotation, editor 
 	if ( marginalia.noteEditor )
 	{
 		// Focus on the text edit
-		var noteElement = document.getElementById( AN_ID_PREFIX + annotation.getId() );
+		var noteElement = document.getElementById( Marginalia.ID_PREFIX + annotation.getId() );
 		// Sequencing here (with focus last) is important
 		this.repositionNotes( marginalia, noteElement.nextSibling );
 		marginalia.noteEditor.focus( );
@@ -769,8 +937,8 @@ PostMicro.prototype.cancelAnnotationEdit = function( marginalia, annotation )
 		this.addAnnotation( marginalia, annotation );
 	}
 	
-	this.flagAnnotation( marginalia, annotation, AN_EDITINGNOTE_CLASS, false );
-	domutil.removeClass( document.body, AN_EDITINGNOTE_CLASS );
+	this.flagAnnotation( marginalia, annotation, Marginalia.C_EDITINGNOTE, false );
+	domutil.removeClass( document.body, Marginalia.C_EDITINGNOTE );
 }
 
 
@@ -792,7 +960,7 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 	// Check the length of the note.  If it's too long, do nothing, but restore focus to the note
 	// (which is awkward, but we can't save a note that's too long, we can't allow the note
 	// to appear saved, and truncating it automatically strikes me as an even worse solution.) 
-	if ( marginalia.noteEditor.annotation.getNote().length > MAX_NOTE_LENGTH )
+	if ( marginalia.noteEditor.annotation.getNote().length > marginalia.maxNoteLength )
 	{
 		alert( getLocalized( 'note too long' ) );
 		marginalia.noteEditor.focus( );
@@ -800,7 +968,7 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 	}
 	
 	// Similarly for the length of a link
-	if ( marginalia.noteEditor.annotation.getLink().length > MAX_LINK_LENGTH )
+	if ( marginalia.noteEditor.annotation.getLink().length > Marginalia.MAX_LINK_LENGTH )
 	{
 		alert( getLocalized( 'link too long' ) );
 		marginalia.noteEditor.focus( );
@@ -816,9 +984,6 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 		return false;
 	}
 	
-	// Now that validation's complete, start storing things
-	Marginalia.saveEditPrefs( marginalia, annotation, marginalia.noteEditor );
-
 	// Ensure the window doesn't scroll by saving and restoring scroll position
 	var scrollY = domutil.getWindowYScroll( );
 	var scrollX = domutil.getWindowXScroll( );
@@ -827,7 +992,7 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 	this.stopEditing( marginalia, annotation );
 
 	// TODO: listItem is an alias for noteElement
-	var listItem = document.getElementById( AN_ID_PREFIX + annotation.getId() );
+	var listItem = document.getElementById( Marginalia.ID_PREFIX + annotation.getId() );
 	
 	// For annotations with links; insert, or substitute actions, must update highlight also
 	if ( 'edit' == annotation.action && annotation.hasChanged( 'note' ) || annotation.hasChanged( 'link' ) )
@@ -842,25 +1007,31 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 	if ( annotation.isLocal )
 	{
 		var postMicro = this;
-		var f = function( url ) {
+		// Callback for successful creation
+		var ok = function( url ) {
 			// update the annotation with the created ID
-			var id = url.substring( url.lastIndexOf( '/' ) + 1 );
-			annotation.setId( id );
+			annotation.setId( Annotation.idFromUrl( url ) );
 			annotation.resetChanges( );
 			annotation.isLocal = false;
-			var noteElement = document.getElementById( AN_ID_PREFIX + '0' );
-			noteElement.id = AN_ID_PREFIX + annotation.getId();
-			var highlightElements = domutil.childrenByTagClass( postMicro.getContentElement( ), 'em', AN_ID_PREFIX + '0', null, null );
+			var noteElement = document.getElementById( Marginalia.ID_PREFIX + '0' );
+			noteElement.id = Marginalia.ID_PREFIX + annotation.getId();
+			var highlightElements = domutil.childrenByTagClass( postMicro.getContentElement( ), 'em', Marginalia.ID_PREFIX + '0', null, null );
 			for ( var i = 0;  i < highlightElements.length;  ++i )
 			{
-				domutil.removeClass( highlightElements[ i ], AN_ID_PREFIX + '0' );
-				domutil.addClass( highlightElements[ i ], AN_ID_PREFIX + annotation.getId() );
+				domutil.removeClass( highlightElements[ i ], Marginalia.ID_PREFIX + '0' );
+				domutil.addClass( highlightElements[ i ], Marginalia.ID_PREFIX + annotation.getId() );
 			}
 		};
-		annotation.setUrl( this.getUrl( ) );
 		
+		var fail = function( status, text ) {
+			if ( marginalia.serviceErrorCallback )
+				marginalia.serviceErrorCallback( 'annotation', 'create', status, text );
+			postMicro.deleteAnnotation( marginalia, annotation, false );
+		};
+		
+		annotation.setUrl( this.getUrl( ) );
 		// IE may have made a relative URL absolute, which could cause problems
-		if ( null != marginalia.baseUrl
+		if ( null != marginalia.baseUrl && annotation.url
 			&& annotation.url.substring( 0, marginalia.baseUrl.length ) == marginalia.baseUrl )
 		{
 			annotation.setUrl( annotation.getUrl().substring( marginalia.baseUrl.length ) );
@@ -871,7 +1042,7 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 		annotation.setQuoteAuthorName( this.getAuthorName( ) );
 		// ^ author name is usually ignored, as the server will know from the ID
 		//   but conceivably there might be systems where this is not so
-		marginalia.createAnnotation( annotation, f );
+		marginalia.createAnnotation( annotation, ok, fail );
 	}
 	// The annotation already exists and needs to be updated
 	else
@@ -887,8 +1058,8 @@ PostMicro.prototype.saveAnnotation = function( marginalia, annotation )
 	this.repositionNotes( marginalia, noteElement.nextSibling );
 
 	// May need to reposition block markers
-	if ( annotation.action == 'edit' && annotation.hasChanged( 'note' ) || annotation.hasChanged( 'link' ) )
-		this.repositionBlockMarkers( marginalia );
+//	if ( annotation.action == 'edit' && annotation.hasChanged( 'note' ) || annotation.hasChanged( 'link' ) )
+//		this.repositionBlockMarkers( marginalia );
 	
 	window.scrollTo( scrollX, scrollY );
 	
@@ -908,7 +1079,7 @@ PostMicro.prototype.stopEditing = function( marginalia, annotation )
 {
 	// Remove events
 	removeEvent( document.documentElement, 'click', _saveAnnotation );
-	var noteElement = document.getElementById( AN_ID_PREFIX + annotation.getId() );
+	var noteElement = document.getElementById( Marginalia.ID_PREFIX + annotation.getId() );
 	removeEvent( noteElement, 'click', domutil.stopPropagation );
 	
 	// Clear the editor
@@ -917,18 +1088,18 @@ PostMicro.prototype.stopEditing = function( marginalia, annotation )
 	while ( noteElement.firstChild )
 		noteElement.removeChild( noteElement.firstChild );
 
-	this.flagAnnotation( marginalia, annotation, AN_EDITINGNOTE_CLASS, false );
-	domutil.removeClass( document.body, AN_EDITINGNOTE_CLASS );
+	this.flagAnnotation( marginalia, annotation, Marginalia.C_EDITINGNOTE, false );
+	domutil.removeClass( document.body, Marginalia.C_EDITINGNOTE );
 }
 
 
 /**
  * Delete an annotation
  */
-PostMicro.prototype.deleteAnnotation = function( marginalia, annotation )
+PostMicro.prototype.deleteAnnotation = function( marginalia, annotation, warnDelete )
 {
 	// Pop up a warning (if configured)
-	if ( marginalia.warnDelete )
+	if ( warnDelete )
 	{
 		if ( ! confirm( getLocalized( 'warn delete' ) ) )
 			return;
@@ -944,13 +1115,13 @@ PostMicro.prototype.deleteAnnotation = function( marginalia, annotation )
 	
 	// Delete it on the server
 	if ( ! annotation.isLocal )
-		marginalia.deleteAnnotation( annotation.getId(), null );
+		marginalia.deleteAnnotation( annotation, null );
 	
 	// Find the annotation
 	var next = this.removeAnnotation( marginalia, annotation );
 	if ( null != next )
 	{
-		var nextElement = document.getElementById( AN_ID_PREFIX + next.id );
+		var nextElement = document.getElementById( Marginalia.ID_PREFIX + next.id );
 		this.repositionNotes( marginalia, nextElement );
 	}
 	annotation.destruct( );
@@ -972,9 +1143,9 @@ PostMicro.prototype.deleteAnnotation = function( marginalia, annotation )
  */
 function _hoverAnnotation( event )
 {
-	var post = domutil.nestedFieldValue( this, AN_POST_FIELD );
-	var annotation = domutil.nestedFieldValue( this, AN_ANNOTATION_FIELD );
-	post.flagAnnotation( window.marginalia, annotation, AN_HOVER_CLASS, true );
+	var post = domutil.nestedFieldValue( this, Marginalia.F_POST );
+	var annotation = domutil.nestedFieldValue( this, Marginalia.F_ANNOTATION );
+	post.flagAnnotation( marginalia, annotation, Marginalia.C_HOVER, true );
 }
 
 /**
@@ -983,9 +1154,9 @@ function _hoverAnnotation( event )
 function _unhoverAnnotation( event )
 {
 	// IE doesn't have a source node for the event, so use this
-	var post = domutil.nestedFieldValue( this, AN_POST_FIELD );
-	var annotation = domutil.nestedFieldValue( this, AN_ANNOTATION_FIELD );
-	post.flagAnnotation( window.marginalia, annotation, AN_HOVER_CLASS, false );
+	var post = domutil.nestedFieldValue( this, Marginalia.F_POST );
+	var annotation = domutil.nestedFieldValue( this, Marginalia.F_ANNOTATION );
+	post.flagAnnotation( marginalia, annotation, Marginalia.C_HOVER, false );
 }
 
 /**
@@ -994,7 +1165,7 @@ function _unhoverAnnotation( event )
 function _keyupCreateAnnotation( event )
 {
 	var marginalia = window.marginalia;
-	if ( null != marginalia.loginUserId && ( marginalia.loginUserId == marginalia.displayUserId || '' == marginalia.displayUserId ) )
+	if ( null != marginalia.loginUserId )
 	{
 		// Enter to create a regular note
 		if ( 13 == event.keyCode )
@@ -1029,8 +1200,12 @@ function _caretUpHandler( event )
 		// Save selection position
 		var container = textRange.startContainer;
 		var offset = textRange.startOffset;
+		var marginalia = window.marginalia;
 
-		if ( domutil.parentByTagClass( container, null, PM_CONTENT_CLASS ) )
+		
+		var post = marginalia.posts.getPostByElement( container );
+		var contentElement = post.getContentElement( );
+		if ( post && ( container == contentElement || domutil.isElementDescendent( container, contentElement ) ) )
 		{
 			// Only show the caret if it's a point (i.e. the range has zero length)
 			if ( container == textRange.endContainer && offset == textRange.endOffset )
@@ -1038,7 +1213,7 @@ function _caretUpHandler( event )
 				// Insert the caret
 				var caret = document.createElement( 'span' );
 				caret.appendChild( document.createTextNode( '>' ) );
-				caret.setAttribute( 'id', AN_RANGECARET_ID );
+				caret.setAttribute( 'id', Marginalia.ID_RANGECARET );
 				textRange.insertNode( caret );
 /*
 				
@@ -1082,7 +1257,7 @@ function _caretDownHandler( event )
 	if ( ! window.getSelection )
 		return;
 	
-	var caret = document.getElementById( AN_RANGECARET_ID );
+	var caret = document.getElementById( Marginalia.ID_RANGECARET );
 	if ( caret )
 	{
 		var selection = window.getSelection();
@@ -1107,7 +1282,7 @@ function _caretDownHandler( event )
 
 function _skipCaret( node )
 {
-	return node.id == AN_RANGECARET_ID;
+	return node.id == Marginalia.ID_RANGECARET;
 }
 
 /**
@@ -1118,7 +1293,7 @@ function _skipAnnotationActions( node )
 {
 	if ( ELEMENT_NODE == node.nodeType && 'ins' == domutil.getLocalName( node ).toLowerCase() )
 	{
-		if ( node.parentNode && domutil.hasClass( node.parentNode, AN_HIGHLIGHT_CLASS ) )
+		if ( node.parentNode && domutil.hasClass( node.parentNode, Marginalia.C_HIGHLIGHT ) )
 			return true;
 	}
 	return false;
@@ -1135,23 +1310,13 @@ function clickCreateAnnotation( event, id, editor )
 	// so use the clumsy functions.
 	event = domutil.getEvent( event );
 	domutil.stopPropagation( event );
-	createAnnotation( id, true, editor );
+	post = marginalia.listPosts( ).getPostById( id );
+	createAnnotation( post, true, editor );
 }
 
 
-/**
- * Create a highlight range based on user selection.
- *
- * This is not in the event handler section above because it's up to the calling
- * application to decide what control creates an annotation.  Deletes and edits,
- * on the other hand, are built-in to the note display.
- *
- * That said, the standard interface calls this from clickCreateAnnotation
- */
-function createAnnotation( postId, warn, editor )
+Marginalia.prototype.getSelection = function( warn )
 {
-	var marginalia = window.marginalia;
-
 	// Can't create an annotation while one is being edited
 	if ( marginalia.noteEditor )
 		return false;
@@ -1166,22 +1331,47 @@ function createAnnotation( postId, warn, editor )
 	}
 		
 	var textRange0 = getPortableSelectionRange();
-	if ( null == textRange0 )
-	{
-		if ( warn )
-			alert( getLocalized( 'select text to annotate' ) );
-		return false;
-	}
+	if ( ! textRange0 )
+		return null;
 	
 	// Strip off leading and trailing whitespace and preprocess so that
 	// conversion to WordRange will go smoothly.
 	var textRange = TextRange.fromW3C( textRange0 );
 	textRange = textRange.shrinkwrap( marginalia.skipContent );
 	if ( ! textRange )
-	{
 		// this happens if the shrinkwrapped range has no non-whitespace text in it
+		return false;
+
+	return textRange;
+}
+
+
+
+/**
+ * Create a highlight range based on user selection.
+ *
+ * This is not in the event handler section above because it's up to the calling
+ * application to decide what control creates an annotation.  Deletes and edits,
+ * on the other hand, are built-in to the note display.
+ *
+ * That said, the standard interface calls this from clickCreateAnnotation
+ */
+function createAnnotation( post, warn, editor )
+{
+	var marginalia = window.marginalia;
+
+	// Can't create an annotation while one is being edited
+	if ( marginalia.noteEditor )
+		return false;
+	
+	textRange = marginalia.cachedSelection;
+	if ( ! textRange )
+		var textRange = marginalia.getSelection( warn );
+	
+	if ( ! textRange )
+	{
 		if ( warn )
-			alert( getLocalized( 'x select text to annotate' ) );
+			alert( getLocalized( 'select text to annotate' ) );
 		return false;
 	}
 	
@@ -1189,23 +1379,24 @@ function createAnnotation( postId, warn, editor )
 	// because the code would get confused by the two ID values coming back.  In that
 	// case (hopefully very rare), silently fail.  (I figure the user doesn't want to
 	// see an alert pop up, and the natural human instinct would be to try again).
-	if ( null != document.getElementById( AN_ID_PREFIX + '0' ) )
+	if ( null != document.getElementById( Marginalia.ID_PREFIX + '0' ) )
 		return;
 	
 
+/*	// Find the post
+	var post;
 	if ( null == postId )
 	{
-		var contentElement = domutil.parentByTagClass( textRange.startContainer, null, PM_CONTENT_CLASS, false, null );
-		if ( null == contentElement )
+		post = marginalia.posts.getPostByElement( textRange.startContainer );
+		if ( null == post )
 			return false;
-		postId = domutil.parentByTagClass( contentElement, null, PM_POST_CLASS, true, PostMicro.skipPostContent ).id;
 	}
-	
-	var post = marginalia.listPosts( ).getPostById( postId );
-	
+	else
+		post = marginalia.listPosts( ).getPostById( postId );
+*/	
 	// Confirm that the selection is within the post
 	var contentElement = post.getContentElement( );
-	if ( ! ( ( domutil.isElementDescendant( textRange.startContainer,contentElement )
+	if ( ! ( ( domutil.isElementDescendant( textRange.startContainer, contentElement )
 		|| textRange.startContainer == contentElement )
 		&& ( domutil.isElementDescendant( textRange.endContainer, contentElement )
 		|| textRange.endContainer == contentElement ) ) )
@@ -1217,20 +1408,15 @@ function createAnnotation( postId, warn, editor )
 	
 	var annotation = new Annotation( {
 		url: post.getUrl( ),
-		userid: marginalia.loginUserId,
+		'userid': marginalia.loginUserId,	// don't know why I need the quotes.  suspicious.
 		quoteAuthorId: post.getAuthorId( ),
-		quoteAuthorName: post.getAuthorName( )
+		quoteAuthorName: post.getAuthorName( ),
+		sheet: marginalia.sheet
 	} );
 	
-	// Must strip smartcopy as it contains a <br> element which will confuse
-	// the range engine.  It's safe to do this because stripsubtree only
-	// removes elements - it doesn't remove, normalize, or otherwise modify
-	// the text nodes used by the textRange for reference.
-	domutil.stripSubtree( post.getContentElement( ), null, 'smart-copy' );
-
-	var wordRange = WordRange.fromTextRange( textRange, post.getContentElement( ), marginalia.skipContent );
-	var sequenceRange = wordRange.toSequenceRange( post.getContentElement( ) );
-	var xpathRange = wordRange.toXPathRange( post.getContentElement( ) );
+	var wordRange = WordRange.fromTextRange( textRange, contentElement, marginalia.skipContent );
+	var sequenceRange = wordRange.toSequenceRange( contentElement );
+	var xpathRange = wordRange.toXPathRange( contentElement );
 	
 	// Compress whitespace in quote down to a single space
 	var quote = getTextRangeContent( textRange, marginalia.skipContent );
@@ -1242,7 +1428,6 @@ function createAnnotation( postId, warn, editor )
 		annotation.destruct( );
 		if ( warn )
 			alert( getLocalized( 'zero length quote' ) );
-		trace( null, "zero length quote '" + annotation.getQuote() + "'" );
 		return false;
 	}
 	
@@ -1259,7 +1444,7 @@ function createAnnotation( postId, warn, editor )
 	
 	// Check to see whether the quote is too long (don't do this based on the raw text 
 	// range because the quote strips leading and trailing spaces)
-	if ( annotation.getQuote().length > MAX_QUOTE_LENGTH )
+	if ( annotation.getQuote().length > Marginalia.maxQuoteLength )
 	{
 		annotation.destruct( );
 		if ( warn )

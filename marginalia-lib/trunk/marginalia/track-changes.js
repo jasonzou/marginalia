@@ -14,7 +14,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -37,7 +37,7 @@ function SelectActionNoteEditor( )
 
 SelectActionNoteEditor.prototype.bind = FreeformNoteEditor.prototype.bind;
 
-SelectActionNoteEditor.prototype.clear = function( )
+SelectActionNoteEditor.prototype.clear = function( marginalia )
 {
 	while ( this.noteElement.firstChild )
 	{
@@ -47,7 +47,7 @@ SelectActionNoteEditor.prototype.clear = function( )
 	}
 }
 
-SelectActionNoteEditor.prototype.show = function( )
+SelectActionNoteEditor.prototype.show = function( marginalia )
 {
 	var postMicro = this.postMicro;
 	var marginalia = this.marginalia;
@@ -106,7 +106,7 @@ SelectActionNoteEditor.prototype.show = function( )
 	}
 }
 
-SelectActionNoteEditor.prototype.focus = function( )
+SelectActionNoteEditor.prototype.focus = function( marginalia )
 { }
 
 
@@ -125,25 +125,25 @@ ActionNoteEditor.prototype.bind = function( marginalia, postMicro, annotation, n
 	this.editor.bind( marginalia, postMicro, annotation, noteElement );
 }
 
-ActionNoteEditor.prototype.show = function( )
+ActionNoteEditor.prototype.show = function( marginalia )
 {
 	this.faction( this );
-	this.editor.show( );
+	this.editor.show( marginalia );
 }
 
-ActionNoteEditor.prototype.focus = function( )
+ActionNoteEditor.prototype.focus = function( marginalia )
 {
-	this.editor.focus( );
+	this.editor.focus( marginalia );
 }
 
 ActionNoteEditor.prototype.clear = function( )
 {
-	this.editor.clear( );
+	this.editor.clear( marginalia );
 }
 
 ActionNoteEditor.prototype.save = function( )
 {
-	this.editor.save( );
+	this.editor.save( marginalia );
 }
 
 
@@ -160,18 +160,18 @@ DummyEditor.prototype.bind = function( marginalia, postMicro, annotation, noteEl
 	this.noteElement = noteElement;
 }
 
-DummyEditor.prototype.show = function( )
+DummyEditor.prototype.show = function( marginalia )
 {
 	this.faction( this );
 }
 
-DummyEditor.prototype.focus = function( )
+DummyEditor.prototype.focus = function( marginalia )
 { }
 
-DummyEditor.prototype.clear = function( )
+DummyEditor.prototype.clear = function( marginalia )
 { }
 
-DummyEditor.prototype.save = function( )
+DummyEditor.prototype.save = function( marginalia )
 { }
 
 trackchanges = {
