@@ -33,7 +33,7 @@
 define( 'NO_ERROR', False );
 define( 'XPATH_SECURITY_ERROR', 'xpath-security-error' );
 define( 'URL_SCHEME_ERROR', 'url-error' );
-define( 'ACCESS_VALUE_ERROR', 'access-value-error' );
+define( 'SHEET_VALUE_ERROR', 'sheet-value-error' );
 define( 'ACTION_VALUE_ERROR', 'action-value-error' );
 
 class MarginaliaHelper
@@ -131,20 +131,20 @@ class MarginaliaHelper
 			$annotation->setQuoteAuthorName( $quoteAuthorName );
 		}
 		
-		// Access
-		if ( array_key_exists( 'access', $params ) )
+		// Sheet
+		if ( array_key_exists( 'sheet', $params ) )
 		{
-			$access = $params[ 'access' ];
-			if ( ! Annotation::isAccessValid( $access ) )
-				return ACCESS_VALUE_ERROR;
-			$annotation->setAccess( $access );
+			$sheet = $params[ 'sheet' ];
+			if ( ! $annotation->isSheetValid( $sheet ) )
+				return SHEET_VALUE_ERROR;
+			$annotation->setSheet( $sheet );
 		}
 		
 		// Action
 		if ( array_key_exists( 'action', $params ) )
 		{
 			$action = $params[ 'action' ];
-			if ( ! Annotation::isActionValid( $action ) ) 
+			if ( ! $annotation->isActionValid( $action ) ) 
 				return ACTION_VALUE_ERROR;
 			$annotation->setAction( $action );
 		}
@@ -201,7 +201,7 @@ class MarginaliaHelper
 		$NS_ATOM = 'http://www.w3.org/2005/Atom';
 		
 		// About the feed ----
-		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.7'";
+		echo "<feed xmlns:ptr='$NS_PTR' xmlns='$NS_ATOM' ptr:annotation-version='0.8'";
 		if ( $baseUrl )
 			echo " xml:base='".htmlspecialchars($baseUrl)."'";
 		echo ">\n";
@@ -254,7 +254,7 @@ class MarginaliaHelper
 		$sQuoteTitle = htmlspecialchars( $annotation->getQuoteTitle() );
 		$sQuoteAuthorId = htmlspecialchars( $annotation->getQuoteAuthorId() );
 		$sQuoteAuthorName = htmlspecialchars( $annotation->getQuoteAuthorName() );
-		$sAccess = htmlspecialchars( $annotation->getAccess() );
+		$sSheet = htmlspecialchars( $annotation->getSheet() );
 		$sAction = htmlspecialchars( $annotation->getAction() );
 		
 		// title for display to reader
@@ -287,7 +287,7 @@ class MarginaliaHelper
 		if ( $xpathRange && XPathPoint::isXPathSafe( $xpathRange->start->getPathStr() ) && XPathPoint::isXPathSafe( $xpathRange->end->getPathStr( ) ) )
 			$s .= "  <ptr:range format='xpath'>".htmlspecialchars($xpathRange->toString())."</ptr:range>\n";
 		
-		$s .= "  <ptr:access>$sAccess</ptr:access>\n"
+		$s .= "  <ptr:sheet>$sSheet</ptr:sheet>\n"
 			. "  <ptr:action>$sAction</ptr:action>\n"
 			. "  <title>$title</title>\n";
 		// Use double quotes for some attributes because it's easier than passing ENT_QUOTES to
@@ -301,6 +301,8 @@ class MarginaliaHelper
 		$s .= "  <id>tag:$tagHost," . date( 'Y-m-d', $annotation->getCreated() ) . ':annotation/'.$annotation->getAnnotationId()."</id>\n"
 		. "  <updated>" . MarginaliaHelper::timeToIso( $annotation->getModified() ) . "</updated>\n"
 		. "  <ptr:created>" . MarginaliaHelper::timeToIso( $annotation->getCreated() ). "</ptr:created>\n";
+		if ( $annotation->getLastRead( ) )
+			$s .= "  <ptr:lastread>" . MarginaliaHelper::timeToIso( $annotation->getLastRead() ). "</ptr:lastread>\n";
 		// Selected text as summary
 		//echo "  <summary>$summary</summary>\n";
 		// Author of the annotation
@@ -455,7 +457,7 @@ class MarginaliaHelper
 		{
 			case URL_SCHEME_ERROR:
 			case XPATH_SECURITY_ERROR:
-			case ACCESS_VALUE_ERROR:
+			case SHEET_VALUE_ERROR:
 			case ACTION_VALUE_ERROR:
 				return 400;
 			default:

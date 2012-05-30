@@ -32,9 +32,10 @@
 function listMarginaliaJavascript( )
 {
 	return array (
-		"3rd-party/cssQuery.js"
-		,"3rd-party/cssQuery-level2.js"
-		,"3rd-party/cssQuery-standard.js"
+		'3rd-party/jquery.js'
+		,'3rd-party/jquery.url.js'
+		,'3rd-party/date.js'
+		,'3rd-party/jquery.dates.js'
 		,"3rd-party/shortcut.js"
 		,"3rd-party.js"
 	
@@ -42,6 +43,7 @@ function listMarginaliaJavascript( )
 		,"prefs.js"
 		,"html-model.js"
 		,"domutil.js"
+		,"restutil.js"
 		,"ranges.js"
 		,"SequenceRange.js"
 		,"XPathRange.js"
@@ -61,7 +63,6 @@ function listMarginaliaJavascript( )
 		,"rest-annotate.js"
 		,"rest-prefs.js"
 		,"rest-keywords.js"
-		,"marginalia-direct.js"
 	);
 }
 	
