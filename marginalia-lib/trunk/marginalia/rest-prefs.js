@@ -11,7 +11,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -26,14 +26,36 @@
  * $Id$
  */
 
-NICE_PREFERENCE_SERVICE_URL = '/preference';
-UGLY_PREFERENCE_SERVICE_URL = '/preference';
-
-function RestPreferenceService( serviceUrl, niceUrls )
+function RestPreferenceService( serviceUrl, features )
 {
 	this.serviceUrl = serviceUrl;
-	this.niceUrls = niceUrls;
-	return this;
+	this.niceUrls = false;
+	
+	if ( features )
+	{
+		for ( feature in features )
+		{
+			var value = features[ feature ];
+			switch ( feature )
+			{
+				// Name of cookie to use for preventing cross-site request forgery
+				case 'csrfCookie':
+					this.csrfCookie = value;
+					break;
+				
+				// Use nice service URLs (currently unsupported)
+				case 'niceUrls':
+					this.niceUrls = value;
+					break;
+					
+				default:
+					if ( typeof( this[ feature ] ) != 'undefined' )
+						throw 'Attempt to override feature: ' + feature;
+					else
+						this[ feature ] = value;
+			}
+		}
+	}
 }
 
 /**
@@ -70,7 +92,7 @@ RestPreferenceService.prototype.setPreference = function( setting, value, f )
 	var xmlhttp = domutil.createAjaxRequest( );
 	xmlhttp.open( 'POST', serviceUrl, true );
 	xmlhttp.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8' );
-	xmlhttp.setRequestHeader( 'Content-length', body.length );
+//	xmlhttp.setRequestHeader( 'Content-length', body.length );
 	xmlhttp.onreadystatechange = function( ) {
 		if ( xmlhttp.readyState == 4 )
 		{

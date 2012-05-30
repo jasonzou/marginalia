@@ -13,7 +13,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -51,6 +51,8 @@ XPathRange.canResolve = function( root )
 
 XPathRange.fromString = function( path )
 {
+	if ( ! path )
+		return null;
 	var parts = path.split( ';' );
 	if ( null == parts || 2 != parts.length )
 		throw "XPathRange parse error";
@@ -218,16 +220,11 @@ XPathPoint.prototype.getReferenceElement = function( root )
 	var rel;	// will be the result	
 	var xpath = this.path;
 	var myroot = root;
-	
+
 	var startTime = new Date( );
 	trace( 'xpath-range', 'XPathPoint.getReferenceElement for path ' + xpath );
 
-	// Screen out document(), as it is a security risk
-	// I would prefer to use a whitelist, but full processing of the xpath
-	// expression is expensive and complex.  I'm doing some of this on the
-	// server, so unless someone can hijack the returned xpath expressions
-	// this should never happen anyway.
-	if ( xpath.match( /[^a-zA-Z_]document\s*\(/ ) )
+	if ( ! this.isXPathSafe( xpath ) )
 		return null;
 	else if ( xpath == '' )
 		return root;
@@ -251,7 +248,7 @@ XPathPoint.prototype.getReferenceElement = function( root )
 		// of this behavior.
 		try
 		{
-			result = root.ownerDocument.evaluate( xpath, root, domutil.nsPrefixResolver, XPathResult.ANY_TYPE, null );
+			result = root.ownerDocument.evaluate( xpath, root, null /*domutil.nsPrefixResolver*/, XPathResult.ANY_TYPE, null );
 			rel = result.iterateNext( );
 		}
 		catch( e )
@@ -282,4 +279,64 @@ XPathPoint.prototype.getReferenceElement = function( root )
 	return rel;
 }
 
+// This is not a generic xpath checker.  It whitelists just enough to handle
+// the auto-generated paths used by XPathPoint
+XPathPoint.prototype.isXPathSafe = function( xpath )
+{
+	// Path could be blank
+	if ( '' == xpath )
+		return true;
+	// Path may start with .//
+	if ( './/' == xpath.substr(0,3) )
+		xpath = xpath.substr(3);
+	var parts = xpath.split( '/' );
+	for ( var i = 0;  i < parts.length;  ++i )
+	{
+		var part = parts[ i ];
+		// should perhaps trim it, but won't bother
+		var matches = part.match( '^[a-zA-Z0-9_:\*-]+\s*(.*)$' );
+		if ( matches )
+		{
+			var tail = matches[ 1 ];
+			// Simple tag name witho or without axis or namespace
+			if ( '' == tail )
+				;
+			// Qualification in [brackets]
+			else if ( matches = tail.match( /^\[([^\]]+)\]\s*$/ ) )
+			{
+				var test = matches[ 1 ];
+				// Simple number index
+				if ( test.match( /^\d+$/ ) )
+					;
+				// Comparison of an attribute with a quoted value
+				else if ( matches = test.match( /^@[a-zA-Z0-9_-]+\s*=\s*([\'"])[a-zA-Z0-9:._-]+([\'"])$/ ) )
+				{
+					if ( matches[ 1 ] == matches[ 1 ] )
+						;
+					else
+					{
+						trace( 'isXPathSafe', 'XPath test failed: @attribute="value"' );
+						return false;
+					}
+				}
+				else
+				{
+					trace( 'isXPathSafe', 'XPath test failed: unknown subscript' );
+					return false;
+				}
+			}
+			else
+			{
+				trace ('isXPathSafe', 'XPath test failed: improper text after tag name: ' + tail );
+				return false;
+			}
+		}
+		else
+		{
+			trace( 'isXPathSafe', 'XPath test failed: bad tag name' );
+			return false;
+		}
+	}
+	return true;
+}
 

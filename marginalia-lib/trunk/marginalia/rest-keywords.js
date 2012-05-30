@@ -12,7 +12,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -137,7 +137,7 @@ RestKeywordService.prototype.createKeyword = function( keyword, f )
 	xmlhttp.open( 'POST', serviceUrl, true );
 	xmlhttp.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8' );
 	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
-	xmlhttp.setRequestHeader( 'Content-length', body.length );
+	//xmlhttp.setRequestHeader( 'Content-length', body.length );
 	xmlhttp.onreadystatechange = function( ) {
 		if ( xmlhttp.readyState == 4 ) {
 			// No need for Safari hack, since Safari can't create annotations anyway.
@@ -172,7 +172,7 @@ RestKeywordService.prototype.updateKeyword = function( keyword, f )
 	xmlhttp.open( 'PUT', serviceUrl, true );
 	xmlhttp.setRequestHeader( 'Content-Type', 'application/x-www-form-urlencoded; charset=UTF-8' );
 	//xmlhttp.setRequestHeader( 'Accept', 'application/xml' );
-	xmlhttp.setRequestHeader( 'Content-length', body.length );
+	//xmlhttp.setRequestHeader( 'Content-length', body.length );
 	xmlhttp.onreadystatechange = function( ) {
 		if ( xmlhttp.readyState == 4 ) {
 			// Safari is braindead here:  any status code other than 200 is converted to undefined

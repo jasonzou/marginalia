@@ -9,7 +9,7 @@
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -23,13 +23,6 @@
  *
  * $Id$
  */
-
-AN_USER_PREF = 'annotations.user';
-AN_SHOWANNOTATIONS_PREF = 'annotations.show';
-AN_NOTEEDITMODE_PREF = 'annotations.note-edit-mode';
-AN_SPLASH_PREF = 'annotations.splash';
-SMARTCOPY_PREF = 'smartcopy';
-
 
 /**
  * Preferences creation
