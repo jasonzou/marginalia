@@ -10,6 +10,11 @@ The sub-projects are:
   * `moodle` - the Moodle implementation
   * `ojs` - the Open Journal Systems plugin
 
+The following tags exist:
+  * marginalia-lib/tags/release-1.0 - corresponds to Marginalia M 1.0 for Moodle 1.9
+  * marginalia-php/tags/release-1.0 - corresponds to Marginalia M 1.0 for Moodle 1.9
+  * moodle/tags/release-1.0 - Marginalia M 1.0 for Moodle 1.9
+
 = Command-Line Access =
 
 If you plan to make changes, check out the code as yourself using HTTPS.  For example, to check out the demo do the following:
