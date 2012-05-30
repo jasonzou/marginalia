@@ -23,65 +23,67 @@
  * 
  */
 
-function summaryOnLoad( )
-{
-	jQuery('.annotations .note').each( function( index, node ) {
-		domutil.urlize( this );
-	} );
-}
-jQuery(window).load(summaryOnLoad);
-
 /*
  * Must be called before any other annotation functions
  */
-function AnnotationSummary( wwwroot, params )
+AN_SUN_SYMBOL = '\u25cb'; //'\u263c';
+AN_MOON_SYMBOL = '\u25c6'; //'\u2641';	
+
+function AnnotationSummary( annotationService, wwwroot, loginUserId )
 {
+	this.annotationService = annotationService;
 	this.wwwroot = wwwroot;
-	this.annotationService = params.annotationService;
-	this.loginUserId = params.loginUserId;
-	this.csrfCookie = null;
-	this.useLog = false;
-	this.extService = params.extService;
-	
-	for ( var param in params )
-	{
-		switch ( param )
-		{
-			case 'annotationService':
-				this.annotationService = params[ param ];
-				break;
-			
-			case 'userid':
-				this.userid = params[ param ];
-				break;
-			
-			case 'csrfCookie':
-				this.csrfCookie = params[ param ];
-				break;
-				
-			case 'useLog':
-				this.useLog = params[ param ];
-				break;
-				
-			default:
-				throw 'Unknown paramater to AnnotationSummary: ' + param;
-		}
-	}
-	
-	this.smartquote = new Smartquote( this.wwwroot, null, this.extService );
+	this.loginUserId = loginUserId;
 }
 
-AnnotationSummary.prototype.deleteAnnotation = function( id, annotationid )
+AnnotationSummary.prototype.deleteAnnotation = function( id )
 {
-	var element = document.getElementById( id );
-	var row = domutil.parentByTagClass( element, 'tr', null );
-	var annotation = this.annotationFromRow( row, {
-		id: annotationid } );
-
 	var f = function( xmldoc ) {
 		window.location.reload( );
 	};
-	this.annotationService.deleteAnnotation( annotation, f );
+	this.annotationService.deleteAnnotation( id, f );
+}
+
+AnnotationSummary.prototype.shareAnnotation = function( button, id )
+{
+	var annotation = new Annotation( );
+	annotation.setId( id );
+	annotation.resetChanges( );
+	annotation.setAccess( button.value );
+	this.annotationService.updateAnnotation( annotation, null );
+}
+
+AnnotationSummary.prototype.shareAnnotationPublicPrivate = function( button, id )
+{
+	var annotation = new Annotation( );
+	annotation.setId( id );
+	annotation.resetChanges( );
+	annotation.id = id;
+	var oldAccess = domutil.hasClass( button, 'access-public' ) ? 'public' : 'private';
+	annotation.setAccess( 'public' == oldAccess ? 'private' : 'public' );
+	this.annotationService.updateAnnotation( annotation, null );
+	domutil.removeClass( button, 'access-' + oldAccess );
+	while ( button.firstChild )
+		button.removeChild( button.firstChild );
+	button.appendChild( document.createTextNode( 'public' == annotation.access ? AN_SUN_SYMBOL : AN_MOON_SYMBOL ) );
+	domutil.addClass( button, 'access-' + annotation.access );
+}
+
+AnnotationSummary.prototype.onSearchAnnotationsChange = function( )
+{
+	var searchElement  = document.getElementById( 'search-annotations' );
+	var accessElement = document.getElementById( 'access' );
+	var userElement = document.getElementById( 'user' );
+	if ( 'my annotations' == searchElement.value )
+	{
+		userElement.value = this.loginUserId;
+		accessElement.value = '';
+	}
+	else
+	{
+		userElement.value = '';
+		accessElement.value = 'public';
+	}
 }
 
 AnnotationSummary.skipZoom = function( node )
@@ -98,14 +100,12 @@ AnnotationSummary.prototype.quote = function( id, userid, postId )
 {
 	var element = document.getElementById( id );
 	var row = domutil.parentByTagClass( element, 'tr', null );
-	var annotation = this.annotationFromRow( row, {
-		userid: userid } );
-	
+	var annotation = this.annotationFromRow( row, userid );
 	var postId = Smartquote.postIdFromUrl( annotation.getUrl( ) );
-	this.smartquote.quoteAnnotation( annotation, this.userid, postId );
+	Smartquote.quoteAnnotation( annotation, this.loginUserId, this.wwwroot, postId );
 }
 
-AnnotationSummary.prototype.annotationFromRow = function( row, fields )
+AnnotationSummary.prototype.annotationFromRow = function( row, userid )
 {
 	var node = domutil.childByTagClass( row, null, 'quote' );
 	var quote = domutil.getNodeText( node, AnnotationSummary.skipZoom );
@@ -134,16 +134,20 @@ AnnotationSummary.prototype.annotationFromRow = function( row, fields )
 	var url = node ? node.getAttribute( 'href' ) : '';
 	
 	var annotation = new Annotation( {
-		id: fields.id,
-		userId: fields.userid,
+		userid: userid,
 		url: url,
 		quote: quote,
 		note: note,
 		userName: userName,
 		quoteAuthorName: quoteAuthorName
 	} );
-	annotation.resetChanges( );
 	
 	return annotation;
+}
+
+function setAnnotationUser( user )
+{
+	window.preferenceService.setPreference( 'show_annotations', 'true', null);
+	window.preferenceService.setPreference( 'annotation_user', user, null );
 }
 

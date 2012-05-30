@@ -3,7 +3,7 @@
 global $CFG;
 
 require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
-require_once( ANNOTATION_DIR.'/lib.php' );
+require_once( ANNOTATION_DIR.'/annotation_globals.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/Annotation.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/MarginaliaHelper.php' );
 require_once( ANNOTATION_DIR.'/marginalia-php/SequenceRange.php' );
@@ -20,7 +20,7 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		/// Define table annotation to be created
 		$table = new XMLDBTable('marginalia');
 		
-		/// Adding fields to table marginalia
+		/// Adding fields to table annotation
 		$table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
 	//	$table->addFieldInfo('userid', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null, null, null);
 		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
@@ -50,13 +50,13 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		$table->addFieldInfo('object_type', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 		$table->addFieldInfo('object_id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
 		
-		/// Adding keys to table marginalia
+		/// Adding keys to table annotation
 		$table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
 		
-		/// Adding indexes to table marginalia
+		/// Adding indexes to table annotation
 		$table->addIndexInfo('object', XMLDB_INDEX_NOTUNIQUE, array('object_type', 'object_id'));
 		
-		/// Launch create table for marginalia
+		/// Launch create table for annotation
 		$result = $result && create_table($table);
 		
 		// Check for old annotation table and convert its data over
@@ -123,57 +123,6 @@ function xmldb_block_marginalia_upgrade( $oldversion )
 		}
 		
 		// Should perhaps delete old annotation table?
-	}
-	
-	if ( $result && $oldversion < 2010012800 )  {
-		// Give in to Moodle's architecture and associate each annotation with a course
-		// (I don't like that Moodle is course-centric: I think it should be user-centric instead.
-		// I see annotations as belonging to the people who create them, not the things they
-		// annotate or the courses they were created in.  A student over the course of his or her
-		// career accumulates knowledge and content, synthesizing it into new knowledge and practice.
-		// In contrast, a course-oriented system is rooted in administrative structure.) 
-		$query = "ALTER TABLE {$CFG->prefix}marginalia ADD COLUMN course int";
-		$result = $result && execute_sql( $query, false );
-		
-		$query = "UPDATE {$CFG->prefix}marginalia a"
-			.", {$CFG->prefix}forum_posts p"
-			.", {$CFG->prefix}forum_discussions d"
-			." SET a.course=d.course"
-			." WHERE a.object_id=p.id"
-			." AND d.id=p.discussion";
-
-		$query = "ALTER TABLE {$CFG->prefix}marginalia ADD COLUMN sheet_type int";
-		$result = $result && execute_sql( $query, false );
-		
-		$query = "UPDATE {$CFG->prefix}marginalia SET sheet_type=access_perms";
-		$result = $result && execute_sql( $query, false );
-		
-		// private used to have access bits 0x0;  now has access 0x1
-		$query = "UPDATE {$CFG->prefix}marginalia SET sheet_type=1 WHERE sheet_type=0";
-		$result = $result && execute_sql( $query, false );
-		
-		$query = "ALTER TABLE {$CFG->prefix}marginalia DROP COLUMN access_perms";
-		$result = $result && execute_sql( $query, false );
-
-		
-		/// Define marginalia_read table, which tracks which annotations have been read by which users
-		$table = new XMLDBTable('marginalia_read');
-		
-        $table->addFieldInfo('id', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, XMLDB_SEQUENCE, null, null, null);
-		$table->addFieldInfo('annotationid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
-		$table->addFieldInfo('userid', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
-		$table->addFieldInfo('firstread', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
-		$table->addFieldInfo('lastread', XMLDB_TYPE_INTEGER, '10', XMLDB_UNSIGNED, XMLDB_NOTNULL, null, null, null, '0');
-
-		/// Adding keys to table marginalia_read
-		$table->addKeyInfo('primary', XMLDB_KEY_PRIMARY, array('id'));
-
-		/// Adding indexes to table marginalia_read
-		$table->addIndexInfo('object', XMLDB_INDEX_UNIQUE, array('annotationid', 'userid'));
-		
-		// Delete obsolete preferences
-	    delete_records('user_preferences', 'name', addslashes('annotations.user'));
-	    delete_records('user_preferences', 'name', addslashes('smartcopy'));
 	}
 	
 	return $result;
