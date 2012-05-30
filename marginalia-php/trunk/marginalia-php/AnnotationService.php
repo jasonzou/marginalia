@@ -291,17 +291,16 @@ class AnnotationService
 	{
 		$format = $this->getQueryParam( 'format', 'atom' );
 		$url = $this->getQueryParam( 'url', null );
-		$sheet = $this->getQueryParam( 'sheet', null );
+		$userid = $this->getQueryParam( 'user', null );
 		$block = $this->getQueryParam( 'block', null );
 		$block = $block ? new SequencePoint( $block ) : null;
 		$all = $this->getQueryParam( 'all', 'no' ) == 'yes' ? true : false;
-		$mark = $this->getQueryParam( 'mark', null );
 		
 /*		if ( $url == null || $url == '' )
 			$this->httpError( 400, 'Bad Request', 'Bad URL' );
 		else
 		{
-*/			$annotations = $this->doListAnnotations( $url, $sheet, $block, $all, $mark );
+*/			$annotations = $this->doListAnnotations( $url, $userid, $block, $all );
 			
 			if ( null === $annotations )
 				$this->httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
@@ -310,8 +309,8 @@ class AnnotationService
 				$feedUrl = '';
 				if ( $url )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'url=' . urlencode($url);
-				if ( $sheet )
-					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'sheet=' . urlencode( $sheet );
+				if ( $userid )
+					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'user=' . urlencode( $userid );
 				if ( $format )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'format=' . urlencode( $format );
 				if ( $block )
@@ -334,9 +333,8 @@ class AnnotationService
 	function getAnnotation( $id )
 	{
 		$format = (int) $this->getQueryParam( 'format', null );
-		$mark = $this->getQueryParam( 'mark', null );
 
-		$annotation = $this->doGetAnnotation( $id, $mark );
+		$annotation = $this->doGetAnnotation( $id );
 			
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found Error', 'No such annotation' );

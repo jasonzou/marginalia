@@ -49,7 +49,7 @@ class Annotation
 		$this->sequenceRange = null;
 		$this->xpathRange = null;
 		$this->note = null;
-		$this->sheet = null;
+		$this->access = null;
 		$this->action = null;
 		$this->quote = null;
 		$this->quoteTitle = null;
@@ -60,7 +60,6 @@ class Annotation
 		$this->created = null;
 		$this->modified = null;
 		$this->version = 1;
-		$this->lastRead = null;
 	}
 	
 	/** This method is intended to be called when an annotation is created via 
@@ -128,14 +127,14 @@ class Annotation
 	function getAction( )
 	{ return $this->action; }
 	
-	function setSheet( $sheet )
+	function setAccess( $access )
 	{
-		if ( $this->isSheetValid( $sheet ) )
-			$this->sheet = $sheet;
+		if ( $this->isAccessValid( $access ) )
+			$this->access = $access;
 	}
 	
-	function getSheet( )
-	{ return $this->sheet; }
+	function getAccess( )
+	{ return $this->access; }
 	
 	function setQuote( $quote )
 	{ $this->quote = $quote; }
@@ -194,12 +193,6 @@ class Annotation
 	function getVersion( )
 	{ return (int) $this->version; }
 	
-	function setLastRead( $lastread )
-	{ $this->lastRead = is_string( $lastread ) ? strtotime( $lastread ) : $lastread; }
-	
-	function getLastRead( )
-	{ return $this->lastRead; }
-	
 	/**
 	 * Convert to an Atom entry
 	 */
@@ -214,10 +207,10 @@ class Annotation
 		return null === $action || '' === $action || 'edit' == $action;
 	}
 	
-	/** Check whether a sheet value is valid (overrideable) */
-	function isSheetValid( $sheet )
+	/** Check whether an access value is valid (overrideable) */
+	function isAccessValid( $access )
 	{
-		return ! $sheet || 'public' == $sheet || 'private' == $sheet;
+		return ! $access || 'public' == $access || 'private' == $access;
 	}	
 }
 
