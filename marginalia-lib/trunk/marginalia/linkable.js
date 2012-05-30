@@ -26,62 +26,28 @@
  * $Id$
  */
 
-/**
- * Enable link targets for when user clicks on a post
- */
-function LinkablePosts( postPageInfo )
-{
-	this.postInfo = postPageInfo;
-	this.prefix = prefix;
-	
-	var linkablePosts = this;
-	
-	this.fenable = function( )  {
-		linkablePosts.enableLinkTargets( );
-	};
+AN_MAKELINKTARGET_CLASS = 'make-link-target';	// this content element's children can be made link targets by clicking
+AN_LINKTARGET_CLASS = 'link-target';	// the node is the clicked target of a link
+AN_FLASH_CLASS = 'flash';			// the display is flashing this node
 
-	this.fdisable = function( )  {
-		linkablePosts.disableLinkTargets( );
-	};
-	
-	this.fclick = function( event )  {
-		linkablePosts.clickLinkTarget( event );
-	};
-	
-	this.fflash = function( )  {
-		linkablePosts.flashLinkTarget( );
-	};
-	
-	domutil.addEventListener( window, 'focus', this.fenable, false );
-	domutil.addEventListener( window, 'blur', this.fdisable, false );
-}
-
-// These class names do not require a prefix
-LinkablePosts.C_MAKELINKTARGET = 'linkableposts-makelinktarget';// this content element's children can be made link targets by clicking
-LinkablePosts.C_LINKTARGET = 'linkableposts-linktarget';			// the node is the clicked target of a link
-LinkablePosts.C_FLASH = 'linkableposts-flash';					// the display is flashing this node
-
-// Cookies:
-LinkablePosts.CK_LINKING = 'marginalia-linking';
-LinkablePosts.CK_LINKURL = 'marginalia-link-url';
-
-
-
+AN_LINKING_COOKIE = 'marginalia-linking';
+AN_LINKURL_COOKIE = 'marginalia-link-url';
 
 /**
  * If the window gains focus and linking is on, enable link targets
  */
-LinkablePosts.prototype.enableLinkTargets = function( )
+function _enableLinkTargets( )
 {
-	if ( readCookie( LinkablePosts.CK_LINKING ) )
+	if ( readCookie( AN_LINKING_COOKIE ) )
 	{
-		var posts = this.postInfo.getAllPosts( );
+		var postInfo = PostPageInfo.getPostPageInfo( document );
+		var posts = postInfo.getAllPosts( );
 		for ( var i = 0;  i < posts.length;  ++i )
 		{
 			var post = posts[ i ];
 			var content = post.getContentElement( );
-			domutil.addClass( content, LinkablePosts.C_MAKELINKTARGET );
-			domutil.addEventListener( content, 'click', this.fclick, false );
+			domutil.addClass( content, AN_MAKELINKTARGET_CLASS );
+			domutil.addEventListener( content, 'click', _clickLinkTarget, false );
 		}
 	}
 }
@@ -90,7 +56,7 @@ LinkablePosts.prototype.enableLinkTargets = function( )
 /**
  * If the window loses focus, disable link targets
  */
-LinkablePosts.prototype.disableLinkTargets = function( )
+function _disableLinkTargets( )
 {	
 	var postInfo = PostPageInfo.getPostPageInfo( document );
 	var posts = postInfo.getAllPosts( );
@@ -98,10 +64,10 @@ LinkablePosts.prototype.disableLinkTargets = function( )
 	{
 		var post = posts[ i ];
 		var content = post.getContentElement( );
-		domutil.removeClass( content, LinkablePosts.C_MAKELINKTARGET );
-		domutil.removeEventListener( content, 'click', this.fclick, false );
+		domutil.removeClass( content, AN_MAKELINKTARGET_CLASS );
+		domutil.removeEventListener( content, 'click', _clickLinkTarget, false );
 	}
-	domutil.removeEventListener( window, 'blur', this.fdisable, false );
+	domutil.removeEventListener( window, 'blur', _disableLinkTargets, false );
 }
 
 
@@ -109,66 +75,61 @@ LinkablePosts.prototype.disableLinkTargets = function( )
  * The user has clicked on a link target.  Update the relevant annotation with
  * the new link.
  */
-LinkablePosts.prototype.clickLinkTarget = function( event )
+function _clickLinkTarget( event )
 {
 	event = domutil.getEvent( event );
 	domutil.stopPropagation( event );
+	var content = domutil.parentByTagClass( domutil.getEventTarget( event ), null, PM_CONTENT_CLASS, false, null );
 	
-	var post = this.postInfo.postByElement( domutil.getEventTarget( event ) );
-	if ( post )
+	// Need to look at parent targets until a block level element is found
+	var target = domutil.getEventTarget( event, target );
+	while ( 'block' != domutil.htmlDisplayModel( target.tagName ) )
+		target = target.parentNode;
+	
+	// Calculate path to target
+	var point = SequencePoint.fromNode( content, target );
+	var path = point.toString( );
+	//	var path = NodeToPath( content, target );
+	var link = '' + window.location;
+	if ( -1 != link.indexOf( '#' ) )
+		link = link.substring( 0, link.indexOf( '#' ) );
+	link = link + '#node-path:' + path;
+	
+	// Get the annotation
+	var annotationId = readCookie( AN_LINKING_COOKIE );
+	if ( null != annotationId )
 	{
-		var content = post.getContentElement( );
-	
-		// Need to look at parent targets until a block level element is found
-		var target = domutil.getEventTarget( event, target );
-		while ( 'block' != domutil.htmlDisplayModel( target.tagName ) )
-			target = target.parentNode;
-		
-		// Calculate path to target
-		var point = SequencePoint.fromNode( content, target );
-		var path = point.toString( );
-		//	var path = NodeToPath( content, target );
-		var link = '' + window.location;
-		if ( -1 != link.indexOf( '#' ) )
-			link = link.substring( 0, link.indexOf( '#' ) );
-		link = link + '#node-path:' + path;
-		
-		// Get the annotation
-		var annotationId = readCookie( LinkablePosts.CK_LINKING );
-		if ( null != annotationId )
-		{
-			// TODO: must replace ; characters in cookie
-			createCookie( LinkablePosts.CK_LINKURL, link, 1 );
-	
-			domutil.removeEventListener( content, 'click', _clickLinkTarget, false );
-			domutil.removeClass( content, LinkablePosts.C_MAKELINKTARGET );
-			domutil.addClass( target, LinkablePosts.C_FLASH );
-			target.flashcount = 4;
-			setTimeout( this.fflash, 240 );
-		}
+		// TODO: must replace ; characters in cookie
+		createCookie( AN_LINKURL_COOKIE, link, 1 );
+
+		domutil.removeEventListener( content, 'click', _clickLinkTarget, false );
+		domutil.removeClass( content, AN_MAKELINKTARGET_CLASS );
+		domutil.addClass( target, AN_FLASH_CLASS );
+		target.flashcount = 4;
+		setTimeout( _flashLinkTarget, 240 );
 	}
 	
 	// If the link was made from this window, leave editing mode
-	this.disableLinkTargets( );
+	_disableLinkTargets( );
 	_updateLinks( );
 }
 
-LinkablePosts.prototype.flashLinkTarget = function( )
+function _flashLinkTarget( )
 {
-	var target = domutil.childByTagClass( document.documentElement, null, LinkablePosts.C_FLASH, null );
+	var target = domutil.childByTagClass( document.documentElement, null, AN_FLASH_CLASS, null );
 	if ( target.flashcount > 0 )
 	{
 		if ( target.flashcount % 2 )
-			domutil.removeClass( target, LinkablePosts.C_LINKTARGET );
+			domutil.removeClass( target, AN_LINKTARGET_CLASS );
 		else
-			domutil.addClass( target, LinkablePosts.C_LINKTARGET );
+			domutil.addClass( target, AN_LINKTARGET_CLASS );
 		target.flashcount -= 1;
-		setTimeout( this.fflash, 240 );
+		setTimeout( _flashLinkTarget, 240 );
 	}
 	else
 	{
-		domutil.removeClass( target, LinkablePosts.C_LINKTARGET );
-		domutil.removeClass( target, LinkablePosts.C_FLASH );
+		domutil.removeClass( target, AN_LINKTARGET_CLASS );
+		domutil.removeClass( target, AN_FLASH_CLASS );
 		if ( target.flashcount )
 			delete target.flashcount;
 	}

@@ -124,8 +124,6 @@ ErrorLogger.prototype.outdent = function( )
 
 ErrorLogger.prototype.trace = function( topic, s )
 {
-	if ( ! this.on )
-		alert( 'logging not on' );
 	for ( var i = 0;  i < this.indentLevel;  ++i )
 		s = '  ' + s;
 	if ( this.on && ( !topic || this.traceSettings[ topic ] ) )

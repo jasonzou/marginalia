@@ -36,25 +36,25 @@ function SimpleLinkUi( )
 
 SimpleLinkUi.prototype.bind = FreeformNoteEditor.prototype.bind;
 
-SimpleLinkUi.prototype.clear = function( marginalia )
+SimpleLinkUi.prototype.clear = function( )
 {
 	this.editNode = null;
 }
 
-SimpleLinkUi.prototype.show = function( marginalia )
+SimpleLinkUi.prototype.show = function( )
 {
 	var marginalia = this.marginalia;
 	var annotation = this.annotation;
 	var post = this.postMicro;
 	var noteElement = this.noteElement;
 	
-	var controlId = Marginalia.ID_PREFIX + annotation.getId() + '-linkedit';
+	var controlId = AN_ID_PREFIX + annotation.getId() + '-linkedit';
 	
 	// add the link label
 	noteElement.appendChild( domutil.element( 'label', {
 		title:  getLocalized( 'annotation link label' ),
 		attr_for:  controlId,
-		content:  marginalia.icons[ 'linkEdit' ] } ) );
+		content:  AN_LINKEDIT_LABEL } ) );
 
 	// Add the URL input field
 	this.editNode = noteElement.appendChild( domutil.element( 'input', {
@@ -66,7 +66,7 @@ SimpleLinkUi.prototype.show = function( marginalia )
 	
 	// add the delete button
 	noteElement.appendChild( domutil.button( {
-		className:  Marginalia.C_LINKDELETEBUTTON,
+		className:  AN_LINKDELETEBUTTON_CLASS,
 		title:  getLocalized( 'delete annotation link button' ),
 		content:  'x',
 		annotationId:  annotation.getId(),

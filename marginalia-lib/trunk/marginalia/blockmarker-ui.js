@@ -26,9 +26,10 @@
  * $Id$
  */
 
-Marginalia.C_MARKER = Marginalia.PREFIX + 'marker';		// individual block marker
-Marginalia.C_USERCOUNT = Marginalia.PREFIX + 'annotation-user-count';		// contains user count in block marker
-Marginalia.C_ANNOTATIONSFETCHED = Marginalia.PREFIX + 'fetched';	// indicates a block's annotations have been fetched
+AN_MARKERS_CLASS = 'markers';		// markers column (usually on the left)
+AN_MARKER_CLASS = 'marker';		// individual block marker
+AN_USERCOUNT_CLASS = 'annotation-user-count';		// contains user count in block marker
+AN_ANNOTATIONSFETCHED_CLASS = 'fetched';	// indicates a block's annotations have been fetched
 
 
 /**
@@ -53,7 +54,7 @@ function _showPerBlockUserCountsCallback( xmldoc )
 			for ( var j = 0;  j < info.users.length;  ++j )
 			{
 				var user = info.users[ j ];
-				if ( user.noteCount > 0 )
+				if ( user.noteCount > 0 && user.userid != marginalia.displayUserId )
 				{
 					var post = marginalia.listPosts( ).getPostByUrl( info.url, marginalia.baseUrl );
 					post.showPerBlockUserCount( marginalia, info );
@@ -98,14 +99,14 @@ PostMicro.prototype.getBlockMarkerClickFcn = function( marginalia, markerElement
 {
 	var postMicro = this;
 	return function() {
-		if ( domutil.hasClass( markerElement, Marginalia.C_ANNOTATIONSFETCHED ) )
+		if ( domutil.hasClass( markerElement, AN_ANNOTATIONSFETCHED_CLASS ) )
 		{
-			domutil.removeClass( markerElement, Marginalia.C_ANNOTATIONSFETCHED );
+			domutil.removeClass( markerElement, AN_ANNOTATIONSFETCHED_CLASS );
 			postMicro.hideBlockAnnotations( marginalia, pointStr );
 		}
 		else
 		{
-			domutil.addClass( markerElement, Marginalia.C_ANNOTATIONSFETCHED );
+			domutil.addClass( markerElement, AN_ANNOTATIONSFETCHED_CLASS );
 			marginalia.showBlockAnnotations( url, pointStr );
 		}
 	};
@@ -129,11 +130,8 @@ PostMicro.prototype.hideBlockAnnotations = function( marginalia, pointStr )
 		var range = annotation.getSequenceRange( );
 		if ( range )
 		{
-			// displayUserId replaced by displayAccess, too tired to figure
-			// out exactly what this test was for so commenting instead of deleting
-			// 20100221: access is obsolete anyway, now relpaced by sheet
-			//if ( annotation.getUserId( ) != marginalia.displayUserId )
-			//{
+			if ( annotation.getUserId( ) != marginalia.displayUserId )
+			{
 				// if we've run past the last relevant annotation, don't bother with the rest
 				if ( range.start.comparePath( point ) > 0 )
 					break;
@@ -151,7 +149,7 @@ PostMicro.prototype.hideBlockAnnotations = function( marginalia, pointStr )
 							repositionNote = nextNote;
 					}
 				}
-			//}
+			}
 		}
 	}
 	if ( repositionNote )
@@ -160,7 +158,7 @@ PostMicro.prototype.hideBlockAnnotations = function( marginalia, pointStr )
 
 PostMicro.prototype.showBlockMarker = function( marginalia, info, block, point )
 {
-	var markers = marginalia.selectors[ 'mia_markers' ].node( this.getElement( ) );
+	var markers = domutil.childByTagClass( this.getElement( ), null, AN_MARKERS_CLASS, marginalia.skipContent );
 	if ( markers )
 	{
 		var countElement;
@@ -172,11 +170,11 @@ PostMicro.prototype.showBlockMarker = function( marginalia, info, block, point )
 			block.blockMarkerUsers = [ ];
 
 			markerElement = domutil.element( 'div', {
-				className: Marginalia.C_MARKER,
+				className: AN_MARKER_CLASS,
 				blockElement: block
 			} );
 			countElement = domutil.element( 'span', {
-				className: Marginalia.C_USERCOUNT,
+				className: AN_USERCOUNT_CLASS,
 				onclick: this.getBlockMarkerClickFcn( window.marginalia, markerElement, info.url, point.toString() )
 			} );
 			markerElement.appendChild( countElement );
@@ -198,7 +196,7 @@ PostMicro.prototype.showBlockMarker = function( marginalia, info, block, point )
 		{
 			var user = info.users[ i ];
 			// Don't include the currently-displayed user
-			if ( user.noteCount > 0 ) //&& user.userid != marginalia.displayUserId )
+			if ( user.noteCount > 0 && user.userid != marginalia.displayUserId )
 				block.blockMarkerUsers[ block.blockMarkerUsers.length ] = user;
 		}
 		
@@ -254,10 +252,10 @@ PostMicro.prototype.positionBlockMarker = function( marginalia, markers, markerE
  */
 PostMicro.prototype.repositionBlockMarkers = function( marginalia )
 {
-	var markers = marginalia.selectors[ 'mia_markers' ].nodes( this.getElement( ) );
+	var markers = domutil.childByTagClass( this.getElement( ), null, AN_MARKERS_CLASS, marginalia.skipContent );
 	if ( markers )
 	{
-		var markerElements = domutil.childrenByTagClass( this.getElement( ), null, Marginalia.C_MARKER, null );
+		var markerElements = domutil.childrenByTagClass( this.getElement( ), null, AN_MARKER_CLASS, null );
 		for ( var i = 0;  i < markerElements.length;  ++i )
 			this.positionBlockMarker( marginalia, markers, markerElements[ i ] );
 	}
