@@ -6,11 +6,12 @@ The sub-projects are:
 
   * `marginalia-lib` - the core Javascript client-side code
   * `marginalia-php` - support code for PHP server-side implementations
-  * `demo` - the demo application
   * `moodle` - the Moodle implementation
+  * `demo` - the demo application
   * `ojs` - the Open Journal Systems plugin
 
-The following tags exist:
+The current versions of marginalia-lib, marginalia-php and moodle are for the Marginalia 2.x release series for Moodle 2.x.  Snapshots of Moodle M 1.0 for Moodle 1.9 can be found here:
+
   * `marginalia-lib/tags/release-1.0` - corresponds to Marginalia M 1.0 for Moodle 1.9
   * `marginalia-php/tags/release-1.0` - corresponds to Marginalia M 1.0 for Moodle 1.9
   * `moodle/tags/release-1.0` - Marginalia M 1.0 for Moodle 1.9
