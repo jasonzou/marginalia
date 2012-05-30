@@ -9,7 +9,7 @@
  * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
  * units and individuals within those organizations.  Many 
  * thanks to all of them.  See CREDITS.html for details.
- * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
+ * Copyright (C) 2005-2011 Geoffrey Glass; the United Nations
  * http://www.geof.net/code/annotation
  * 
  * This program is free software; you can redistribute it and/or
@@ -71,7 +71,7 @@ class AnnotationService
 		// default for optional arguments
 		$this->baseUrl = null;
 		$this->niceUrls = False;
-		$this->csrfCookie = null;
+		$this->csrfParam = null;
 		$this->csrfCookieValue = null;
 		$this->noPutDelete = False;
 		
@@ -111,11 +111,11 @@ class AnnotationService
 						$this->noPutDelete = $value;
 						break;
 						
-					// The name of the session cookie and its value
+					// The name of the parameter containing the session cookie and its expected value
 					// Used to prevent cross-site request forgeries
-					// Client must also configure csrfCookie (but definitely *not* csrfCookieValue)
-					case 'csrfCookie':
-						$this->csrfCookie = $value;
+					// Client must configure csrfCookie (but definitely *not* csrfCookieValue)
+					case 'csrfParam':
+						$this->csrfParam = $value;
 						break;
 					case 'csrfCookieValue':
 						$this->csrfCookieValue = $value;
@@ -153,9 +153,14 @@ class AnnotationService
 	// Used to prevent cross-site request forgery
 	function verifySession( $params )
 	{
-		return ! $this->csrfCookie ||
-			( array_key_exists( $this->csrfCookie, $params )
-			&& $this->csrfCookieValue == $params[ $this->csrfCookie ] );
+		$success = ! $this->csrfParam ||
+			( array_key_exists( $this->csrfParam, $params )
+			&& $this->csrfCookieValue == $params[ $this->csrfParam ] );
+/*		if ( ! $success )
+			echo 'submit csrf: '.$params[$this->csrfParam]
+			.', cookie name: '.$this->csrfParam
+			.", correct csrf: ".$this->csrfCookieValue;
+*/		return $success;
 	}
 	
 	function parseAnnotationId( )
@@ -291,16 +296,17 @@ class AnnotationService
 	{
 		$format = $this->getQueryParam( 'format', 'atom' );
 		$url = $this->getQueryParam( 'url', null );
-		$userid = $this->getQueryParam( 'user', null );
+		$sheet = $this->getQueryParam( 'sheet', null );
 		$block = $this->getQueryParam( 'block', null );
 		$block = $block ? new SequencePoint( $block ) : null;
 		$all = $this->getQueryParam( 'all', 'no' ) == 'yes' ? true : false;
+		$mark = $this->getQueryParam( 'mark', null );
 		
 /*		if ( $url == null || $url == '' )
 			$this->httpError( 400, 'Bad Request', 'Bad URL' );
 		else
 		{
-*/			$annotations = $this->doListAnnotations( $url, $userid, $block, $all );
+*/			$annotations = $this->doListAnnotations( $url, $sheet, $block, $all, $mark );
 			
 			if ( null === $annotations )
 				$this->httpError( 500, 'Internal Service Error', 'Failed to list annotations' );
@@ -309,8 +315,8 @@ class AnnotationService
 				$feedUrl = '';
 				if ( $url )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'url=' . urlencode($url);
-				if ( $userid )
-					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'user=' . urlencode( $userid );
+				if ( $sheet )
+					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'sheet=' . urlencode( $sheet );
 				if ( $format )
 					$feedUrl .= ( $feedUrl ? '&' : '?' ) . 'format=' . urlencode( $format );
 				if ( $block )
@@ -333,8 +339,9 @@ class AnnotationService
 	function getAnnotation( $id )
 	{
 		$format = (int) $this->getQueryParam( 'format', null );
+		$mark = $this->getQueryParam( 'mark', null );
 
-		$annotation = $this->doGetAnnotation( $id );
+		$annotation = $this->doGetAnnotation( $id, $mark );
 			
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found Error', 'No such annotation' );
