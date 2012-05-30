@@ -125,3 +125,5 @@ $string['js_zero_length_quote'] = 'You must select some text to annotate.';
 $string['js_quote_not_found'] = 'The highlighted passage could not be found';
 $string['js_create_overlapping_edits'] = 'You may not create overlapping edits';
 
+$string['marginalia:view_all'] = 'View all';
+$string['marginalia:fix_notes'] = 'Fix notes';

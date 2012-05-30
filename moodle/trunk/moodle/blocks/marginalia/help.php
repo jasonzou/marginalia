@@ -1,4 +1,4 @@
-<?
+<?php
 
 /**
  * Load up a help page.
