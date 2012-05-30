@@ -1,0 +1,36 @@
+<html>
+<head>
+	<title>Marginalia Annotation Development for Moodle</title>
+	<style type="text/css">
+		ol li {
+			margin: 1em 0 ;
+		}
+	</style>
+</head>
+<body>
+<h1>Marginalia Annotation Development for Moodle</h1>
+
+<p>Although targetted at Moodle, this guide may be useful for developers who wish to
+use the annotation code in other applications.  Most of these changes parallel what
+would be necessary elsewhere.</p>
+
+<p>Marginalia library code is self-contained in the <kbd>annotation/marginalia</kbd> and
+<kbd>annotation/marginalia-php</kbd> subdirectories.  All other annotation code is
+Moodle-specific.</p>
+
+<p>The summary page implementation, in particular, is unique to Moodle.  If you wish
+to implement Marginalia support for parts of Moodle other than the forum, you will need
+to add handlers for the relevant data type to AnnotationSummaryQuery.php.  These
+handlers take care of things like the title of an annotated resources, collating
+subresources (e.g. forum posts), etc.</p>
+
+<p>Unlike other Marginalia integrations, the Moodle version adds two columns to the
+database:  object_type and object_id.  These are used to make joins with forum
+data more efficient (e.g. when returning all annotations for all forum posts to a
+particular forum).</p>
+
+<p>For more information about Marginalia development in general, download the demo
+application.</p>
+
+</body>
+</html>
