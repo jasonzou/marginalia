@@ -35,7 +35,7 @@ require_once( 'marginalia-php/Keyword.php' );
 require_once( 'marginalia-php/KeywordService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
 require_once( 'keywords_db.php' );
-require_once( 'lib.php' );
+require_once( 'annotation_globals.php' );
 
 require_login();
 
@@ -44,10 +44,9 @@ class moodle_keyword_service extends KeywordService
 	function moodle_keyword_service( $username )
 	{
 		global $CFG;
-		$moodlemia = moodle_marginalia::get_instance( );
 		KeywordService::KeywordService( 
-			$moodlemia->get_host(),
-			$moodlemia->get_keyword_service_path(),
+			annotation_globals::get_host(),
+			annotation_globals::get_keyword_service_path(),
 			$username,
 			$CFG->wwwroot );
 		$this->tablePrefix = $CFG->prefix;

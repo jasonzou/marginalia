@@ -1,38 +1,16 @@
 <?php
 
-/*
- * tags.php
- *
- * Marginalia has been developed with funding and support from
- * BC Campus, Simon Fraser University, and the Government of
- * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
- * units and individuals within those organizations.  Many 
- * thanks to all of them.  See CREDITS.html for details.
- * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
- * http://www.geof.net/code/annotation
- * 
- * This program is free software; you can redistribute it and/or
- * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
- * of the License, or (at your option) any later version.
- *
- * This program is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU General Public License for more details.
- *
- * You should have received a copy of the GNU General Public License
- * along with this program; if not, write to the Free Software
- * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
- *
- * $Id$
- */
+ // summary.php
+ // Part of Marginalia annotation for Moodle
+ // See www.geof.net/code/annotation/ for full source and documentation.
+
+ // Display a summary of all annotations for the current user
 
 require_once( "../../config.php" );
 require_once( 'config.php' );
 require_once( "marginalia-php/MarginaliaHelper.php" );
 require_once( 'marginalia-php/Keyword.php' );
-require_once( 'lib.php' );
+require_once( 'annotation_globals.php' );
 require_once( 'keywords_db.php' );
 
 global $CFG;
@@ -80,7 +58,6 @@ else  {
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/log.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia-config.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/domutil.js'></script>\n"
-		. "<script language='JavaScript' type='text/javascript' src='marginalia/restutil.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-annotate.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='marginalia/rest-keywords.js'></script>\n"
 		. "<script language='JavaScript' type='text/javascript' src='tags.js'></script>\n"
@@ -103,14 +80,9 @@ else  {
 		. "addEvent( window, 'load', keywordsOnload );\n"
 		. "</script>";
 			
-		$navlinks = array();
-		$navlinks[] = array(
-				'name' => get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
-				'type' => 'title');
-		$navigation = build_navigation( $navlinks );
-
-		print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
-		$course->fullname, $navigation, "", $meta, true, "", null);
+	$navtail = get_string( 'edit_keywords_title', ANNOTATION_STRINGS );
+	print_header( "$course->shortname: " . get_string( 'edit_keywords_title', ANNOTATION_STRINGS ),
+		$course->fullname, "$navtail", "", $meta, true, "", null);
 		
 
 	echo "<div id='keyword-display'>\n";
@@ -133,11 +105,6 @@ else  {
 	$urlparts = parse_url( $logurl );
 	$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
 	add_to_log( null, 'annotation', 'summary', 'edit-keywords.php' );
-	
-	$marginalia = moodle_marginalia::get_instance( );
-	$logger = $marginalia->logger;
-	if ( $logger && $logger->is_active())
-		$logger->viewTags();
 }
 
 ?>

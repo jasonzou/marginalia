@@ -35,13 +35,6 @@ LocalizedAnnotationStrings = {
 
 	'annotation quote button' : 'Quote this annotation in a discussion post.',
 	
-	'chars remaining' : 'characters remaining',
-	
-	'edit annotation click' : 'Click to edit the text of this annotation.',
-	
-	'note user recent title' : 'Note recently modified on: ',
-	
-	'note user title' : 'Note last modified on: ',
 	
 	
 	'browser support of W3C range required for annotation creation' : 'Your browser does not support the W3C range standard, so you cannot create annotations.',

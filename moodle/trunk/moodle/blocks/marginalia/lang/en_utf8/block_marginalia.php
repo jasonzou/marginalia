@@ -1,12 +1,12 @@
 <?php // $Id$
 
 $string['splash'] = 'This is the annotation margin.  Click the ? next to My Annotations at the top right of your screen to find out more, or select Hide Annotations in the drop down list to hide this annotation margin.';
-$string['create_margin'] = 'Select text and click here or type Enter to create a new annotation.';
-$string['summary_link'] = 'Annotation Summary';
+$string['create_button'] = 'Click here or type Enter to create a new annotation for selected text.';
+$string['summary_link'] = 'Summary';
 $string['summary_link_title'] = 'Go to your annotation summary';
-$string['sheet_private'] = 'My Private Annotations';
-$string['sheet_none'] = 'Hide Annotations';
-$string['sheet_public'] = 'Shared Annotations';
+$string['my_annotations'] = 'My annotations';
+$string['hide_annotations'] = 'Hide annotations';
+$string['all_annotations'] = 'All annotations';
 $string['summary_title'] = 'Annotation Summary';
 $string['prompt_find'] = 'Find';
 $string['prompt_by'] = 'by';
@@ -21,7 +21,7 @@ $string['summary_range_error'] =
 	'You have been directed here because one or more annotations could not'
 	. ' be displayed.  This is probably because the annotated text changed.'
 	. ' This summary includes the annotations which could not be shown.';
-$string['prompt_search_desc'] = 'Showing $a->n of $a->m';
+$string['prompt_search_desc'] = 'Showing';
 $string['prompt_section'] = 'Go to $a->section_type';
 $string['prompt_row'] = 'Go to $a->row_type by $a->author';
 $string['private'] = 'private';
@@ -63,21 +63,14 @@ $string['zoom_author_hover'] = 'Click to show only annotations of work by $a->fu
 $string['zoom_url_hover'] = 'Click to show only annotations in this $a->section_type.';
 $string['zoom_match_hover'] = 'Click to show only notes matching this exact text.';
 $string['unzoom_user_hover'] = 'Click to view annotations by anyone.';
-$string['unzoom_author_hover'] = 'Click to view annotations of any user&#38;s work.';
+$string['unzoom_author_hover'] = 'Click to view annotations of any user&apos;s work.';
 $string['unzoom_url_hover'] = 'Click to broaden the search.';
 $string['unzoom_match_hover'] = 'Click to include all occurrences of this text.';
 $string['smartquote_annotation'] = 'Quote this annotation in a forum post.';
 $string['summary_help'] = 'using the annotaton summary';
-$string['summary_sort_document'] = "Show annotations in document order.";
-$string['summary_sort_time'] = "Show most recent annotations first.";
-$string['summary_source_head'] = 'Source';
-$string['summary_quote_head'] = 'Highlighted Text';
-$string['summary_note_head'] = 'Margin Note';
-$string['summary_time_head'] = 'Modified';
-$string['summary_user_head'] = 'User';
 
 /* Edit Keywords Page */
-$string['edit_keywords_link' ] = 'Annotation Tags';
+$string['edit_keywords_link' ] = 'Tags';
 $string['edit_keywords_title'] = 'Annotation Tags';
 $string['keyword_column'] = 'Tag';
 $string['keyword_desc_column'] = 'Description';
@@ -88,4 +81,4 @@ $string['note_replace_new'] = 'Replacement note text';
 $string['note_replace_button'] = 'Replace Notes';
 $string['note_update_count'] = 'Notes updated: ';
 $string['tag_list_prompt'] = 'You have used the following notes multiple times.  Click on a link to view a summary of annotations with that note.';
-
+?>

@@ -43,22 +43,14 @@ p#query {
 	margin-top: 1.5em;
 }
 
-p#query a .alt {display: none;}
 p#query a .alt,
 p#query a:hover .current {
-	xdisplay: none;
-	text-decoration: line-through;
+	display: none;
 }
 
-p#query a:hover {
-	text-decoration: none;
-}
-
-/*
 p#query a:hover .alt {
 	display: inline;
 }
-*/
 
 p.error em.range-error {
 	color: white;
@@ -152,10 +144,6 @@ table.annotations tbody td.note {
 	width: 30%;
 }
 
-table.annotations tbody td.modified {
-	font-size: 80%;
-}
-
 table.annotations tbody td.user {
 	font-size: 80%;
 }
@@ -196,21 +184,6 @@ table.annotations button {
 
 table.annotations button:hover {
 	font-weight: bold;
-}
-
-.result-pages {
-	list-style-type: none;
-	margin: 2em auto;
-	text-align: center;
-	padding: 1px 0;
-}
-
-.result-pages li {
-	display: inline;
-}
-
-.result-pages + * {
-	clear: both;
 }
 
 /* smartcopy tip */
