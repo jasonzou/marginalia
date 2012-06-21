@@ -330,8 +330,9 @@ Marginalia.defaultErrorCallback = function( object, operation, status, text )
 			getLocalized( 'service error title ' + msgKey ) ),
 		domutil.element( 'p', { },
 			getLocalized( 'service error ' + msgKey ) + ' ' ),
-		domutil.element( 'p', { },
-			getLocalized( 'service error ' + status ) ) ] );
+		domutil.element( 'p', { }, msgKey + ' ' +
+			getLocalized( 'service error ' + status ) ),
+		domutil.element( 'p', { }, text ) ] );
 	document.body.appendChild( node );
 	setTimeout( function( ) {
 		jQuery( node ).fadeOut( 'def ', function( ) {
