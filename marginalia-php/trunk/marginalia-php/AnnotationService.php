@@ -9,12 +9,12 @@
  * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
  * units and individuals within those organizations.  Many 
  * thanks to all of them.  See CREDITS.html for details.
- * Copyright (C) 2005-2011 Geoffrey Glass; the United Nations
+ * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
  * http://www.geof.net/code/annotation
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -71,7 +71,7 @@ class AnnotationService
 		// default for optional arguments
 		$this->baseUrl = null;
 		$this->niceUrls = False;
-		$this->csrfParam = null;
+		$this->csrfCookie = null;
 		$this->csrfCookieValue = null;
 		$this->noPutDelete = False;
 		
@@ -111,11 +111,11 @@ class AnnotationService
 						$this->noPutDelete = $value;
 						break;
 						
-					// The name of the parameter containing the session cookie and its expected value
+					// The name of the session cookie and its value
 					// Used to prevent cross-site request forgeries
-					// Client must configure csrfCookie (but definitely *not* csrfCookieValue)
-					case 'csrfParam':
-						$this->csrfParam = $value;
+					// Client must also configure csrfCookie (but definitely *not* csrfCookieValue)
+					case 'csrfCookie':
+						$this->csrfCookie = $value;
 						break;
 					case 'csrfCookieValue':
 						$this->csrfCookieValue = $value;
@@ -151,16 +151,12 @@ class AnnotationService
 
 	// Verify that the request was sent from within a valid session
 	// Used to prevent cross-site request forgery
+	// Parameter name is always "csrf"
 	function verifySession( $params )
 	{
-		$success = ! $this->csrfParam ||
-			( array_key_exists( $this->csrfParam, $params )
-			&& $this->csrfCookieValue == $params[ $this->csrfParam ] );
-/*		if ( ! $success )
-			echo 'submit csrf: '.$params[$this->csrfParam]
-			.', cookie name: '.$this->csrfParam
-			.", correct csrf: ".$this->csrfCookieValue;
-*/		return $success;
+		return ! $this->csrfCookie ||
+			( array_key_exists( 'csrf', $params )
+			&& $this->csrfCookieValue == $params[ 'csrf' ] );
 	}
 	
 	function parseAnnotationId( )
@@ -274,10 +270,7 @@ class AnnotationService
 					$this->httpError( 403, 'Forbidden', 'Must be logged in' );
 				elseif ( $this->beginRequest( ) )
 				{
-					if ( $this->doDeleteAnnotation( $id ) )
-						header( "HTTP/1.1 204 Deleted" );
-					else
-						$this->httpError( 500, 'Internal Error', 'Delete failed' );
+					$this->deleteAnnotation( $id );
 					$this->endRequest( );
 				}
 				else
@@ -370,7 +363,7 @@ class AnnotationService
 		// Check for cross-site request forgery
 		if ( ! $this->verifySession( $params ) )
 		{
-			$this->httpError( 403, 'Forbidden', 'Illegal request' );
+			$this->httpError( 403, 'Forbidden', 'Illegal request.' );
 			return;
 		}
 		
@@ -481,18 +474,19 @@ class AnnotationService
 	function deleteAnnotation( $id )
 	{
 		// Check for cross-site request forgery
-		if ( ! $this->verifySession( $params ) )
+		// unfortunately the csrf param is in the GET params
+		if ( ! $this->verifySession( $_GET ) )
 		{
 			$this->httpError( 403, 'Forbidden', 'Illegal request' );
 			return;
 		}
 
-		$annotation = $this->doGetAnnotation( $id );
+		$annotation = $this->doGetAnnotation( $id, null );
 		if ( null === $annotation )
 			$this->httpError( 404, 'Not Found', 'No such annotation' );
 		elseif ( $this->currentUserId != $annotation->getUserId( ) )
 			$this->httpError( 403, 'Forbidden', 'Not your annotation' );
-		elseif ( $this->doDeleteAnnotation( $id ) )
+		elseif ( $this->doDeleteAnnotation( $annotation ) )
 			header( "HTTP/1.1 204 Deleted" );
 		else
 			$this->httpError( 500, 'Internal Service Error', 'Deleted failed' );
