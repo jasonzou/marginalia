@@ -9,12 +9,12 @@
  * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
  * units and individuals within those organizations.  Many 
  * thanks to all of them.  See CREDITS.html for details.
- * Copyright (C) 2005-2007 Geoffrey Glass; the United Nations
+ * Copyright (C) 2005-2011 Geoffrey Glass; the United Nations
  * http://www.geof.net/code/annotation
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -35,36 +35,30 @@ require_once( 'marginalia-php/Keyword.php' );
 require_once( 'marginalia-php/KeywordService.php' );
 require_once( 'marginalia-php/MarginaliaHelper.php' );
 require_once( 'keywords_db.php' );
-require_once( 'annotation_globals.php' );
+require_once( 'moodle_marginalia.php' );
 
 require_login();
 
 class moodle_keyword_service extends KeywordService
 {
-	function moodle_keyword_service( $username )
+	function moodle_keyword_service( $userid )
 	{
 		global $CFG;
+		$moodlemia = moodle_marginalia::get_instance( );
 		KeywordService::KeywordService( 
-			annotation_globals::get_host(),
-			annotation_globals::get_keyword_service_path(),
-			$username,
+			$moodlemia->get_host(),
+			$moodlemia->get_keyword_service_path(),
+			$userid,
 			$CFG->wwwroot );
 		$this->tablePrefix = $CFG->prefix;
 	}
 	
 	function doListKeywords( )
 	{
-		global $USER;
-		
-		$user = get_record( 'user', 'username', $this->currentUserId );
-		if ( $user )  {
-			$keywords = annotation_keywords_db::list_keywords( $user->id );
-			$logurl = 'keywords.php';
-			add_to_log( null, 'annotation', 'list', $logurl );
-			return $keywords;
-		}
-		else
-			return array( );
+		$keywords = annotation_keywords_db::list_keywords( $this->currentUserId );
+		$logurl = 'keywords.php';
+//		add_to_log( null, 'annotation', 'list', $logurl );
+		return $keywords;                              
 	}
 	
 	/**
@@ -102,7 +96,7 @@ class moodle_keyword_service extends KeywordService
 }
 
 if ( AN_USEKEYWORDS )  {
-	$service = new moodle_keyword_service( isguest() ? null : $USER->username );
+	$service = new moodle_keyword_service( isguestuser() ? null : $USER->id );
 	$service->dispatch( );
 }
 else  {

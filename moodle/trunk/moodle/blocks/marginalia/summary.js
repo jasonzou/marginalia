@@ -1,15 +1,17 @@
 /*
- * annotation.js
+ * summary.js
  *
- * Web Annotation is being developed for Moodle with funding from BC Campus 
- * and support from Simon Fraser University and SFU's Applied Communication
- * Technologies Group and the e-Learning Innovation Centre of the
- * Learning Instructional Development Centre at SFU
- * Copyright (C) 2005 Geoffrey Glass
+ * Marginalia has been developed with funding and support from
+ * BC Campus, Simon Fraser University, and the Government of
+ * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
+ * units and individuals within those organizations.  Many 
+ * thanks to all of them.  See CREDITS.html for details.
+ * Copyright (C) 2005-2011 Geoffrey Glass; the United Nations
+ * http://www.geof.net/code/annotation
  * 
  * This program is free software; you can redistribute it and/or
  * modify it under the terms of the GNU General Public License
- * as published by the Free Software Foundation; either version 2
+ * as published by the Free Software Foundation; either version 3
  * of the License, or (at your option) any later version.
  *
  * This program is distributed in the hope that it will be useful,
@@ -23,67 +25,65 @@
  * 
  */
 
+function summaryOnLoad( )
+{
+	jQuery('.annotations .note').each( function( index, node ) {
+		domutil.urlize( this );
+	} );
+}
+jQuery(window).load(summaryOnLoad);
+
 /*
  * Must be called before any other annotation functions
  */
-AN_SUN_SYMBOL = '\u25cb'; //'\u263c';
-AN_MOON_SYMBOL = '\u25c6'; //'\u2641';	
-
-function AnnotationSummary( annotationService, wwwroot, loginUserId )
+function AnnotationSummary( wwwroot, params )
 {
-	this.annotationService = annotationService;
 	this.wwwroot = wwwroot;
-	this.loginUserId = loginUserId;
+	this.annotationService = params.annotationService;
+	this.loginUserId = params.loginUserId;
+	this.csrfCookie = null;
+	this.useLog = false;
+	this.extService = params.extService;
+	
+	for ( var param in params )
+	{
+		switch ( param )
+		{
+			case 'annotationService':
+				this.annotationService = params[ param ];
+				break;
+			
+			case 'userid':
+				this.userid = params[ param ];
+				break;
+			
+			case 'csrfCookie':
+				this.csrfCookie = params[ param ];
+				break;
+				
+			case 'useLog':
+				this.useLog = params[ param ];
+				break;
+				
+			default:
+				throw 'Unknown paramater to AnnotationSummary: ' + param;
+		}
+	}
+	
+	this.smartquote = new Smartquote( this.wwwroot, null, this.extService );
 }
 
-AnnotationSummary.prototype.deleteAnnotation = function( id )
+AnnotationSummary.prototype.deleteAnnotation = function( id, annotationid )
 {
+	var element = document.getElementById( id );
+	var row = domutil.parentByTagClass( element, 'tr', null );
+	var annotation = this.annotationFromRow( row, {
+		id: annotationid } );
+
 	var f = function( xmldoc ) {
 		window.location.reload( );
 	};
-	this.annotationService.deleteAnnotation( id, f );
-}
-
-AnnotationSummary.prototype.shareAnnotation = function( button, id )
-{
-	var annotation = new Annotation( );
-	annotation.setId( id );
-	annotation.resetChanges( );
-	annotation.setAccess( button.value );
-	this.annotationService.updateAnnotation( annotation, null );
-}
-
-AnnotationSummary.prototype.shareAnnotationPublicPrivate = function( button, id )
-{
-	var annotation = new Annotation( );
-	annotation.setId( id );
-	annotation.resetChanges( );
-	annotation.id = id;
-	var oldAccess = domutil.hasClass( button, 'access-public' ) ? 'public' : 'private';
-	annotation.setAccess( 'public' == oldAccess ? 'private' : 'public' );
-	this.annotationService.updateAnnotation( annotation, null );
-	domutil.removeClass( button, 'access-' + oldAccess );
-	while ( button.firstChild )
-		button.removeChild( button.firstChild );
-	button.appendChild( document.createTextNode( 'public' == annotation.access ? AN_SUN_SYMBOL : AN_MOON_SYMBOL ) );
-	domutil.addClass( button, 'access-' + annotation.access );
-}
-
-AnnotationSummary.prototype.onSearchAnnotationsChange = function( )
-{
-	var searchElement  = document.getElementById( 'search-annotations' );
-	var accessElement = document.getElementById( 'access' );
-	var userElement = document.getElementById( 'user' );
-	if ( 'my annotations' == searchElement.value )
-	{
-		userElement.value = this.loginUserId;
-		accessElement.value = '';
-	}
-	else
-	{
-		userElement.value = '';
-		accessElement.value = 'public';
-	}
+	this.annotationService.deleteAnnotation( annotation, f );
 }
 
 AnnotationSummary.skipZoom = function( node )
@@ -100,12 +100,14 @@ AnnotationSummary.prototype.quote = function( id, userid, postId )
 {
 	var element = document.getElementById( id );
 	var row = domutil.parentByTagClass( element, 'tr', null );
-	var annotation = this.annotationFromRow( row, userid );
+	var annotation = this.annotationFromRow( row, {
+		userid: userid } );
+	
 	var postId = Smartquote.postIdFromUrl( annotation.getUrl( ) );
-	Smartquote.quoteAnnotation( annotation, this.loginUserId, this.wwwroot, postId );
+	this.smartquote.quoteAnnotation( annotation, this.userid, postId );
 }
 
-AnnotationSummary.prototype.annotationFromRow = function( row, userid )
+AnnotationSummary.prototype.annotationFromRow = function( row, fields )
 {
 	var node = domutil.childByTagClass( row, null, 'quote' );
 	var quote = domutil.getNodeText( node, AnnotationSummary.skipZoom );
@@ -134,20 +136,16 @@ AnnotationSummary.prototype.annotationFromRow = function( row, userid )
 	var url = node ? node.getAttribute( 'href' ) : '';
 	
 	var annotation = new Annotation( {
-		userid: userid,
+		id: fields.id,
+		userId: fields.userid,
 		url: url,
 		quote: quote,
 		note: note,
 		userName: userName,
 		quoteAuthorName: quoteAuthorName
 	} );
+	annotation.resetChanges( );
 	
 	return annotation;
-}
-
-function setAnnotationUser( user )
-{
-	window.preferenceService.setPreference( 'show_annotations', 'true', null);
-	window.preferenceService.setPreference( 'annotation_user', user, null );
 }
 
