@@ -3416,14 +3416,17 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
         }
         $postcontent .= html_writer::tag('div', $attachedimages, array('class'=>'attachedimages'));
     }
+
     // #marginalia begin
     // Write out the margin.  It goes before the content, then floats right.
     global $PAGE;
     $miamoodle = moodle_marginalia::get_instance( );
     $miaprofile = $miamoodle->get_profile( $PAGE->url->out( false ) );
-    $output .= $miaprofile->output_margin( );
+    if ($miaprofile) {
+        $output .= $miaprofile->output_margin( );
+    }
     // #marginalia end
-    
+
     // Output the post content
     $output .= html_writer::tag('div', $postcontent, array('class'=>'posting '.$postclass));
     $output .= html_writer::end_tag('div'); // Content
@@ -3451,7 +3454,9 @@ function forum_print_post($post, $discussion, $forum, &$cm, $course, $ownpost=fa
     // #marginalia begin
     // Ack.  Moodle assumes that commands should be links.  This doesn't work
     // for the quote button, because it has to call some JS to get the quote.
-    $commandhtml[] = $miaprofile->output_quote_button( );
+    if ($miaprofile) {
+        $commandhtml[] = $miaprofile->output_quote_button( );
+    }
     // #marginalia end
     $output .= html_writer::tag('div', implode(' | ', $commandhtml), array('class'=>'commands'));
 
@@ -4435,7 +4440,7 @@ function forum_delete_post($post, $children, $course, $cm, $forum, $skipcompleti
 
     $context = get_context_instance(CONTEXT_MODULE, $cm->id);
 
-    if ($children != 'ignore' && ($childposts = $DB->get_records('forum_posts', array('parent'=>$post->id)))) {
+    if ($children !== 'ignore' && ($childposts = $DB->get_records('forum_posts', array('parent'=>$post->id)))) {
        if ($children) {
            foreach ($childposts as $childpost) {
                forum_delete_post($childpost, true, $course, $cm, $forum, $skipcompletion);
@@ -5458,7 +5463,8 @@ function forum_print_latest_discussions($course, $forum, $maxdiscussions=-1, $di
 
                 $discussion->forum = $forum->id;
 
-                forum_print_post($discussion, $discussion, $forum, $cm, $course, $ownpost, 0, $link, false);
+                forum_print_post($discussion, $discussion, $forum, $cm, $course, $ownpost, 0, $link, false,
+                        '', null, true, $forumtracked);
             break;
         }
     }
