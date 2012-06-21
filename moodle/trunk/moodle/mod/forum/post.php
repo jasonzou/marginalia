@@ -35,7 +35,6 @@ $prune   = optional_param('prune', 0, PARAM_INT);
 $name    = optional_param('name', '', PARAM_CLEAN);
 $confirm = optional_param('confirm', 0, PARAM_INT);
 $groupid = optional_param('groupid', null, PARAM_INT);
-$messageinit = optional_param('message', '', PARAM_CLEANHTML);
 
 $PAGE->set_url('/mod/forum/post.php', array(
         'reply' => $reply,
@@ -46,7 +45,6 @@ $PAGE->set_url('/mod/forum/post.php', array(
         'name'  => $name,
         'confirm'=>$confirm,
         'groupid'=>$groupid,
-        'messageinit'=>$messageinit
         ));
 //these page_params will be passed as hidden variables later in the form.
 $page_params = array('reply'=>$reply, 'forum'=>$forum, 'edit'=>$edit);
@@ -144,7 +142,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     $post->parent        = 0;
     $post->subject       = '';
     $post->userid        = $USER->id;
-    $post->message       = $messageinit;
+    $post->message       = '';
     $post->messageformat = editors_get_preferred_format();
     $post->messagetrust  = 0;
 
@@ -220,7 +218,7 @@ if (!empty($forum)) {      // User is starting a new discussion in a forum
     $post->parent      = $parent->id;
     $post->subject     = $parent->subject;
     $post->userid      = $USER->id;
-    $post->message     = $messageinit;
+    $post->message     = '';
 
     $post->groupid = ($discussion->groupid == -1) ? 0 : $discussion->groupid;
 
@@ -839,7 +837,9 @@ $PAGE->set_heading($course->fullname);
 // #marginalia begin
 $moodlemia = moodle_marginalia::get_instance( );
 $miaprofile = $moodlemia->get_profile( $PAGE->url->out( false ) );
-$miaprofile->emit_requires( $moodlemia );
+if ($miaprofile) {
+    $miaprofile->emit_requires( $moodlemia );
+}
 // #marginalia end
 
 echo $OUTPUT->header();
@@ -869,8 +869,10 @@ if (!empty($parent)) {
     // #marginalia begin
     $moodlemia = moodle_marginalia::get_instance( );
     $miaprofile = $moodlemia->get_profile( $PAGE->url->out( false ) );
-    $miaprofile->emit_body( );
-    $miaprofile->emit_margin_controls( );
+    if ($miaprofile) {
+        $miaprofile->emit_body( );
+        $miaprofile->emit_margin_controls( );
+    }
     // #marginalia end
 
     forum_print_post($parent, $discussion, $forum, $cm, $course, false, false, false);
