@@ -4,7 +4,7 @@ class annotation_keywords_db
 {
 	function list_keywords( $userid )
 	{
-		global $CFG;
+		global $CFG, $DB;
 		// A keyword is a note that occurs more than once
 		$query =
 			'SELECT a.note AS name, \'\' AS description'
@@ -12,23 +12,22 @@ class annotation_keywords_db
 			. ' JOIN ('
 			. '  SELECT note, count(*) as m'
 			. "  FROM {$CFG->prefix}".AN_DBTABLE
-			. "  WHERE userid=$userid"
+			. "  WHERE userid= :userid"
 			. '  GROUP BY note) AS b'
 			. ' ON a.note = b.note'
 			. ' AND b.m > 1'
 			. ' GROUP BY a.note'
 			. ' ORDER BY a.note';
-		$keywordset = get_records_sql( $query );
+		$params = array( 'userid' => $userid );
+		$keywordset = $DB->get_recordset_sql( $query, $params );
 		$keywords = array( );
-		if ( $keywordset )  {
-			$i = 0;
-			foreach ( $keywordset as $r )
-			{
-				$keyword = new MarginaliaKeyword( );
-				$keyword->name = $r->name;
-				$keyword->description = $r->description;
-				$keywords[ $i++ ] = $keyword;
-			}
+		$i = 0;
+		foreach ( $keywordset as $r )
+		{
+			$keyword = new MarginaliaKeyword( );
+			$keyword->name = $r->name;
+			$keyword->description = $r->description;
+			$keywords[ $i++ ] = $keyword;
 		}
 		return $keywords;
 	}

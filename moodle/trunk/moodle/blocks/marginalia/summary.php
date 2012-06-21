@@ -1,132 +1,148 @@
 <?php
-
- // summary.php
- // Part of Marginalia annotation for Moodle
- // See www.geof.net/code/annotation/ for full source and documentation.
-
- // Display a summary of all annotations for the current user
+/*
+ * summary.php
+ *
+ * Marginalia has been developed with funding and support from
+ * BC Campus, Simon Fraser University, and the Government of
+ * Canada, the UNDESA Africa i-Parliaments Action Plan, and  
+ * units and individuals within those organizations.  Many 
+ * thanks to all of them.  See CREDITS.html for details.
+ * Copyright (C) 2005-2011 Geoffrey Glass; the United Nations
+ * http://www.geof.net/code/annotation
+ * 
+ * This program is free software; you can redistribute it and/or
+ * modify it under the terms of the GNU General Public License
+ * as published by the Free Software Foundation; either version 3
+ * of the License, or (at your option) any later version.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program; if not, write to the Free Software
+ * Foundation, Inc., 59 Temple Place - Suite 330, Boston, MA  02111-1307, USA.
+ *
+ * $Id: keywords.php 383 2008-12-14 06:12:12Z geof.glass $
+ */
 
 require_once( "../../config.php" );
+require_once( $CFG->dirroot.'/blocks/marginalia/config.php' );
+require_once( ANNOTATION_DIR.'/marginalia-php/embed.php' );
+require_once( ANNOTATION_DIR.'/annotation_summary_query.php' );
+require_once( ANNOTATION_DIR.'/moodle_marginalia.php' );
+require_once( ANNOTATION_DIR.'/marginalia-php/Keyword.php' );
 require_once( "marginalia-php/MarginaliaHelper.php" );
-require_once( 'marginalia-php/Annotation.php' );
+require_once( "keywords_db.php" );
+/*require_once( 'marginalia-php/Annotation.php' );
 require_once( 'marginalia-php/Keyword.php' );
 require_once( 'config.php' );
-require_once( 'annotation_globals.php' );
+require_once( "lib.php" );
 require_once( "annotation_summary_query.php" );
-require_once( "keywords_db.php" );
-
-global $CFG;
-
-if ($CFG->forcelogin) {
-	require_login();
-}
+*/
 
 class annotation_summary_page
 {
-	function show_header( )
+	var $moodlemia;
+	var $summary;
+	var $first;
+	var $maxrecords = 50;
+	var $logger = null;
+	
+	function annotation_summary_page( $first=1 )
 	{
-		global $CFG, $USER;
+		$this->moodlemia = moodle_marginalia::get_instance( );
+		$this->first = $first;
+		$this->logger = $this->moodlemia->logger;
 		
-		$swwwroot = htmlspecialchars( $CFG->wwwroot );
-		$navtail = get_string( 'summary_title', ANNOTATION_STRINGS );
-		$navmiddle = "";
-		
-		require_js( ANNOTATION_PATH.'/marginalia/3rd-party.js' );
-		require_js( ANNOTATION_PATH.'/marginalia/log.js' );
-		require_js( ANNOTATION_PATH.'/marginalia-config.js' );
-		require_js( ANNOTATION_PATH.'/marginalia/domutil.js' );
-		require_js( ANNOTATION_PATH.'/marginalia/prefs.js' );
-		require_js( ANNOTATION_PATH.'/marginalia/rest-prefs.js' );
-		require_js( ANNOTATION_PATH.'/marginalia/annotation.js' );
-		require_js( ANNOTATION_PATH.'/marginalia/rest-annotate.js' );
-		require_js( ANNOTATION_PATH.'/smartquote.js' );
-		require_js( ANNOTATION_PATH.'/summary.js' );
-
-		$meta = "<link rel='stylesheet' type='text/css' href='".s( ANNOTATION_PATH )."/summary-styles.php'/>\n";
-		
-		if ( null != $this->course && $this->course->category)  {
-			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
-				'<a href='.$CFG->wwwroot.'/course/view.php?id='.$this->course->id.'>'.$this->course->shortname.'</a> -> '.$navtail,
-				"", $meta, true, "", navmenu($this->course) );
-		}
-		elseif ( null != $this->course )  {
-			print_header($this->course->shortname.': '.get_string( 'summary_title', ANNOTATION_STRINGS ), $this->course->fullname,
-				$navtail, "", $meta, true, "", navmenu($this->course) );
-		}
-		else
-			print_header(get_string( 'summary_title', ANNOTATION_STRINGS ), null, "$navtail", "", $meta, true, "", null );
-//		echo $tagsHtml;
-
-		if( isloggedin() )
-		{
-			$sannotationpath = s( ANNOTATION_PATH );
-			echo "<script language='JavaScript' type='text/javascript'>\n"
-				. "var annotationService = new RestAnnotationService('$sannotationpath/annotate.php', { csrfCookie: 'MoodleSessionTest' } );\n"
-				. "window.annotationSummary = new AnnotationSummary(annotationService"
-					.", '$swwwroot'"
-					.", '".s($USER->username)."');\n"
-				. "window.preferences = new Preferences( new RestPreferenceService('$sannotationpath/user-preference.php' ) );\n"
-				. "</script>\n";
-		}
+		$this->summary = new annotation_summary_query( annotation_summary_query::map_params( $_GET ) );
 	}
 	
 	function show( )
 	{
+		global $CFG, $DB, $PAGE;
+		
+		// Need to set page context
+		// In theory this should be CONTEXT_BLOCK for a block instance, but no
+		// instance exists:  Marginalia is using the block plugin type, but isn't really
+		// a block on the side of the screen.  So we're forced to use CONTEXT_SYSTEM.
+		// Bleargh.
+		//$block = $DB->get_record( 'block_instances', array( 'blockname' => 'block_marginalia' ) );
+		$PAGE->set_context( get_context_instance( CONTEXT_SYSTEM ) );
+
+		if ($CFG->forcelogin) {
+			require_login();
+		}
+		
 		$this->errorpage = array_key_exists( 'error', $_GET ) ? $_GET[ 'error' ] : null;
 
-		$summary = annotation_summary_query::from_params( );
-
-		if ( null == $summary )  {
+		if ( null == $this->summary )  {
 			header( 'HTTP/1.1 400 Bad Request' );
 			echo '<h1>400 Bad Request</h1>';
 		}
-		elseif ( ! MarginaliaHelper::isUrlSafe( $summary->url ) )  {
+		elseif ( ! MarginaliaHelper::isUrlSafe( $this->summary->url ) )  {
 			header( 'HTTP/1.1 400 Bad Request' );
 			echo '<h1>400 Bad Request</h1>Bad url parameter';
 		}
 		else  {
-			// Display individual annotations
-			// Dunno if the range sorting is working
-			$sql = $summary->sql( 'section_type, section_name, a.url, start_block, start_word, start_char, end_block, end_word, end_char' );
-			// echo "SQL: $sql\n";	// uncomment for debugging
-			$annotations = get_records_sql( $sql );
+			$params = array( );
+			$sql = $this->summary->sql( $params );
+			//echo "SQL: $sql\n";	// uncomment for debugging
+			$annotations = $DB->get_records_sql( $sql, $params, $this->first - 1, $this->maxrecords );
 			
+			$params = array( );
+			$count_sql = $this->summary->count_sql( $params );
+			$annotation_count = $DB->count_records_sql( $count_sql, $params );
+				
 			$format = array_key_exists( 'format', $_GET ) ? $_GET[ 'format' ] : 'html';
 			
 			if ( 'atom' == $format )
-				$this->show_atom( $summary, $annotations );
+				$this->show_atom( $annotations );
 			else
-				$this->show_html( $summary, $annotations );
+				$this->show_html( $annotations, $annotation_count );
 		}
 	}
 
-	function show_atom( $summary, $annotations )
+	function show_atom( $annotations )
 	{
 		global $CFG;
 		
 		$annotationobjs = array();
 		foreach ( $annotations as $annotationrec )
-			$annotationobjs[ ] = annotation_globals::record_to_annotation( $annotationrec );
+			$annotationobjs[ ] = $this->moodlemia->record_to_annotation( $annotationrec );
 		MarginaliaHelper::generateAnnotationFeed( $annotationobjs,
-			annotation_globals::get_feed_tag_uri( ),
-			MarginaliaHelper::getLastModified( $annotationObjs, annotation_globals::get_install_date( ) ),
-			annotation_globals::get_service_path( ),
-			annotation_globals::get_host( ),
-			$summary->get_feed_url( 'atom' ),
+			$this->moodlemia->get_feed_tag_uri( ),
+			MarginaliaHelper::getLastModified( $annotationobjs, $this->moodlemia->get_install_date( ) ),
+			$this->moodlemia->get_service_path( ),
+			$this->moodlemia->get_host( ),
+			$this->summary->get_feed_url( 'atom' ),
 			$CFG->wwwroot );
 	}
 	
-	function show_html( $summary, $annotations )
+	function show_html( $annotations, $annotation_count )
 	{
-		global $CFG, $USER;
+		global $CFG, $USER, $PAGE, $OUTPUT, $DB;
 		
+		$PAGE->set_url( $this->summary->summary_url( ) );
+		
+		$blockpath = '/blocks/marginalia';	// was ANNOTATION_PATH
+		$PAGE->requires->css( $blockpath.'/summary-styles.php' );
+
+		// This loads way more than is needed here, but reduces code paths
+		// and hence bugs.
+		$moodlemia = moodle_marginalia::get_instance( );
+		$profile = $moodlemia->get_profile( $this->summary->summary_url( ) );
+		$profile->emit_requires( );
+		$PAGE->requires->js( $blockpath.'/summary.js', true );
+
 		// Get the course.  This can't be passed as a GET parameter because this URL could be via the
 		// Atom feed, and the Atom feed is generated exclusively by annotation code which doesn't know
 		// that much about Moodle.  So the handler has to query it based on a discussion ID or the like.
 		$this->course = null;
-		$this->courseid = $summary->handler->courseid;
+		$this->courseid = $this->summary->handler->courseid;
 		if ( null != $this->courseid )  {
-			if (! $this->course = get_record( "course", "id", $this->courseid ) )
+			if (! $this->course = $DB->get_record( "course", array( 'id' => $this->courseid ) ) )
 				error( "Course ID is incorrect");
 
 			// Ok, now this is probably very wrong.  If the user looks for annotations within a course,
@@ -136,37 +152,73 @@ class annotation_summary_page
 				require_login( $this->course->id );
 		}
 
-		// Keep for debugging:
-		// echo "<h2>Query</h2><pre>".$query->sql( 'a.id' )."</pre>";
-		
-		// Show header
-		$swwwroot = htmlspecialchars( $CFG->wwwroot );
-		
-		$this->show_header( );
+		// #geof#: not quite correct - should fetch the URL from the summary object
+		$PAGE->set_url( '/mod/forum/summary.php' );
+		if ( null != $this->course )
+		{
+			$PAGE->set_title("$this->course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ) );
+			$PAGE->set_heading($this->course->fullname);
+		}
+		else
+		{
+			$PAGE->set_title(get_string( 'summary_title', ANNOTATION_STRINGS ) );
+			$PAGE->set_heading( get_string( 'summary_title', ANNOTATION_STRINGS ) );
+		}
 
+		// #geof# Must change to split requires from inline JS:
+		if ( $this->logger && $this->logger->is_active())
+			$this->logger->header_html( );
+		
+		if ( null != $this->course && $this->course->category)
+			$PAGE->navbar->add( $this->course->shortname, $CFG->wwwroot.'/course/view.php?id='.$this->course->id );
+		$PAGE->navbar->add( get_string( 'summary_title', ANNOTATION_STRINGS ) );
+		
+		echo $OUTPUT->header( );
+
+		$swwwroot = htmlspecialchars( $CFG->wwwroot );
+		if( isloggedin() )
+		{
+			$profile->emit_body( );
+/*			$sannotationpath = s( ANNOTATION_PATH );
+			echo "<script language='JavaScript' type='text/javascript'>\n"
+				. "var annotationService = new RestAnnotationService('$sannotationpath/annotate.php', "
+				.    "{ csrfCookie: 'MoodleSession".$CFG->sessioncookie."', noPutDelete: true } );\n"
+				. "window.annotationSummary = new AnnotationSummary('$swwwroot', {"
+				." \n annotationService: annotationService"
+				.",\n userid: ".(int)$USER->id
+				.",\n useLog: ".($this->logger && $this->logger->is_active() ? 'true' : 'false' )
+				.",\n csrfCookie: 'MoodleSession".$CFG->sessioncookie."'"
+				."} );\n"
+				. "window.preferences = new Preferences( new RestPreferenceService('$sannotationpath/user-preference.php' ) );\n"
+				. "</script>\n";
+*/		}
+
+		// Needed later to determine whether a given annotation is a keyword
 		$keywords = isloggedin() ? annotation_keywords_db::list_keywords( $USER->id ) : array( );
 		$keywordhash = array( );
 		for ( $i = 0;  $i < count( $keywords );  ++$i )  {
 			$keyword = $keywords[ $i ];
 			$keywordhash[ $keyword->name ] = true;
 		}
-		
+
 		// print search header
 		//  * my annotations
 		//  * shared annotations
 		//  * instructor annotations
 		//  * annotations of my work
-		$username = $summary->user ? $summary->user->username : '';
-		$ofusername = $summary->ofuser ? $summary->ofuser->username : '';
 		echo "<form id='annotation-search' method='get' action='summary.php'>\n";
 		echo "<fieldset>\n";
-		echo "<label for='search-of'>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
-		echo "<input type='hidden' name='search-of' id='search-of' value='".s($ofusername)."'/>\n";
-		echo "<input type='hidden' name='u' id='u' value='".s($username)."'/>\n";
-		echo "<input type='text' id='search-text' name='q' value='".s($summary->text)."'/>\n";
+		echo "<label for=''>".get_string( 'prompt_find', ANNOTATION_STRINGS )."</label>\n";
+		if ( $this->summary->ofuser )
+			echo "<input type='hidden' name='search-of' id='search-of' value='".s($this->moodlemia->fullname($this->summary->ofuser))."'/>\n";
+		if ( $this->summary->user )
+			echo "<input type='hidden' name='u' id='u' value='".s($this->moodlemia->fullname($this->summary->user))."'/>\n";
+		echo "<input type='text' id='search-text' name='q' value='".s($this->summary->text)."'/>\n";
 		echo "<input type='submit' value='".get_string( 'go' )."'/>\n";
-		echo "<input type='hidden' name='url' value='".s($summary->url)."'/>\n";
-		helpbutton( 'annotation_summary', get_string( 'summary_help', ANNOTATION_STRINGS ), 'block_marginalia' );
+		echo "<input type='hidden' name='url' value='".s($this->summary->url)."'/>\n";
+		
+//		echo $OUTPUT->help_icon( 'annotation_summary', ANNOTATION_STRINGS ); //'block_marginalia', get_string( 'summary_help', ANNOTATION_STRINGS ) );
+
 		echo "</fieldset>\n";
 		echo "</form>";
 		
@@ -176,8 +228,11 @@ class annotation_summary_page
 				.get_string( 'summary_range_error', ANNOTATION_STRINGS )."</p>\n";
 		}
 		
-		echo '<p id="query">'.get_string( 'prompt_search_desc', ANNOTATION_STRINGS )
-			.' '.$summary->desc_with_links(null).":</p>\n";
+		$a = new object( );
+		$a->n = $annotations ? count( $annotations ) : 0;
+		$a->m = $annotation_count;
+		echo '<p id="query">'.get_string( 'prompt_search_desc', ANNOTATION_STRINGS, $a )
+			.' '.$this->summary->desc_with_links(null).":</p>\n";
 		
 		$cursection = null;
 		$cursectiontype = null;
@@ -192,6 +247,9 @@ class annotation_summary_page
 				$annotationa[ ] = $annotation;
 				
 			$ncols = 6;
+			
+			if ( AN_SUMMARY_ORDER_TIME == $this->summary->orderby )
+				$ncols += 1;
 	
 			echo '<table cellspacing="0" class="annotations">'."\n";
 			for ( $annotationi = 0;  $annotationi < count( $annotationa );  ++$annotationi )  {
@@ -207,15 +265,15 @@ class annotation_summary_page
 						. "<a href='".s( $annotation->section_url )
 						."' title='".get_string( 'prompt_section', ANNOTATION_STRINGS, $a )."'>" 
 						.s( $annotation->section_name ) . "</a>";
-					if ( $annotation->section_url != $summary->url )  {
-						$tsummary = $summary->for_url( $annotation->section_url );
+					if ( $annotation->section_url != $this->summary->url )  {
+						$tsummary = $this->summary->derive( array( 'url' => $annotation->section_url ) );
 						$turl = $tsummary->summary_url( );
 						echo "<a class='zoom' title='".get_string( 'zoom_url_hover', ANNOTATION_STRINGS, $annotation )."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
 					}
 					echo '</th></tr></thead>'."\n";
 
 					if ( AN_SUMMARYHEADINGSTOP )
-						$this->show_column_headings( 'top' );
+						$this->show_column_headings( $this->summary, 'top' );
 
 					echo '<tbody>'."\n";
 					$cursection = $annotation->section_url;
@@ -247,22 +305,19 @@ class annotation_summary_page
 					echo "<th rowspan='$nrows'>";
 					$url = MarginaliaHelper::isUrlSafe( $url ) ? $url : '';
 					$a->row_type = $annotation->row_type;
-					$a->author = $annotation->quote_author_fullname;
+					$a->author = $this->moodlemia->fullname2( $annotation->quote_author_firstname, $annotation->quote_author_lastname );
 					echo "<a class='url' href='".s($url)."' title='".get_string( 'prompt_row', ANNOTATION_STRINGS, $a)."'>";
 					echo s( $annotation->quote_title ) . '</a>';
 
-					echo "<br/>by <span class='quote-author'>".s( $annotation->quote_author_fullname )."</span>\n";
+					echo "<br/>by <span class='quote-author'>".
+						s( $a->author )."</span>\n";
 					
 					// Link to filter only annotations by this user
-					if ( ! $summary->ofuser || $annotation->quote_author_username != $summary->ofuser->username )  {
-						$tuser = get_record( 'user', 'username', $annotation->quote_author_username );
-						if ( $tuser )  {
-							$tsummary = $summary->for_ofuser( $tuser );
-							$turl = $tsummary->summary_url( );
-							$a->fullname = $annotation->quote_author_fullname;
-							echo "<a class='zoom' title='".get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $a)
-								."' href='".s( $turl )."'>".AN_FILTERICON_HTML."</a>\n";
-						}
+					if ( ! $this->summary->ofuser || $annotation->quote_author_username != $this->summary->ofuser->username )  {
+						$tsummary = $this->summary->derive( array( 'ofuserid' => $annotation->quote_author_id ) );
+						$turl = $tsummary->summary_url( );
+						$a->fullname = $this->moodlemia->fullname2( $annotation->quote_author_firstname, $annotation->quote_author_lastname );
+						echo $this->zoom_link( $tsummary->summary_url( ), get_string( 'zoom_author_hover', ANNOTATION_STRINGS, $a) );
 					}
 					echo "</th>\n";
 				}
@@ -281,16 +336,18 @@ class annotation_summary_page
 				if ( ! $annotation->note )
 					echo '&#160;';
 				else
-					p( $annotation->note );
+					echo s( $annotation->note );
 
-				if ( ! $summary->exactmatch && array_key_exists( $annotation->note, $keywordhash ) )  {
-					$tsummary = $summary->for_text( $annotation->note, true );
-					echo "<a class='zoom' title='"
-						.get_string( 'zoom_match_hover', ANNOTATION_STRINGS )
-						."' href='".s( $tsummary->summary_url( ) )."'>".AN_FILTERICON_HTML."</a>\n";
+				if ( ! $this->summary->exactmatch && array_key_exists( $annotation->note, $keywordhash ) )  {
+					$tsummary = $this->summary->derive( array( 'text' => $annotation->note, 'exactmatch' => true ) );
+					echo ' '.$this->zoom_link( $tsummary->summary_url( ), get_string( 'zoom_match_hover', ANNOTATION_STRINGS ) );
 				}
 				echo "</td>\n";
 
+				
+				// Show annotation time (if requested)
+				if ( AN_SUMMARY_ORDER_TIME == $this->summary->orderby )
+					echo "<td class='modified'>".s(date('Y-m-d G:i', $annotation->modified))."</td>\n";
 				
 				// Show edit controls or the user who created the annotation
 				echo "<td class='user".( isloggedin() && $annotation->userid == $USER->id ? ' isloginuser' : '')."'>\n";
@@ -306,16 +363,12 @@ class annotation_summary_page
 				
 				// Controls for current user
 				if ( isloggedin() && $annotation->userid == $USER->id )  {
-					$AN_SUN_SYMBOL = '&#9675;';
-					$AN_MOON_SYMBOL = '&#9670;';
-					$access_str = AN_ACCESS_PUBLIC & $annotation->access_perms ? 'public' : 'private';
-					echo "<button class='share-button access-$access_str' onclick='window.annotationSummary.shareAnnotationPublicPrivate(this,$annotation->id);'>"
-						.($annotation->access_perms & AN_ACCESS_PUBLIC ? $AN_SUN_SYMBOL : $AN_MOON_SYMBOL )."</button>";
-					echo "<button class='delete-button' onclick='window.annotationSummary.deleteAnnotation($annotation->id);'>x</button>\n";
+					$delid = s( 'del'.$annotation->id );
+					echo "<button class='delete-button' id='$delid'>x</button>\n";
 				}
 				
 				// User name (or "me" for current user)
-				$displayusername = s( $annotation->username );
+				$displayusername = s( $this->moodlemia->fullname2( $annotation->firstname, $annotation->lastname ) );
 				$hiddenusername = '';
 				$class = 'user-name';
 				
@@ -330,19 +383,15 @@ class annotation_summary_page
 					echo "<a class='$class' onclick='setAnnotationUser(\"".s($annotation->userid)."\")' href='".s($url)."'>"
 						."$displayusername</a>\n";
 				else
-					echo "<span class='$class'>$displayUserName</span>\n";
+					echo "<span class='$class'>$displayusername</span>\n";
 				echo $hiddenusername;
 
 				// Link to filter only annotations by this user
-				if ( ! $summary->user || $annotation->userid != $summary->user->username )  {
-					$tuser = get_record( 'user', 'username', $annotation->username );
-					if ( $tuser )  {
-						$tsummary = $summary->for_user( $tuser );
-						$turl = $tsummary->summary_url( );
-						$a->fullname = $annotation->fullname;
-						echo "<a class='zoom' title='".get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $a)
-							."' href='".s($turl)."'>".AN_FILTERICON_HTML."</a>\n";
-					}
+				if ( ! $this->summary->user || $annotation->userid != $this->summary->user->username )  {
+					$tsummary = $this->summary->derive( array( 'userid' => $annotation->userid) );
+					$turl = $tsummary->summary_url( );
+					$a->fullname = $this->moodlemia->fullname2( $annotation->firstname, $annotation->lastname );
+					echo $this->zoom_link( $tsummary->summary_url( ), get_string( 'zoom_user_hover', ANNOTATION_STRINGS, $a) );
 				}
 				echo "</td>\n";
 				
@@ -353,10 +402,19 @@ class annotation_summary_page
 			echo "<script type='text/javascript'>\n";
 			for ( $annotationi = 0;  $annotationi < count( $annotationa );  ++$annotationi )  {
 				$annotation = $annotationa[ $annotationi ];
-				$sqid = s( 'sq'.$annotation->id );
-				$tuserid = s( $annotation->userid );
-				echo "  addEvent(document.getElementById('$sqid'),'click',function() {"
-					."    window.annotationSummary.quote('$sqid','$tuserid'); } );";
+				if ( AN_USESMARTQUOTE )
+				{
+					$sqid = s( 'sq'.$annotation->id );
+					$tuserid = s( $annotation->userid );
+					echo "  addEvent(document.getElementById('$sqid'),'click',function() {"
+						."    window.annotationSummary.quote('$sqid','$tuserid'); } );";
+				}
+				if ( isloggedin() && $annotation->userid == $USER->id )
+				{
+					$delid = s( 'del'.$annotation->id );
+					echo "  addEvent(document.getElementById('$delid'),'click',function() {"
+						."    window.annotationSummary.deleteAnnotation('$delid',".(int)$annotation->id."); } );\n";
+				}
 			}
 			echo "</script>\n";
 			
@@ -369,40 +427,89 @@ class annotation_summary_page
 			echo "</table>\n";
 		}
 	
+		marginalia_summary_lib::show_result_pages( $this->first, $annotation_count, $this->maxrecords, $this->summary->summary_url('{first}') );
+/*
+		// Show the list of result pages
+		$npages = ceil( $annotation_count / $this->maxrecords );
+		if ( $npages > 1 )
+		{
+			$this_page = 1 + floor( ( $this->first - 1 ) / $this->maxrecords );
+			echo "<ol class='result-pages'>\n";
+			for ( $i = 1; $i <= $npages;  ++$i )
+			{
+				if ( $i == $this_page )
+					echo "  <li>".$i."</li>\n";
+				else
+					echo "  <li><a href='".s($this->summary->summary_url('{first}')."'>".$i."</a></li>\n";
+			}
+			echo "</ol>\n";
+		}
+*/		
 		//$moodlePath = getMoodlePath( );
+		
+		// Link for sorting by date or document order
+		if ( $this->summary->orderby == AN_SUMMARY_ORDER_DOCUMENT )
+		{
+			$tsummary = $this->summary->derive( array( 'orderby' => AN_SUMMARY_ORDER_TIME ) );
+			echo "<p><a href='".s($tsummary->summary_url())."'>".get_string( 'summary_sort_time', ANNOTATION_STRINGS )."</a></p>\n";
+		}
+		else
+		{
+			$tsummary = $this->summary->derive( array( 'orderby' => AN_SUMMARY_ORDER_DOCUMENT ) );
+			echo "<p><a href='".s($tsummary->summary_url())."'>".get_string( 'summary_sort_document', ANNOTATION_STRINGS )."</a></p>\n";
+		}
+
+/*		Feed removed because Moodle should require a login for it to be of much
+		use, and the feed reader would then need to authenticate.  So it's likely
+		to be more frustrating than useful.
 		
 		// Provide a feed URL.  I don't know how to do authentication for the feed, so for now
 		// if a login is required I won't include the feature.
 		if ( ! ANNOTATION_REQUIRE_USER )  {
-			$turl = $summary->get_feed_url( 'atom' );
+			$tsummary = $this->summary->derive( array( 'orderby' => AN_SUMMARY_ORDER_TIME ) );
+			$turl = $tsummary->get_feed_url( 'atom' );
 			echo "<p class='feed' title='".get_string( 'atom_feed', ANNOTATION_STRINGS )
 				."'><a href='".s($turl)."'><img border='0' alt='"
 				.get_string( 'atom_feed', ANNOTATION_STRINGS )."' src='".s( $CFG->wwwroot )."/pix/i/rss.gif'/>"
 				. '</a> '.get_string( 'atom_feed_desc', ANNOTATION_STRINGS )."</p>\n";
 		}
-		
-		print_footer($this->course);
+*/
+		echo "<p><a href='help.php?component=block_marginalia&topic=annotation_summary'>"
+			.get_string( 'annotation_summary_help_link', ANNOTATION_STRINGS ).'</a></p>';
+
+		$OUTPUT->footer($this->course);
 
 		$logurl = $_SERVER[ 'REQUEST_URI' ];
 		$urlparts = parse_url( $logurl );
 		$logurl = array_key_exists( 'query', $urlparts ) ? $urlparts[ 'query' ] : null;
-		add_to_log( null, 'annotation', 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $summary->desc(null) );
+		$this->moodlemia->moodle_log( 'summary', 'summary.php'.($logurl?'?'.$logurl:''), $this->summary->desc(null) );
+
+		// Marginalia logging
+		if ( $this->logger && $this->logger->is_active() )
+			$this->logger->summarizeAnnotations($this->summary->summary_url(), $this->summary->desc());
 	}
 	
 	function show_column_headings( $className )
 	{
 		echo "<thead class='labels $className'>\n"
-			."  <th>Source &amp; Author</th>\n"
-			."  <th>Highlighted Text</th>\n"
-			."  <th>Margin Note</th>\n"
-			."  <th>User</th>\n"
+			."  <th>".get_string('summary_source_head', ANNOTATION_STRINGS)."</th>\n"
+			."  <th>".get_string('summary_quote_head', ANNOTATION_STRINGS)."</th>\n"
+			."  <th>".get_string('summary_note_head', ANNOTATION_STRINGS)."</th>\n";
+		if ( AN_SUMMARY_ORDER_TIME == $this->summary->orderby )
+			echo "  <th>".get_string('summary_time_head', ANNOTATION_STRINGS)."</th>\n";
+		echo "  <th>".get_string('summary_user_head', ANNOTATION_STRINGS)."</th>\n"
 			."</thead>\n";
 	}
 	
-	function get_summary_link( $text, $title, $summary )
+	function get_summary_link( $text, $title )
 	{
-		$turl = $summary->summary_url( );
+		$turl = $this->summary->summary_url( );
 		return '<a href="'.s( $turl ).'" title="'.s($title).'">'.s( $text ).'</a>';
+	}
+	
+	function zoom_link( $url, $title )
+	{
+		return "<a class='zoom' title='".s($title)."' href='".s($url)."'>".AN_FILTERICON_HTML."</a>\n";
 	}
 }
 
@@ -439,7 +546,8 @@ if ( $_SERVER[ 'REQUEST_METHOD' ] != 'GET' )  {
 	echo 'grr';
 }
 else  {
-	$summarypage = new annotation_summary_page( );
+	$first = array_key_exists( 'first', $_GET ) ? (int)$_GET[ 'first' ] : 1;
+	$summarypage = new annotation_summary_page( $first );
 	$summarypage->show( );
 }
-?>
+

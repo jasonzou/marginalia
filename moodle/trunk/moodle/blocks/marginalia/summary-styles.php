@@ -43,14 +43,22 @@ p#query {
 	margin-top: 1.5em;
 }
 
+p#query a .alt {display: none;}
 p#query a .alt,
 p#query a:hover .current {
-	display: none;
+	xdisplay: none;
+	text-decoration: line-through;
 }
 
+p#query a:hover {
+	text-decoration: none;
+}
+
+/*
 p#query a:hover .alt {
 	display: inline;
 }
+*/
 
 p.error em.range-error {
 	color: white;
@@ -84,7 +92,9 @@ table.annotations thead.labels th {
 
 table.annotations thead.labels th:before {
 	font-style: normal;
-	content: '\2191 ';
+	font-size: 120%;
+	margin-right: .5ex;
+	content: '\2191';
 }
 
 table.annotations thead.labels.top th:before {
@@ -144,6 +154,10 @@ table.annotations tbody td.note {
 	width: 30%;
 }
 
+table.annotations tbody td.modified {
+	font-size: 80%;
+}
+
 table.annotations tbody td.user {
 	font-size: 80%;
 }
@@ -177,6 +191,7 @@ table.annotations a.zoom:hover {
 table.annotations button {
 	padding-left: .25ex ;
 	padding-right: .25ex;
+	width: 1em;
 	background: none;
 	border: none;
 	cursor: pointer;
@@ -184,6 +199,21 @@ table.annotations button {
 
 table.annotations button:hover {
 	font-weight: bold;
+}
+
+.result-pages {
+	list-style-type: none;
+	margin: 2em auto;
+	text-align: center;
+	padding: 1px 0;
+}
+
+.result-pages li {
+	display: inline;
+}
+
+.result-pages + * {
+	clear: both;
 }
 
 /* smartcopy tip */
