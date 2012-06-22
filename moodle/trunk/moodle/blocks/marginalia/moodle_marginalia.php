@@ -51,7 +51,6 @@ define( 'AN_FILTERICON_HTML', '&#9664' ); // '&#9754;' );  //&#9756;
 define( 'ANNOTATION_STRINGS', 'block_marginalia' );
 
 define( 'AN_SHEET_PREF', 'annotations.sheet' ); // 'annotations.user' );
-define( 'AN_SHOWANNOTATIONS_PREF', 'annotations.show' );
 define( 'AN_NOTEEDITMODE_PREF', 'annotations.note-edit-mode' );
 define( 'AN_SPLASH_PREF', 'annotations.splash' );
 //define( 'SMARTCOPY_PREF', 'smartcopy' );
@@ -59,6 +58,7 @@ define( 'AN_SPLASH_PREF', 'annotations.splash' );
 define( 'AN_DBTABLE', 'marginalia' );
 define( 'AN_READ_TABLE', 'marginalia_read' );
 
+define( 'AN_SHEET_NONE' , 0 );
 define( 'AN_SHEET_PRIVATE', 0x1 );
 define( 'AN_SHEET_AUTHOR', 0x2 );
 define( 'AN_SHEET_PUBLIC', 0xffff );
@@ -178,12 +178,10 @@ abstract class mia_page_profile
 		// in the database if not already present.
 		$prefs = array(
 			AN_SHEET_PREF => $this->moodlemia->get_pref( AN_SHEET_PREF, 'public' ),
-			AN_SHOWANNOTATIONS_PREF => $this->moodlemia->get_pref( AN_SHOWANNOTATIONS_PREF, 'false' ),
 			AN_NOTEEDITMODE_PREF => $this->moodlemia->get_pref( AN_NOTEEDITMODE_PREF, 'freeform' ),
 			AN_SPLASH_PREF => $this->moodlemia->get_pref( AN_SPLASH_PREF, 'true' )
 		);
 		
-		$showannotationspref = $prefs[ AN_SHOWANNOTATIONS_PREF ];
 		$showsplashpref = $prefs[ AN_SPLASH_PREF ];
 		
 		// Build a string of initial preference values for passing to Marginalia
@@ -290,23 +288,22 @@ SCRIPT;
 		$refurl = $this->get_refurl( );
 		
 		$sheet = $this->get_sheet( );
-		$showannotationspref = $this->moodlemia->get_show_annotations_pref( ) == 'true';
 		
 		echo "<div class='discussioncontrols miacontrols clearfix'>";
 		echo "<div class='discussioncontrol nullcontrol'>&#160;</div><div class='discussioncontrol'>&#160;</div>\n";
 		echo "<select name='ansheet' class='discussioncontrol miacontrol' id='ansheet' onchange='window.moodleMarginalia.changeSheet(this,\"".$refurl."\");'>\n";
 
-		$selected = $showannotationspref ? '' : " selected='selected' ";
-		echo " <option $selected value=''>".get_string('sheet_none', ANNOTATION_STRINGS)."</option>\n";
+		$selected = $sheet == AN_SHEET_NONE ? " selected='selected' " : '';
+		echo " <option $selected value='".$this->moodlemia->sheet_str(AN_SHEET_NONE,null)."'>".get_string('sheet_none', ANNOTATION_STRINGS)."</option>\n";
 
 		if ( ! isguestuser() )  {
-			$selected = ( $showannotationspref && $sheet == AN_SHEET_PRIVATE ) ? "selected='selected' " : '';
+			$selected = $sheet == AN_SHEET_PRIVATE ? "selected='selected' " : '';
 			echo " <option $selected"
 				."value='".$this->moodlemia->sheet_str(AN_SHEET_PRIVATE,null)."'>".get_string('sheet_private', ANNOTATION_STRINGS)."</option>\n";
 		}
 		// Show item for all users
 		if ( true )  {
-			$selected = ( $showannotationspref && $sheet == AN_SHEET_PUBLIC ) ? "selected='selected' " : '';
+			$selected = $sheet == AN_SHEET_PUBLIC ? "selected='selected' " : '';
 			echo " <option $selected value='".$this->moodlemia->sheet_str(AN_SHEET_PUBLIC,null)."'>".get_string('sheet_public', ANNOTATION_STRINGS)."</option>\n";
 		}
 		echo "  <option disabled='disabled'>——————————</option>\n";
@@ -706,10 +703,12 @@ class moodle_marginalia
 	{
 		if ( 'public' == $sheet_str )
 			return AN_SHEET_PUBLIC;
+		elseif ( 'private' == $sheet_str )
+			return AN_SHEET_PRIVATE;
 		elseif ( 'author' == $sheet_str )
 			return AN_SHEET_AUTHOR;
 		else
-			return AN_SHEET_PRIVATE;
+			return AN_SHEET_NONE;
 	}
 	
 	/**
@@ -723,7 +722,8 @@ class moodle_marginalia
 			return 'private';
 		elseif ( AN_SHEET_AUTHOR == $sheet_type )
 			return 'author';
-		return '';
+		else
+			return 'none';
 	}
 
 	/**
@@ -876,11 +876,6 @@ class moodle_marginalia
 	public function get_sheet( )
 	{
 		return $this->get_pref( AN_SHEET_PREF, 'public' );
-	}
-	
-	public function get_show_annotations_pref( )
-	{
-		return $this->get_pref( AN_SHOWANNOTATIONS_PREF, 'false' );
 	}
 	
 	/**

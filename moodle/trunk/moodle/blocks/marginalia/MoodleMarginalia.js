@@ -38,8 +38,7 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 	this.preferences = new Preferences( 
 		new RestPreferenceService( this.annotationPath + '/user-preference.php' ),
 		prefs );
-	this.showAnnotations = prefs[ Marginalia.P_SHOWANNOTATIONS ];
-	this.showAnnotations = this.showAnnotations == 'true';
+	this.sheet = prefs[ Marginalia.P_SHEET ];
 	this.splash = prefs[ Marginalia.P_SPLASH ] == 'true' ? params[ 'splash' ] : null;
 	this.useSmartquote = params.useSmartquote;
 	this.allowAnyUserPatch = params.allowAnyUserPatch;
@@ -81,8 +80,6 @@ function MoodleMarginalia( annotationPath, url, moodleRoot, userId, prefs, param
 		mia_notes: new Selector( '.mia_margin', '.content .posting .mia_margin' )
 	};
 	// URL is blank!  Should be a function to construct it from window.location + '#' + id
-
-	this.sheet = prefs[ Marginalia.P_SHEET ];
 }
 
 /**
@@ -179,7 +176,7 @@ MoodleMarginalia.prototype.init = function( selectors )
 	
 	// Display annotations
 	var url = this.url;
-	if ( this.showAnnotations )
+	if ( Marginalia.SHEET_NONE != this.sheet )	
 		window.marginalia.showAnnotations( url );
 	
 	// Fix all control margins
@@ -198,7 +195,7 @@ MoodleMarginalia.prototype.init = function( selectors )
 		this.smartquote.enable( marginalia.listPosts( ), marginalia.skipContent );
 	}
 	
-	if ( this.showAnnotations && this.splash )
+	if ( this.splash && this.sheet != Marginalia.SHEET_NONE )
 	{
 		var onclose = function() {
 			window.marginalia.preferences.setPreference( Marginalia.P_SPLASH, 'false', null);
@@ -325,14 +322,11 @@ MoodleMarginalia.prototype.changeSheet = function( sheetControl, url )
 	else
 	{
 		marginalia.hideAnnotations( );
-		if ( null == sheet || '' == sheet )
-			marginalia.preferences.setPreference( Marginalia.P_SHOWANNOTATIONS, 'false', null);
-		else
+		marginalia.preferences.setPreference( Marginalia.P_SHEET, sheet, null );
+		if ( Marginalia.SHEET_NONE != sheet )
 		{
 			marginalia.sheet = sheet;
 			marginalia.showAnnotations( url );
-			marginalia.preferences.setPreference( Marginalia.P_SHOWANNOTATIONS, 'true', null);
-			marginalia.preferences.setPreference( Marginalia.P_SHEET, sheet, null );
 			this.fixAllControlMargins( );
 		}
 	}
