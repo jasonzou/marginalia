@@ -57,13 +57,12 @@ README_FILES = \
  CREDITS.txt \
  INSTALL.txt
 
-release:  zipcontents docs
+release:  zipcontents
 	cd $(OUTDIR); tar czf $(OUTNAME).tgz $(OUTNAME)
 	echo "Please confirm that this is the correct version for this release:"
 	grep plugin $(VERSION_FILE)
 
 zipdir:
-	mkdir -p $(ZIPDIR)/doc
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/marginalia/3rd-party
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/marginalia-php
 	mkdir -p $(ZIPDIR)/moodle/blocks/marginalia/lang/en/help
