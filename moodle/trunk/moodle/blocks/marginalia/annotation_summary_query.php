@@ -601,10 +601,12 @@ class course_annotation_url_handler extends annotation_url_handler
 	function get_conds( &$params, $summary )
 	{
 		$params[ 'object_type' ] = AN_OTYPE_POST;
-		$params[ 'ofuserid' ] = (int) $summary->ofuser->id;
 		$cond = "\n  AND a.object_type= :object_type";
 		if ( $summary->ofuser )
+		{
+			$params[ 'ofuserid' ] = (int) $summary->ofuser->id;
 			$cond .= " AND a.quote_author_id= :ofuserid";
+		}
 		return $cond;
 	}
 }

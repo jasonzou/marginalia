@@ -156,7 +156,7 @@ class annotation_summary_page
 		$PAGE->set_url( '/mod/forum/summary.php' );
 		if ( null != $this->course )
 		{
-			$PAGE->set_title("$this->course->shortname: ".get_string( 'summary_title', ANNOTATION_STRINGS ) );
+			$PAGE->set_title($this->course->shortname.": ".get_string( 'summary_title', ANNOTATION_STRINGS ) );
 			$PAGE->set_heading($this->course->fullname);
 		}
 		else

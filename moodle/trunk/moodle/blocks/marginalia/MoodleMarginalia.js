@@ -157,7 +157,7 @@ MoodleMarginalia.prototype.init = function( selectors )
 	
 	// Ensure the sheet drop-down reflects the actual sheet to be shown
 	// This relies on preferences being saved correctly.  Otherwise, the user may
-	// pick a different user, visit another page, click back and find that the 
+	// change the dropdown, visit another page, click back and find that the 
 	// sheet control shows the wrong thing.
 	var sheetCtrl = document.getElementById( 'ansheet' );
 	if ( sheetCtrl )
@@ -317,7 +317,7 @@ MoodleMarginalia.prototype.changeSheet = function( sheetControl, url )
 {
 	var marginalia = window.marginalia;
 	var sheet = sheetControl.value;
-	
+
 	// Check to see whether this is a special case with a named handler
 	if ( this.handlers[ sheet ] )
 		this.handlers[ sheet ]( this, marginalia );
