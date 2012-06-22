@@ -41,10 +41,10 @@ STEP 1: Patch Moodle
 The patch file will update existing files in your Moodle installation.  You
 should do this from a clean Moodle install.  If you previously had an older
 version of Marginalia installed, you will need to restore the Moodle files to 
-their unpatched state before going ahead.  To apply the patch, copy moodle.patch
+their unpatched state before going ahead.  To apply the patch, copy marginalia-m.patch
 into your moodle root directory and run the following command:
 
-    patch -b -p 1 <moodle2.patch
+    patch -b -p 1 <marginalia-m.patch
     
 The digit after the -p is the number, not the letter L.  The -b option is not 
 strictly necessary, but it makes it easier to (manually) uninstall Marginalia by 
