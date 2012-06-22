@@ -558,7 +558,8 @@ function parseAnnotationXml( xmlDoc )
 	
 	if ( !xmlDoc || xmlDoc.documentElement.tagName == "error" )
 	{
-		logError( "parseAnnotationXML Error: " + xmlDoc.documentElement.textValue() );
+		if ( xmlDoc )
+			logError( "parseAnnotationXML Error: " + xmlDoc.documentElement.textValue() );
 		alert( getLocalized( 'corrupt XML from service' ) );
 		return null;
 	}

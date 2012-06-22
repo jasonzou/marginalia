@@ -31,6 +31,9 @@ function Preferences( service, prefs )
 {
 	this.preferences = new Object( );
 	this.service = service;
+	// Need to know whether preferences have been fetched yet, as
+	// that is asynchronous:
+	this.preferencesFetched = false;
 	
 	if ( prefs )
 	{
@@ -71,6 +74,7 @@ Preferences.prototype.cachePreferences = function( text )
 			trace( 'prefs', 'Preference:  ' + name + ' = "' + value + '"' );
 		}
 	}
+	this.preferencesFetched = true;
 	if ( this.continueFunction )
 	{
 		var continueFunction = this.continueFunction;
@@ -92,8 +96,13 @@ Preferences.prototype.getPreference = function( name, defaultValue )
 Preferences.prototype.setPreference = function( name, value )
 {
 	// Only set the preference if it has changed (saves HTTP requests)
-	if ( ! this.preferences[ name ] || this.preferences[ name ] != value )
+	// Must send if preferences have not yet been fetched.
+	if ( ! this.preferencesFetched
+		|| ! this.preferences[ name ]
+		|| this.preferences[ name ] != value )
+	{
 		this.service.setPreference( name, value );
+	}
 	this.preferences[ name ] = value;
 }
 
