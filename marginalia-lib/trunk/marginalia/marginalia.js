@@ -268,11 +268,11 @@ Marginalia.ID_RANGECARET = Marginalia.PREFIX + 'range-caret';	// identifies care
 
 // Preferences
 Marginalia.P_SHEET = 'annotations.sheet';
-Marginalia.P_SHOWANNOTATIONS = 'annotations.show';
 Marginalia.P_NOTEEDITMODE = 'annotations.note-edit-mode';
 Marginalia.P_SPLASH = 'annotations.splash';
 
 // Default values for annotation.sheet (other sheets are possible)
+Marginalia.SHEET_NONE = 'none';
 Marginalia.SHEET_PUBLIC = 'public';
 Marginalia.SHEET_PRIVATE = 'private';
 
