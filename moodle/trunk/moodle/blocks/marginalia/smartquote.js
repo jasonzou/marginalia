@@ -204,8 +204,7 @@ Smartquote.prototype.quoteAnnotation = function( annotation, loginUserId, postId
 	else if ( this.wwwroot && postId )
 	{
 		bus.publish( pub );
-		window.location = this.wwwroot + '/mod/forum/post.php?reply=' + postId
-			+ '&message=' + restutil.encodeURIParameter( pub + "<p>&nbsp;");
+		window.location = this.wwwroot + '/mod/forum/post.php?reply=' + postId;
 	
 		if ( this.extService )
 			this.extService.createEvent( 'smartquote', 'new post', quote, 'annotation', annotation.getId() );

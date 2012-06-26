@@ -179,7 +179,7 @@ class annotation_summary_page
 		if( isloggedin() )
 		{
 			$profile->emit_body( );
-/*			$sannotationpath = s( ANNOTATION_PATH );
+			$sannotationpath = s( ANNOTATION_PATH );
 			echo "<script language='JavaScript' type='text/javascript'>\n"
 				. "var annotationService = new RestAnnotationService('$sannotationpath/annotate.php', "
 				.    "{ csrfCookie: 'MoodleSession".$CFG->sessioncookie."', noPutDelete: true } );\n"
@@ -191,7 +191,7 @@ class annotation_summary_page
 				."} );\n"
 				. "window.preferences = new Preferences( new RestPreferenceService('$sannotationpath/user-preference.php' ) );\n"
 				. "</script>\n";
-*/		}
+		}
 
 		// Needed later to determine whether a given annotation is a keyword
 		$keywords = isloggedin() ? annotation_keywords_db::list_keywords( $USER->id ) : array( );
@@ -404,6 +404,7 @@ class annotation_summary_page
 				$annotation = $annotationa[ $annotationi ];
 				if ( AN_USESMARTQUOTE )
 				{
+					// HTML ID of smartquote button
 					$sqid = s( 'sq'.$annotation->id );
 					$tuserid = s( $annotation->userid );
 					echo "  addEvent(document.getElementById('$sqid'),'click',function() {"
@@ -411,6 +412,7 @@ class annotation_summary_page
 				}
 				if ( isloggedin() && $annotation->userid == $USER->id )
 				{
+					// HTML ID of delete button
 					$delid = s( 'del'.$annotation->id );
 					echo "  addEvent(document.getElementById('$delid'),'click',function() {"
 						."    window.annotationSummary.deleteAnnotation('$delid',".(int)$annotation->id."); } );\n";
