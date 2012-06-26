@@ -1766,11 +1766,11 @@ CookieBus.prototype.getPublication = function( name )
 
 CookieBus.parseCookieValue = function( raw )
 {
-	raw = raw.split( ':' );
-	var control = raw[ 0 ];
-	var text = raw[ 1 ];
+	var x = raw.indexOf( ':' );
+	var control = raw.substr(0, x );
+	var text = raw.substr( x + 1 );
 	var paramstrs = control.split( '&' );
-	var params = { value: raw[ 1 ] };
+	var params = { value: text };
 	for ( var i = 0;  i < paramstrs.length;  ++i )
 	{
 		var p = paramstrs[ i ].split( '=' );
