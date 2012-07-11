@@ -352,10 +352,10 @@ SCRIPT;
 		return $output;
 	}
 	
-	public function output_quote_button( )
+	public function output_quote_button( $canreply )
 	{
 		$output  = html_writer::tag( 'button', '<span>'.get_string( 'quote_button', ANNOTATION_STRINGS ).'</span>',
-			array( 'class'=>'smartquote' ) );
+			array( 'class'=>'smartquote' . ($canreply ? ' canreply' : '') ) );
 		//$output .= html_writer::end_tag( 'button' );
 		return $output;
 	}
@@ -817,18 +817,18 @@ class moodle_marginalia
 		$sheet = $annotation->getSheet( );
 		$record->sheet_type = $this->sheet_type( $sheet );
 			
-		$record->url = addslashes( $annotation->getUrl( ) );
-		$record->note = addslashes( $annotation->getNote( ) );
-		$record->quote = addslashes( $annotation->getQuote( ) );
-		$record->quote_title = addslashes( $annotation->getQuoteTitle( ) );
+		$record->url = $annotation->getUrl( );
+		$record->note = $annotation->getNote( );
+		$record->quote = $annotation->getQuote( );
+		$record->quote_title = $annotation->getQuoteTitle( );
 		
 		// Map author username to id #
 		$userid = $annotation->getQuoteAuthorId( );
 		$user = $DB->get_record( 'user', array( 'id' => (int) $userid ) );
 		$record->quote_author_id = $user ? $user->id : null;
 		
-		$record->link = addslashes( $annotation->getLink( ) );
-		$record->link_title = addslashes( $annotation->getLinkTitle( ) );
+		$record->link = $annotation->getLink( );
+		$record->link_title = $annotation->getLinkTitle( );
 		$record->created = $annotation->getCreated( );
 		$record->modified = $annotation->getModified( );
 
@@ -841,14 +841,14 @@ class moodle_marginalia
 			$xpathEnd = $xpathRange->getEnd( );
 		}
 		
-		$record->start_block = addslashes( $sequenceStart->getPaddedPathStr( ) );
-		$record->start_xpath = null === $xpathRange ? null : addslashes( $xpathStart->getPathStr( ) );
+		$record->start_block = $sequenceStart->getPaddedPathStr( );
+		$record->start_xpath = null === $xpathRange ? null : $xpathStart->getPathStr( );
 		$record->start_line = $sequenceStart->getLines( );
 		$record->start_word = $sequenceStart->getWords( ) ? $sequenceStart->getWords( ) : 0;
 		$record->start_char = $sequenceStart->getChars( );
 		
-		$record->end_block = addslashes( $sequenceEnd->getPaddedPathStr( ) );
-		$record->end_xpath = null === $xpathRange ? null : addslashes( $xpathEnd->getPathStr( ) );
+		$record->end_block = $sequenceEnd->getPaddedPathStr( );
+		$record->end_xpath = null === $xpathRange ? null : $xpathEnd->getPathStr( );
 		$record->end_line = $sequenceEnd->getLines( );
 		$record->end_word = $sequenceEnd->getWords( ) ? $sequenceEnd->getWords( ) : 0;
 		$record->end_char = $sequenceEnd->getChars( );
