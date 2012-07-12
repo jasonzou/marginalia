@@ -352,12 +352,17 @@ SCRIPT;
 		return $output;
 	}
 	
-	public function output_quote_button( $canreply )
+	public function output_quote_button( $canreply=true )
 	{
-		$output  = html_writer::tag( 'button', '<span>'.get_string( 'quote_button', ANNOTATION_STRINGS ).'</span>',
-			array( 'class'=>'smartquote' . ($canreply ? ' canreply' : '') ) );
-		//$output .= html_writer::end_tag( 'button' );
-		return $output;
+		if ( $canreply )
+		{
+			$output  = html_writer::tag( 'button',
+				'<span>'.get_string( 'quote_button', ANNOTATION_STRINGS ).'</span>',
+				array( 'class'=>'smartquote' ) );
+			//$output .= html_writer::end_tag( 'button' );
+			return $output;
+		}
+			return '';
 	}
 
 	/**

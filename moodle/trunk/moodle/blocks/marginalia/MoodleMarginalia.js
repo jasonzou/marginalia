@@ -188,13 +188,6 @@ MoodleMarginalia.prototype.init = function( selectors )
 	margin.mouseover( function( e ) { margin.toggleClass( 'hover', e.target == margin[0] ); } );
 	margin.mouseleave( function( ) { margin.removeClass( 'hover' ); } );
 	
-	// Enable smartquotes and quote logging
-	if ( this.useSmartquote )
-	{
-		this.smartquote = new Smartquote( this.moodleRoot, this.selectors, this.smartquoteService );
-		this.smartquote.enable( marginalia.listPosts( ), marginalia.skipContent );
-	}
-	
 	if ( this.splash && this.sheet != Marginalia.SHEET_NONE )
 	{
 		var onclose = function() {
@@ -341,6 +334,7 @@ MoodleMarginalia.prototype.changeSheet = function( sheetControl, url )
  */
 function getLocalized( s )
 {
-	return LocalizedAnnotationStrings[ s ];
+	var l = LocalizedAnnotationStrings[ s ];
+	return l ? l : s;
 }
 
