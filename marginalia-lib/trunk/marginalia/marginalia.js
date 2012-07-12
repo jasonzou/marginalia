@@ -1171,7 +1171,15 @@ function _keyupCreateAnnotation( event )
 		// Enter to create a regular note
 		if ( 13 == event.keyCode )
 		{
-			if ( createAnnotation( null, false, marginalia.newEditor() ) )
+			// Find the post
+			var textRange = marginalia.cachedSelection;
+			if ( ! textRange )
+				textRange = marginalia.getSelection( );
+			var post = marginalia.posts.getPostByElement( textRange.startContainer );
+			if ( null == post )
+				return false;
+
+			if ( createAnnotation( post, false, marginalia.newEditor() ) )
 				event.stopPropagation( );
 		}
 	}
@@ -1347,7 +1355,6 @@ Marginalia.prototype.getSelection = function( warn )
 }
 
 
-
 /**
  * Create a highlight range based on user selection.
  *
@@ -1365,9 +1372,9 @@ function createAnnotation( post, warn, editor )
 	if ( marginalia.noteEditor )
 		return false;
 	
-	textRange = marginalia.cachedSelection;
+	var textRange = marginalia.cachedSelection;
 	if ( ! textRange )
-		var textRange = marginalia.getSelection( warn );
+		textRange = marginalia.getSelection( warn );
 	
 	if ( ! textRange )
 	{
@@ -1384,17 +1391,6 @@ function createAnnotation( post, warn, editor )
 		return;
 	
 
-/*	// Find the post
-	var post;
-	if ( null == postId )
-	{
-		post = marginalia.posts.getPostByElement( textRange.startContainer );
-		if ( null == post )
-			return false;
-	}
-	else
-		post = marginalia.listPosts( ).getPostById( postId );
-*/	
 	// Confirm that the selection is within the post
 	var contentElement = post.getContentElement( );
 	if ( ! ( ( domutil.isElementDescendant( textRange.startContainer, contentElement )
