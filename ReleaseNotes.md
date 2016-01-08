@@ -1,0 +1,152 @@
+## Moodle, 2011-05-01 (Marginalia 2.0 beta) ##
+
+> This is a major release, focusing on three areas:  Moodle 2.0 integration,
+> a minimized patch footprint, and a streamlined user interface.  It was
+> delayed chiefly because of a lack of resources for testing (on different
+> browsers and for upgrades from previous versions).
+
+  * This release works with and requires Moodle 2.  I will no longer be adding features for Moodle 1.9.
+  * The patch footprint is dramatically smaller.  It doesn't touch anything outside mod/forum.
+  * The create annotation button in the margin has been eliminated.  Clicking on a blank space in the margin performs the create annotation function now.
+  * The public/private button has been replaced by a drop-down sheet menu at the top of the page.  This makes many things possible in the future.  It also establishes the principle that if you and I are looking at the same sheet (public or private or any future one) our screens should look almost exactly the same and we should both have the same sense of how much space remains for margin notes.
+  * That menu also includes the summary link and help link to minimize screen real-estate needed and clarify the relationship of those controls.
+  * Annotation controls are only displayed when the mouse hovers over the note.
+  * A character count-down to tell the user how much space is left when typing a margin note.  Short note errors were a major user complaint.
+  * Annotation is enabled on the page for creating a reply to an existing post.
+  * URLs in margin notes are automatically turned into hyperlinks.  For security reasons, this only happens if they use the http or https protocols and the domain is displayed as the link text so users know whether it looks suspicious (Slashdot's approach).
+  * Proper use of usernames everywhere as per Moodle configuration.
+  * The Atom feed is gone - it's not much use if it only shows public annotations.
+  * The tags page is gone.  It was pretty much vestigial anyway, though that means no more search and replace.
+  * New annotations are marked with a red star so users can find recent comments.
+  * Improved integration with Moodle's database code, security model, etc.
+  * Full localization support for strings used by the Javascript front-end.  Still no other languages though.  Add languages to blocks/marginalia/lang as per the Moodle standard.
+  * Change indication of association between margin note and highlight to be clearer for color-blind users.
+  * Marginalia no longer requires changes to annotated HTML:  instead it is configurable with CSS selectors to extract the appropriate elements and data without modification.  This further shrinks the patch footprint.
+  * Much code cleanup for the annotation summary.  This should make any future support for other Moodle modules easier.
+  * In the past, Marginalia would easily lose highlight locations if the underlying annotated text changed.  This version silently attempts to fix the problem in simple cases.  If the current user is appropriately trusted it updates the database accordingly.  This hits the majority of simple cases.  A much more complex approach is needed for a comprehensive solution.
+  * Marginalia is now capable of "popping-in" annotations by other users in  real-time without reloading the page.  This capability may burden the server so is not enabled for Moodle.
+
+## Moodle, 2009-10-09 ##
+
+  * when quoting across windows (i.e. into an already open reply window or tab), quote marks and semicolons were not being correctly handled
+
+## Moodle, 2009-08-28 ##
+
+Fixes for IE8.
+
+  * IE8 would delete the most recently displayed annotation when Enter was pressed.  This is bizarre behavior by IE, which secretly auto-selects the delete button.  I have worked around the problem.
+  * An error would pop up on IE8 when creation annotations.  There appeared to be a misconfiguration or conflict between IE8 and the YUI version in Moodle.  I have disabled autocomplete on margin notes in IE to avoid the problem.  Autocomplete will still work in other browsers.
+
+## Moodle, 2009-07-10 ##
+
+Upgrades from the previous version require only the blocks/marginalia directory to be replaced.
+
+  * Highlight display was sometimes failing on IE
+  * Other IE and Safari fixes
+  * When Moodle session key was customized (a new Moodle capability), Marginalia's CSRF protection was rejecting attempts to create, modify, and delete annotations
+  * Fix course-level annotation summary
+
+## Moodle, 2009-03-16 ##
+
+  * Recent 1.9 Moodle releases added a div element to wrap post content.  This was being included when calculating highlight positions.  It shouldn't be.  This may break some highlights if you created them with an affected version of Moodle and a recent Beta of Marginalia.  As this affects only beta releases and I don't know whether anyone is affected, I have not included an automated fix.  If you do need a fix, you can search for start\_xpath and end\_xpath fields in the database for any beginning with "html:div[1](1.md)/".  For these annotation rows, you will also see that start\_block and end\_block begin with "0001." (four digits and a dot).  Strip these prefixes and you should be fine.
+
+## Moodle, 2009-03-11 ##
+
+  * A bad path crept back in to admin/user.php
+  * New users of Marginalia couldn't get it to work due to a bug in the Javascript that displayed introductory instructions to them.  Existing users had no problems.
+
+## Moodle, 2009-03-05 ##
+
+  * Update install to work with Moodle 1.9.4 version as of today.  Should cause patch to break with earlier versions of Moodle 1.9 (though this is not hard to fix manually).
+  * Replace autocomplete drop-down with typeahead, made possible by newer YUI in 1.9.4
+  * Database update code now fixes mistakenly escaped quotes in annotations
+  * Fix bug that could cause some highlights not to be stripped when displaying annotations by different users
+
+## Moodle, 2009-02-27 ##
+
+  * Fix search and replace function on tags page
+
+## OJS, 2009-02-25 ##
+
+  * Work-around for IE, which was crashing when more then one tab was open.  (Due to CSS.  Yay for exploder.)
+  * Implement click-to-link for IE.
+
+## Moodle, 2009-02-24 ##
+
+  * user drop-down broken as side-effect of previous fix
+  * user drop-down sometimes displayed incorrect user (previous fix didn't cover all cases)
+  * frequently used margin note list (tags) used for autocomplete not auto-updating until page reloaded
+
+## OJS, 2009-02-24 ##
+
+  * click-to-link not working for other windows (though did work for current window)
+
+## OJS, 2009-02-19 ##
+
+  * On some web servers Marginalia was not working due to malformed content-type on localized strings file
+
+## Moodle, 2009-02-18 ##
+
+  * fix quote button on summary page
+  * ensure quote button on forum posts replies to correct post
+  * sometimes annotation display and annotation user drop-down menu on forum page would conflict
+  * autocomplete would force an autocompletion when Enter was pressed, so instead use a drop-down menu for now
+
+## Moodle, 2009-02-11 ##
+
+  * fix quote buttons on posts and margin notes
+
+## Moodle, 2009-01-20 ##
+
+  * fixes to the code for upgrading existing annotations from older (pre-December 2008) versions of Marginalia
+  * file path problem for Moodle 1.8
+
+If you did not have trouble with either of these, you do not need to update to this version.
+
+## All Versions, 2009-01-07 ##
+
+This release fixes a significant security problem.
+
+## OJS, Demo 2008-12-22 ##
+
+  * IE compatibility for OJS.
+  * Bug fixes and performance improvements for OJS.
+  * Fixed modified and created dates for OJS.
+  * CSRF protection for OJS.
+  * IE fixes for the demo.
+
+## Demo 2008-12-21 ##
+
+  * The non-static demo only works with userids, not usernames.  When annotations created by other users were displayed, the username was blank.  Now the username is set equal to the userid.  In a working application, the username should be a proper human-readable name (contrasted with the userid, which must be unique - usually it's the login name).
+
+## December 2008 Release ##
+
+This release is aimed at stabilizing and refining the Moodle version, though consideration is being given to the other versions also.  So far there have been releases of the Moodle version (2008-12-14 and later) and demo (2008-12-20 and later).  The following changes are in the Marginalia core libraries and apply to all subsequent releases for all platforms (Moodle, OJS, demo):
+
+  * IE (version 7) is again supported.  Safari is also now fully supported (thanks to browser improvements by Apple).
+
+  * I found a serious problem that could cause margin notes to be wrongly ordered on pages containing HTML br elements.  Typically, notes would cluster towards the bottom of the margin, not near their highlights.  The fix requires a change in the database.  Fixes to data can only happen when a user logs in and views his or her annotations.  Pages displaying annotations by multiple users may exhibit this kind of incorrect behavior (even when they didn't before) until all users have viewed their annotations on the page.  This will fix annotations already experiencing the problem _so long as you visit the page in a non-IE browser_ (this is due to IE's lack of XPath support).
+
+  * Marginalia previously assumed well-formed HTML, i.e. HTML in which block elements are never nested within inline elements.  Marginalia no longer makes this assumption, although in some cases it might be quite slow on malformed pages.
+
+  * Protection against a form of cross-site request forgery attack that could in theory be used to modify or delete a user's existing annotations.  This is implemented for Moodle (if cookies are used for the session ID, which is the default) and OJS.  Previously the benefits of such an attack would be limited;  to my knowledge there was and is no way to inject database commands or HTML through Marginalia.
+
+The following changes are Moodle-specific:
+
+  * Marginalia is, to the extent possible, a proper Moodle plug-in.  This makes it much easier to install:  Moodle will automatically create Marginalia's database tables, and there are fewer files to place in odd places.  This should also make future upgrades much simpler.
+
+  * Smartcopy is gone.  It was a Firefox-specific hack that was not discoverable and seemed to seldom be used.  Instead, we now have Smartquotes.  A "quote" button beneath each forum message allows you to select and quote message content into a reply.  This will start a reply if necessary, or paste into a reply in another window.
+
+  * Annotations can also be quoted.  If you wish to reply to someone else's annotation, click the quote button.  Or, you can effectively turn one of your own annotations into a forum post.  We found that users tried to conduct discussions within the annotation margin.  This is intended to redirect discussion back to the medium best suited for it - the forum itself.
+
+  * Tags (keywords) have been replaced with a system to make it easy to type frequently used margin notes.  If a note has been used more than once, Marginalia can autocomplete it when you start typing.  This eliminates the +/- control next to each annotation, and eliminates the need to create tags on the Tags page.
+
+  * The summary page search interface has been simplified.  The drop-down menus for specifying search criteria are gone.  Instead, you can click a pop-up icon next to the name of a user in the summary results in order to filter by that user.  You can do the same for tags (notes used more than once).  In order to remove filters from the search, click on links in the text description of the search at the top of the page.  Clicking here can also specify that the search should find exact matches of the search string (useful for keywords).
+
+  * All users' existing (public) annotations on a forum page can be fixed automatically when an administrator views them.  This can prevent the display problem mentioned above.  This feature allows admin users to make changes to highlight range locations for other users, so it can be switched off for increased security.
+
+  * The height of the button in the margin is set correctly, including when annotations are added, deleted, etc.
+
+  * The database schema has been redesigned to be smaller and faster (using Moodle id values instead of the strings used in Marginalia's client/server protocol).
+
+  * The Moodle-specific code is being shifted towards Moodle's coding standards.

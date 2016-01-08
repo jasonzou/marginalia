@@ -1,0 +1,30 @@
+Ideally, Marginalia would be installed in Moodle just like any other plugin. However, currently that is not possible.  Marginalia needs to add content and behavior to forum pages, and Moodle provides no hooks to do that.
+
+As of March 2009, Marginalia patches Moodle to do the following:
+
+  * Load Marginalia's Javascript and CSS on forum pages (discuss.php, lib.php)
+  * Add Javascript to the head of forum pages to initialize Marginalia (placing JS in the head can result in quite significant speed benefits compared to placing it in the document body)
+  * Add code to discuss.php to determine configuration parameters and emit them for the initialization Javascript
+  * Add the Marginalia buttons and quote buttons in forum/lib.php
+  * Set appropriate class values on forum posts so that Marginalia can extract metadata
+  * Include username and date in database queries for the author of a forum post
+  * Emit username and date in ISO format in each post's HTML
+  * Add forum/permalink.php, so that each forum post can be linked to individually
+  * Add a message parameter to forum/post.php so that the quote button can pass in initial HTML when the user creates a new post
+  * Add a function call to user.php so that when a user is deleted, his or her annotations are also deleted
+  * Add Javascript code to weblib.php to enable quote pasting into rich text entry controls between windows
+  * Not yet implemented:  Add code when forum posts are created or edited to strip out any annotation highlights that may have been added by copying and pasting.
+
+I believe the need for patches could be eliminated if Moodle did the following:
+
+  * Allow plugins to add load Javascript and CSS into existing pages.  My suggestion would be a standard Moodle method for registering Javascript and CSS files against specific base URLs.  Then each page would pull in the files listed against it.  For performance and clarity, it would also be good to register initialization callbacks.  This feature could be useful for many plugins other than Marginalia.
+  * Emit usernames and ISO dates in forum posts.
+  * Add support for the message parameter to forum/post.php.
+  * Add a hook for plugins to strip extraneous HTML, styling, and class values from posts when they are edited.
+
+Other things would be nice, but that's a bare minimum.  I believe the above tasks could then be implemented as follows:
+
+  * Use the DOM to make changes to page HTML, as is done in the OJS version of Marginalia.  (Supporting browsers with Javascript switched off is not much of an issue as the vast majority of Marginalia's features - some quoting and the summary page excepted - are impossible without JS.)
+  * Modify Marginalia to be configure to find forum post metadata without the need for predefined classes (e.g. use CSS selectors)
+  * Use Javascript to search for rich text controls (they have random variable names, but can be determined by looking for variables with a given type) and initialize them to accept quotes.
+  * Use a polling technique to check for deleted users, and delete their annotations at that time, eliminating the need to change user.php.  Or add an admin button to the Marginalia block (currently no block is displayed, but it could be).
